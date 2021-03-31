@@ -1,0 +1,10 @@
+{
+    "type": "",
+    "host": "",
+    "port": 0,
+    "username": "",
+    "password": "",
+    "database": "",
+    "entities": ["./src/models/**/*.ts"],
+    "synchronize": true
+}
