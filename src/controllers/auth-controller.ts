@@ -2,22 +2,24 @@ import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
 import { getRepository } from "typeorm";
-import { User } from "../models/user";
+import { CatUsers } from "../models/user";
 
 import { Resolver } from "../services/resolver";
+import { Utils } from "../services/utils";
 
 export class AuthController {
     public async signIn(req:Request, res:Response): Promise<void> {
         try {
-            const user = await getRepository(User)
+            const user = await getRepository(CatUsers)
                 .createQueryBuilder("user")
-                .where("user.userName = :userName", {userName: req.body.userName})
-                .andWhere("user.email = :email", {email: req.body.email})
+                .where("user.email = :email", {email: req.body.email})
+                .andWhere("user.password = :password", {password: await new Utils().encrypt(req.body.password)})
                 .getOne();
 
             let payload = {
-                username: user.userName,
+                username: user.name,                
                 email: user.email
+                // password: user.password
             };
             
             if(user) {
