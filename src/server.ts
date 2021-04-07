@@ -7,7 +7,8 @@ import { createConnection } from "typeorm";
 import { UserRouting } from './routes/user-routing';
 import { AuthRouting } from './routes/auth-routing';
 import { Resolver } from "./services/resolver";
-import { Whatsapp } from './services/whatsapp';
+import { Telegram } from './services/telegram';
+import { TelegramController } from './controllers/telegram-controller';
 
 class Server {
     public app:express.Application;
@@ -16,6 +17,7 @@ class Server {
         this.app = express();
         this.config();
         this.loadRoutes();
+        this.initServices();
     }
 
     public config(): void {
@@ -30,6 +32,10 @@ class Server {
         this.app.use('/api/messages/whatsapp', new WhatsappRouting().router);
 
         this.app.get('*', (req, res) => new Resolver().notFound(res, 'Oops! This route not exists.'));
+    }
+
+    public initServices() {
+        new Telegram();
     }
 
     public initDatabase(): void {

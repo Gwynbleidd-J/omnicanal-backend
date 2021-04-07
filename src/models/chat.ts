@@ -1,7 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn, Table, Timestamp } from "typeorm";
 
 @Entity()
-export class OpeCalls{
+export class OpeChats{
     @PrimaryGeneratedColumn('increment')
     id:number; 
 

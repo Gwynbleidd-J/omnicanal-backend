@@ -15,7 +15,7 @@ export class WhatsappController {
             new Resolver().exception(res, 'Unexpected error.', ex);
         }
     }
-
+    
     public async messageOut(req:Request, res:Response, next:NextFunction): Promise<void> {
          
     }
