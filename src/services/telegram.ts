@@ -12,18 +12,20 @@ export class Telegram{
         this.telegraf = new Telegraf(process.env.BOT_TOKEN)
         this.initListeners();
         this.telegraf.launch();
-        this.telegramController = new TelegramController();
+        this.telegramController = new TelegramController(this.telegraf);
     }
 
     public initListeners(): void {
         this.telegraf.start(ctx => {
             ctx.reply("Bienvenido");
-            console.log(ctx);
         });
+        
         this.telegraf.on('text', ctx =>{
-            this.telegramController.sendMessages(ctx.chat.id, ctx.from.id);
+            this.telegramController.sendMessages(ctx);
             console.log(ctx);
         }); 
+
+
     }
     /* 
     public sendMessages(){
