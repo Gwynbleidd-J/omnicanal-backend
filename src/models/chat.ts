@@ -1,7 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn, Table, Timestamp } from "typeorm";
 
 @Entity()
-export class OpeCalls{
+export class OpeChats{
     @PrimaryGeneratedColumn('increment')
     id:number; 
 
@@ -22,6 +22,9 @@ export class OpeCalls{
     
     @Column({type:'varchar', length: 250})
     client:String; 
+
+    @Column({type:'varchar', length: 250})
+    from:String;
 
     @Column({type:'char', length: 250})
     platformIdentifier:String; 

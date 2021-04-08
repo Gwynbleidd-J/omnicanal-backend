@@ -18,7 +18,7 @@ export class Whatsapp {
     //     this.client  = require('twilio')(this.accountSID, this.authToken, { lazyLoading: true });
     // }
 
-    //Método para el envío del mensaje automático
+    //Método para el envío del mensaje automático.
     public async sendWelcomeMessage(message:String, whatsappClientAccount:String, ){
         try{
             
@@ -37,23 +37,22 @@ export class Whatsapp {
         }
     }    
 
-    public async replyMessage(message:String, whatsappClientAccount:String, ){
+    public async replyMessage(message:String, profileName:String, whatsappClientAccount:String, ){
         try{
             
             this.whatsappAcount = 'whatsapp:+14155238886';
-
-            await this.client.messages.create({
+            this.client.messages.create({
                 to:   whatsappClientAccount,
-                body: 'Bienvenido al sistema de soporte . En momento le enlazamos con un agente...',
+                body: 'Hola '+ profileName +'. Bienvenido al sistema de soporte . En un momento le enlazamos con un agente...',
                 from: this.whatsappAcount
                 }); 
-                //Validar el envío, para una vez que se haya iniciado la comunicación con el cliente a partir 
-                // de esta primer respuesta, disparar el algoritmo para buscar un agente disponible
-                
-                console.log('Send to ' + this.whatsappAcount + ' correct');
+                 
+                console.log('Send to ' + this.whatsappAcount + ' correct');  
         }
         catch(err){
             console.log('Error: ' + err);
         }
     }    
+
+    
 }
