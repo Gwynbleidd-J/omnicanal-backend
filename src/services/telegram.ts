@@ -22,7 +22,6 @@ export class Telegram{
         
         this.telegraf.on('text', ctx =>{
             this.telegramController.sendMessages(ctx);
-            console.log(ctx);
         }); 
 
 
