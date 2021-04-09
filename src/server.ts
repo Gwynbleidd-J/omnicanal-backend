@@ -1,13 +1,11 @@
-import { WhatsappRouting } from './routes/whatsapp-routing';
-
 require('dotenv').config();
 
 import express from "express";
 import { createConnection } from "typeorm";
 import { UserRouting } from './routes/user-routing';
 import { AuthRouting } from './routes/auth-routing';
-import { Resolver } from "./services/resolver";
-import { Whatsapp } from './services/whatsapp';
+import { Resolver } from "./services/resolver"; 
+import { MessengerRouting } from './routes/messenger-routing';
 
 class Server {
     public app:express.Application;
@@ -27,7 +25,7 @@ class Server {
         this.app.get('/api', (req, res) => { res.send({message: process.env.WELCOME_MESSAGE}) });
         this.app.use('/api/user', new UserRouting().router);
         this.app.use('/api/auth', new AuthRouting().router);
-        this.app.use('/api/messages/whatsapp', new WhatsappRouting().router);
+        this.app.use('/api/messages/messenger', new MessengerRouting().router);
 
         this.app.get('*', (req, res) => new Resolver().notFound(res, 'Oops! This route not exists.'));
     }

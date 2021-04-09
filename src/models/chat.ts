@@ -5,40 +5,40 @@ export class OpeChats{
     @PrimaryGeneratedColumn('increment')
     id:number; 
 
-    @Column({type:'date'})
+    @Column({type:'date', default: () => `now()` })
     date:Date; 
     
-    @Column({type:'time'})
+    @Column({type:'time', default: () => `now()` })
     startTime:Timestamp;
     
-    @Column({type:'time'})
+    @Column({type:'time', nullable: true})
     endingTime:Timestamp; 
     
-    @Column({type:'integer'})
+    @Column({type:'integer', nullable: true})
     score:number; 
     
     @Column({type:'varchar', length: 250})
     comments:String; 
     
     @Column({type:'varchar', length: 250})
-    client:String; 
+    clientPlatformIdentifier:String; 
 
-    @Column({type:'varchar', length: 250})
-    from:String;
+    @Column({type:'varchar', length: 250, nullable: true})
+    clientPhoneNumber:String;
 
-    @Column({type:'char', length: 250})
+    @Column({type:'char', length: 1})
     platformIdentifier:String; 
     
-    @Column({type:'varchar', length: 250})
+    @Column({type:'varchar', length: 250, nullable: true})
     file:String; 
     
-    @Column({type:'integer'})
+    @Column({type:'integer', nullable: true})
     userId:String; 
     
-    @Column({type:'integer'})
-    statusId:String; 
+    @Column({type:'integer', nullable: true})
+    statusId:number; 
 
-    @Column({type:'integer'})
+    @Column({type:'integer', nullable: true})
     networkCategoryId:String; 
     
 }

@@ -19,14 +19,14 @@ export class Whatsapp {
     // }
 
     //Método para el envío del mensaje automático.
-    public async sendWelcomeMessage(message:String, whatsappClientAccount:String, ){
+    public async sendWelcomeMessage(profileName:String, whatsappClientAccount:String, ){
         try{
             
             this.whatsappAcount = 'whatsapp:+14155238886';
 
             await this.client.messages.create({
                 to:   whatsappClientAccount,
-                body: message,
+                body: 'Hola '+ profileName +'. Bienvenido al sistema de soporte . En un momento le enlazamos con un agente.',
                 from: this.whatsappAcount
                 });     
                 
@@ -37,16 +37,17 @@ export class Whatsapp {
         }
     }    
 
-    public async replyMessage(message:String, profileName:String, whatsappClientAccount:String, ){
+    public async replyMessageWaitingForAgent(message:String, profileName:String, whatsappClientAccount:String, ){
         try{
             
             this.whatsappAcount = 'whatsapp:+14155238886';
             this.client.messages.create({
                 to:   whatsappClientAccount,
-                body: 'Hola '+ profileName +'. Bienvenido al sistema de soporte . En un momento le enlazamos con un agente...',
+                body: 'Estimado '+ profileName +'. Aún no hay agente disponible, un momento por favor, agradecemos tu paciencia.',
                 from: this.whatsappAcount
                 }); 
-                 
+                
+                console.log('Estimado '+ profileName +'. Aún no hay agente disponible, un momento por favor, agradecemos tu paciencia.');
                 console.log('Send to ' + this.whatsappAcount + ' correct');  
         }
         catch(err){
@@ -54,5 +55,6 @@ export class Whatsapp {
         }
     }    
 
+     
     
 }

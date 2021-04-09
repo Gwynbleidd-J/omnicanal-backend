@@ -5,10 +5,10 @@ export class OpeCalls{
     @PrimaryGeneratedColumn('increment')
     id:number; 
 
-    @Column({type:'date'})
+    @Column({type:'date', default: () => `now()` })
     date:Date; 
     
-    @Column({type:'time'})
+    @Column({type:'time', default: () => `now()` })
     startTime:Timestamp;
     
     @Column({type:'time'})
@@ -23,7 +23,10 @@ export class OpeCalls{
     @Column({type:'varchar', length: 250})
     client:String; 
     
-    @Column({type:'varchar', length: 250})
+    @Column({type:'varchar', length: 250, nullable: true})
+    clientPhoneNumber:String;
+    
+    @Column({type:'varchar', length: 250, nullable: true})
     file:String; 
     
     @Column({type:'integer'})
