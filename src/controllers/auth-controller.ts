@@ -19,7 +19,7 @@ export class AuthController {
 
             let payload = {
                 username: user.name,                
-                email: user.email
+                email: user.email            
                 // password: user.password
             };
             

@@ -13,7 +13,7 @@ export class MessengerRouting{
     }
 
     private routes(): void {
-        console.log();
-        this.router.post('/', this.messengerControler.messageIn);
+        console.log('entrando al routing');
+        this.router.post('/', this.messengerControler.incommingMessage);
     }
 }

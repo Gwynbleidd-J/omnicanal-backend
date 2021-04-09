@@ -1,21 +1,28 @@
 require('dotenv').config();
 import { Telegraf } from 'telegraf';
-
-
+// import { TelegramController  } from '../controllers/telegram-controller';
+import { MessengerController  } from '../controllers/messenger-controller';
+ 
 export class Telegram{
+    private telegraf:Telegraf;
+    private telegramController:MessengerController
 
-   public sendMessage(){
-        const bot = new Telegraf(process.env.BOT_TOKEN)
-        bot.on('text', ctx =>{
-            //chatId = ctx.chat.id;
-            //client = ctx.from.id;
-            bot.telegram.sendMessage(1488122635 ? 1761464773 : 1624174766, `Hola ${ctx.from.first_name} en breve lo atiende un promotor`);
-            bot.telegram.sendMessage(1488122635 ? 1488122635 : 1624174766, ctx.update.message.text);
-            console.log(ctx.chat.id);
-            bot.launch();
-            //ctx.chat.id = ctx.chat.id ? 1761464773 : 1624174766, 
-            //ctx.chat.id = ctx.chat.id ? 1488122635 : 1624174766,
-        })
+    constructor() {
+        this.telegraf = new Telegraf(process.env.BOT_TOKEN)
+        this.initListeners();
+        this.telegraf.launch();
+        this.telegramController = new MessengerController(this.telegraf);
     }
 
+    public initListeners(): void {
+        this.telegraf.start(ctx => {
+            ctx.reply("Bienvenido");
+        });
+        
+        this.telegraf.on('text', ctx =>{
+            // this.telegramController.sendMessages(ctx);
+            this.telegramController.standardizeMessageContext(ctx, 't');
+            // console.log(ctx.message.text);
+        }); 
+    }
 }
