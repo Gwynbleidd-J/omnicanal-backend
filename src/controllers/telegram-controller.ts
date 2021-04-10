@@ -4,6 +4,8 @@ import jwt from "jsonwebtoken";
 import { Telegraf } from 'telegraf';
 import { Resolver } from '../services/resolver';
 import { Utils } from "../services/utils";
+import { getRepository } from 'typeorm';
+import { OpeChats } from '../models/chat';
 
 
 export class TelegramController{
@@ -15,8 +17,15 @@ export class TelegramController{
 
     public sendMessages(ctx) {
         ctx.telegram.sendMessage( ctx.from.id, `Hola, buen día ${ctx.from.first_name} en breve lo atiende un promotor`);
-        ctx.telegram.sendMessage(ctx.chat.id, ctx.update.message.text);
-        console.log(ctx.chat.id);
+        
+        getRepository(OpeChats)
+        .createQueryBuilder()
+        .insert()
+        .into(OpeChats)
+        .values([{
+            clientPlatformIdentifier:ctx.from.id, comments: ctx.message.text, platformIdentifier: 't' } 
+        ])
+        .execute();
     }
 
     //Tienes que ir viendo como guardar fotos en los eventos de ctx.on()

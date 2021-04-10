@@ -1,5 +1,4 @@
 require('dotenv').config();
-import { timeStamp } from 'console';
 import { Telegraf } from 'telegraf';
 import { TelegramController } from '../controllers/telegram-controller';
 
@@ -22,6 +21,7 @@ export class Telegram{
         
         this.telegraf.on('text', ctx =>{
             this.telegramController.sendMessages(ctx);
+            console.log(ctx)
         }); 
 
 
