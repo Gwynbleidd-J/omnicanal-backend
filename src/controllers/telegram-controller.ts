@@ -1,9 +1,4 @@
-import { Telegram } from '../services/telegram';
-import { NextFunction, Request, Response } from "express";
-import jwt from "jsonwebtoken";
-import { Telegraf } from 'telegraf';
-import { Resolver } from '../services/resolver';
-import { Utils } from "../services/utils";
+import { Telegraf } from 'telegraf'; 
 import { getRepository } from 'typeorm';
 import { OpeChats } from '../models/chat';
 

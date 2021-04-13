@@ -1,11 +1,11 @@
+import { CatUsers } from './../models/user';
+import { Telegram } from './../services/telegram';
 import { Whatsapp } from '../services/whatsapp';
 import { NextFunction, Request, Response } from "express";
 import { OpeChats } from './../models/chat';
 import { getRepository, SimpleConsoleLogger } from "typeorm";
 import { Resolver } from "../services/resolver";
 import { Telegraf } from 'telegraf';
-import { TIMEOUT } from 'dns';
-
  
 export class MessengerController {
     
@@ -15,10 +15,22 @@ export class MessengerController {
     constructor(telegraf?:Telegraf) {
         this.telegraf = telegraf;
     }
-     
+    
+    /* #region Comments */
+    /*
+    Método:     incommingMessage
+    Parámetros:  Recibe el request que viene desde la petición hecha a la API. 
+    Descripción: Se llama este método específicamente cuando el mensaje entrante es de whatsapp, dentro e proceso redirecciona
+                hacia el método de estandarización de los mensajes. Se pasa como parámetro la letra 'W' para indicar que es un
+                mensaje desde whatsapp.
+    Devuelve:  
+    Creó: J. Carlos Lara
+    Fecha: Abril 09 de 2021
+    */
+   /* #endregion */ 
     public async incommingMessage(req:Request, res:Response): Promise<void> {
         try{  
-            console.log('Cuerpo del mensaje recibido');  
+            // console.log('Cuerpo del mensaje recibido');  
             MessengerController.prototype.standardizeMessageContext(req.body,'w');            
         }
         catch(ex){
@@ -92,14 +104,23 @@ export class MessengerController {
     //         console.log(ex);
     //     }
     // }
-
-    public async messageIn(messageContextJson:JSON){
+    public async messageIn(messageContext:JSON){
         try{ 
             //Pasos para el mensaje entrante:
-            console.log('Procesando mensaje entrante...' + messageContextJson['clientPlatformIdentifier']);
-            const existingChat = await this.chatAlreadyExist(messageContextJson['clientPlatformIdentifier'], messageContextJson['platformIdentifier']);
+            console.log('Procesando mensaje entrante de: ' + messageContext['clientPlatformIdentifier']);
+            const existingChat = await this.chatAlreadyExist(messageContext['clientPlatformIdentifier'], messageContext['platformIdentifier']);
             //Verificar existencia del mismo
-            console.log('Resultado de existencia: ' + existingChat);
+            const myJson = await existingChat;
+            console.log('Estatus del chat existente: ' + myJson.statusId); 
+
+            if(myJson.statusId == 0){
+                console.log('Chat con estatus: ' + myJson.statusId + ' generando registro inicial en BD.');
+                this.registryInitialChat(messageContext);
+            }
+            else if(myJson.statusId == 1)
+                console.log('Chat con estatus '+ myJson.statusId +', asignando un agente.');
+            else if(myJson.statusId == 2)
+                console.log('Chat con estatus '+ myJson.statusId +' dirigiendo el mensaje a su agente');
             //Dependiendo del estatus devuelto, redireccionamos el messageContextJson al mensaje de bienvenida o de seguimiento
         }
         catch(ex)
@@ -115,6 +136,40 @@ export class MessengerController {
     });
     } 
   
+    public async registryInitialChat(messageContext:JSON):Promise<number>{
+        try{
+            console.log('Enrando a registryInitialChat');
+            const insertedOpeChat = await getRepository(OpeChats)
+                            .createQueryBuilder() 
+                            .insert() 
+                            .into(OpeChats) 
+                            .values([ 
+                                {clientPlatformIdentifier: messageContext['clientPlatformIdentifier'], clientPhoneNumber: messageContext['clientPhoneNumber'], comments: messageContext['comments'], platformIdentifier: messageContext['platformIdentifier'], statusId: 1 } 
+                            ])
+                            .execute(); 
+            console.log(insertedOpeChat);
+
+            return 2;
+        }
+        catch(ex){
+            console.log('Error[registryInitialChat]:' + ex);
+        }
+    }
+
+    public sendWelcomeMessage(messageContext:JSON):void{
+        try{ 
+            if(messageContext['platformIdentifier'] == 'w')
+                new Whatsapp().sendWelcomeMessage(messageContext['clientPlatformIdentifier']); 
+            else if(messageContext['platformIdentifier'] == 't')
+            {
+                console.log('Diseñar la lógica para enviar msg a Telegram'); 
+            }
+        }
+        catch(ex){
+            console.log('Error[registryInitialChat]:' + ex);
+        }
+    }
+
     /* #region Comments */
     /*
     Método:     chatAlreadyExist
@@ -133,20 +188,35 @@ export class MessengerController {
     public async chatAlreadyExist(clientPlatformIdentifier:String, platformIdentifier:String):Promise<any>{
         statusId:Number;
         try{ 
+            console.log('Buscando regstro de chat con ' + clientPlatformIdentifier + ', de tipo ' + platformIdentifier);
             const chat = await getRepository(OpeChats)
                 .createQueryBuilder("chat")
                 .where("chat.platformIdentifier = :platformIdentifier", {platformIdentifier: platformIdentifier})
                 .andWhere("chat.clientPlatformIdentifier = :clientPlatformIdentifier", {clientPlatformIdentifier: clientPlatformIdentifier})
-                // .andWhere("chat.statusId != :statusId", {statusId: 3})
+                .andWhere("chat.statusId != :statusId", {statusId: 3})
                 .orderBy("chat.id", "DESC")
                 .getOne();
 
-            let payload = {
-                statusId: chat.statusId,
-                userId: chat.userId
+            let payload; 
+
+            if(chat)
+            {
+                payload = {
+                    id: chat.id,
+                    statusId: chat.statusId, 
+                    userId: chat.userId
+                };
+               return payload;
             }
-            
-            return chat;
+            else 
+            {
+                payload = {
+                    id: '',
+                    statusId: '0', 
+                    userId: null
+                };
+              return payload;
+            }
 
         }
         catch(ex){
@@ -168,14 +238,14 @@ export class MessengerController {
    //public standardizeMessageContext(Ctx:any, platformIdentifier:String){ 
    public standardizeMessageContext(ctx, platformIdentifier:String): void{
         try{
-            console.log('Estandarizando cuerpo del mensaje');
-            // messageContext: JSON; 
+            console.log('Estandarizando cuerpo del mensaje'); 
             let messageContext;
             
             if(platformIdentifier == 't')
             { 
                 //Generar el JSON a partir del ctx de Telegram
                 const Context:JSON = <JSON><unknown>{
+                    "id": '',
                     "clientPlatformIdentifier": ctx.from.id, 
                     "clientPhoneNumber": '',
                     "comments": ctx.message.text, 
@@ -187,16 +257,15 @@ export class MessengerController {
             {
                 //Generar el JSON a partir del ctx de Whatssap
                     const Context:JSON = <JSON><unknown>{
+                    "id": '',
                     "clientPlatformIdentifier": ctx.From, 
-                    "clientPhoneNumber": ctx.WaId,
-                    "comments": ctx.Body,
-                    "platformIdentifier": platformIdentifier
+                    "clientPhoneNumber": ctx.WaId, 
+                    "comments": ctx.Body, 
+                    "platformIdentifier": platformIdentifier 
                   }
                   messageContext = Context;
             }
-
-            //Una vez que se estandarizó un mensaje de cualquier plataforma(w/t), se llama al método para que despache el mensaje según su caso de uso.
-            console.log(messageContext);
+ 
             console.log('Mensaje estandarizado correctamente, enviando al despachador...');            
             this.messageIn(messageContext);
             
@@ -206,20 +275,56 @@ export class MessengerController {
         }
     }
 
-    //Método provisional para probar el funcionamiento de telegram con el controlador general
-    public sendMessages(ctx) {
-        ctx.telegram.sendMessage( ctx.from.id, `Hola, buen día ${ctx.from.first_name} en breve lo atiende un promotor`);
-        
-        getRepository(OpeChats)
-        .createQueryBuilder()
-        .insert()
-        .into(OpeChats)
-        .values([{
-            clientPlatformIdentifier:ctx.from.id, comments: ctx.message.text, platformIdentifier: 't' } 
-        ])
-        .execute();
+    public async getDisponibleAgent(platformIdentifier:String):Promise<any>{
+        try{ 
+            const user = await getRepository(CatUsers)
+                .createQueryBuilder("user")
+                .where("user.activeChats < :activeChats", {activeChats: 3})  
+                .andWhere("user.") //Contemplar después añadir el filtro para el estatus del usuario
+                .orderBy("user.activeChats", "ASC")
+                .getOne();
 
-        console.log(`PromoEspacio: Hola, buen día ${ctx.from.first_name} en breve lo atiende un promotor`);
+            let payload; 
+
+            if(user)
+            {
+                payload = {
+                    userId: user.ID, 
+                    agentIdentifierWhatsapp: user.agentIdentifierWhatsapp, 
+                    agentIdentifierTelegram: user.agentIdentifierTelegram, 
+                    activeChats: user.activeChats
+                };
+               return payload;
+            }
+            else 
+            {
+                payload = {
+                    userId: 0, 
+                    agentIdentifierWhatsapp: '', 
+                    agentIdentifierTelegram: '',
+                    activeChats: 0                   
+                };
+              return payload;
+            }
+        }
+        catch(ex)
+        {
+            console.log('Error[getDisponibleAgent]: ' + ex);
+        }
+    }
+
+    public async assignChatAgent(agentId:number, messageContext:JSON):Promise<void>{
+        try{ 
+            await getRepository(OpeChats)
+                .createQueryBuilder()
+                .update(OpeChats)
+                .set({ userId: agentId, statusId: 2})
+                .where("id = :id", { id: messageContext['id'] })
+                .execute();            
+        }
+        catch(ex){
+            console.log('Error[assignChatAgent]' + ex);
+        }
     }
 
 }

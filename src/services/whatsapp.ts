@@ -19,14 +19,14 @@ export class Whatsapp {
     // }
 
     //Método para el envío del mensaje automático.
-    public async sendWelcomeMessage(profileName:String, whatsappClientAccount:String, ){
+    public async sendWelcomeMessage(whatsappClientAccount:String, ){
         try{
             
             this.whatsappAcount = 'whatsapp:+14155238886';
 
             await this.client.messages.create({
                 to:   whatsappClientAccount,
-                body: 'Hola '+ profileName +'. Bienvenido al sistema de soporte . En un momento le enlazamos con un agente.',
+                body: 'Hola. Gracias por escribir al Whatsapp de PromoEspacio. En un momento le enlazamos con un agente.',
                 from: this.whatsappAcount
                 });     
                 

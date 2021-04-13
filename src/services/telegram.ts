@@ -16,7 +16,7 @@ export class Telegram{
 
     public initListeners(): void {
         this.telegraf.start(ctx => {
-            ctx.reply("Bienvenido");
+            ctx.reply("Hola. Gracias por escribir al Telegram de PromoEspacio. En un momento le enlazamos con un agente.");
         });
         
         this.telegraf.on('text', ctx =>{

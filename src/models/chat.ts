@@ -33,7 +33,7 @@ export class OpeChats{
     file:String; 
     
     @Column({type:'integer', nullable: true})
-    userId:String; 
+    userId:number; 
     
     @Column({type:'integer', nullable: true})
     statusId:number; 

@@ -20,6 +20,12 @@ export class CatUsers {
     @Column({})
     password:String;
 
+    @Column({type:'varchar', length: 23, nullable: true})
+    agentIdentifierWhatsapp:String; 
+
+    @Column({type:'varchar', length: 10, nullable: true})
+    agentIdentifierTelegram:String; 
+
     @Column({ default: 0 })
     activeChats:number;
 
