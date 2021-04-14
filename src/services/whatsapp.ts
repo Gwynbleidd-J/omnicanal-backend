@@ -28,33 +28,62 @@ export class Whatsapp {
                 to:   whatsappClientAccount,
                 body: 'Hola. Gracias por escribir al Whatsapp de PromoEspacio. En un momento le enlazamos con un agente.',
                 from: this.whatsappAcount
-                });     
-                
-                console.log('Send to ' + this.whatsappAcount + ' correct');
+                });      
+                console.log('Correctly WelcomeMessage sent to ' + whatsappClientAccount);  
         }
         catch(err){
             console.log('Error: ' + err);
         }
     }    
 
-    public async replyMessageWaitingForAgent(message:String, profileName:String, whatsappClientAccount:String, ){
+    public async replyMessageWaitingForAgent(whatsappClientAccount:String, ){
         try{
             
             this.whatsappAcount = 'whatsapp:+14155238886';
             this.client.messages.create({
                 to:   whatsappClientAccount,
-                body: 'Estimado '+ profileName +'. Aún no hay agente disponible, un momento por favor, agradecemos tu paciencia.',
+                body: 'Seguimos conectando con un agente disponible, agradecemos tu paciencia.',
                 from: this.whatsappAcount
-                }); 
-                
-                console.log('Estimado '+ profileName +'. Aún no hay agente disponible, un momento por favor, agradecemos tu paciencia.');
-                console.log('Send to ' + this.whatsappAcount + ' correct');  
+                });  
+                console.log('Correctly MessageWaitingForAgent sent to ' + whatsappClientAccount);  
         }
         catch(err){
             console.log('Error: ' + err);
         }
     }    
 
-     
+    public async replyMessageForAgent(message:String, profileName:String, whatsappAgentAccount:String){
+        try{
+            
+            this.whatsappAcount = 'whatsapp:+14155238886';
+            this.client.messages.create({
+                to:   whatsappAgentAccount,
+                body: profileName +' dice: ' + message,
+                from: this.whatsappAcount
+                }); 
+                console.log('Correctly MessageForAgent sent to ' + whatsappAgentAccount);  
+        }
+        catch(err){
+            console.log('Error: ' + err);
+        }
+    }
     
+    public async replyMessageForClient(message:String, profileName:String, whatsappClientAccount:String){
+        try{
+            
+            this.whatsappAcount = 'whatsapp:+14155238886';
+            this.client.messages.create({
+                to:   whatsappClientAccount,
+                body: message,
+                from: this.whatsappAcount
+                }); 
+                
+                console.log('Correctly MessageForClient sent to ' + whatsappClientAccount);  
+        }
+        catch(err){
+            console.log('Error: ' + err);
+        }
+    }
+
+
 }
