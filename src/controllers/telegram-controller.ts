@@ -17,7 +17,7 @@ export class TelegramController{
 
     public sendMessages(ctx) {
         ctx.telegram.sendMessage( ctx.from.id, `Hola, buen día ${ctx.from.first_name} en breve lo atiende un promotor`);
-        
+        console.log(ctx.from)
         getRepository(OpeChats)
         .createQueryBuilder()
         .insert()

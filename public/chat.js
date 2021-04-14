@@ -1,4 +1,4 @@
-//const socket = io(); //mantiene la conexion al servidor
+/* const socket = io(); //mantiene la conexion al servidor
 
 
 //si se enviar desde el cliente al servidor se usan los sockets
@@ -30,6 +30,6 @@ socket.on('chat:message', (data) => {
     </p>`;
 });
 
-socket.on('chat:typing', (data) => {
+/* socket.on('chat:typing', (data) => {
     actions.innerHTML = `<p><en>${data} is typing a message</en><p>`
-});
+}); */

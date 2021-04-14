@@ -1,44 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prueba Sockets</title>
+    <title>Hello world</title>
 </head>
-
-<body>
-    <script src="chat.js"></script>
-</body>
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="main.css">
-    <title>Ejemplo Socket</title>
-</head>
-
-<body>
-
-    <div id="chat-container">
-        <div id="chat-window">
-            <div id="output"></div>
-            <div id="actions"></div>
-        </div>
-        <input type="text" id="username" placeholder="username">
-        <input type="text" id="message" placeholder="message">
-        <button id="send">Send</button>
-    </div>
-
-
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="chat.js"></script>
-</body>
-
-</html>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    var socket = io();
+    socket.on('news', function(data) {
+        console.log(data);
+        socket.emit('clientEvent', {
+            nombre: 'Julio'
+        });
+    });
+</script>
 
 </html>
