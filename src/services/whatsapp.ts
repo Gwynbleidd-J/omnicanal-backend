@@ -26,7 +26,7 @@ export class Whatsapp {
 
             await this.client.messages.create({
                 to:   whatsappClientAccount,
-                body: 'Hola. Gracias por escribir al Whatsapp de PromoEspacio. En un momento le enlazamos con un agente.',
+                body: 'Hola. Gracias por escribir al Whatsapp de PromoEspacio. En un momento le enlazamos.',
                 from: this.whatsappAcount
                 });      
                 console.log('Correctly WelcomeMessage sent to ' + whatsappClientAccount);  

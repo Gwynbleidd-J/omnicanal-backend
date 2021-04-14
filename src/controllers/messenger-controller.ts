@@ -6,6 +6,7 @@ import { getRepository, SimpleConsoleLogger, UpdateResult } from "typeorm";
 import { Resolver } from "../services/resolver";
 import { Telegraf } from 'telegraf';
 import {TelegramController} from '../controllers/telegram-controller';
+import { userInfo } from 'os';
 
  
 export class MessengerController {
@@ -29,7 +30,7 @@ export class MessengerController {
     Fecha: Abril 09 de 2021
     */
    /* #endregion */ 
-    public async incommingMessage(req:Request, res:Response): Promise<void> {
+    public async incommingMessage(req:Request, res:Response): Promise<void> {        
         try{  
             // console.log('Cuerpo del mensaje recibido');  
             MessengerController.prototype.standardizeMessageContext(req.body,'w');            
@@ -128,6 +129,9 @@ export class MessengerController {
                     messageContext['userId'] = jsonDisponibleAgent.userId;  
                     messageContext['agentPlatformIdentifier'] = jsonDisponibleAgent.agentPlatformIdentifier; 
                     this.replyMessageForAgent(messageContext);
+
+                    //De momento se usará este método para cubrir la funcionalidad del Trigger desde BD
+                    this.provisionalTriggerForActiveChats(messageContext['userId']);
                 }
                 else
                     console.log('No se pudo asignar a ningún agente por el momento');
@@ -144,6 +148,9 @@ export class MessengerController {
                     messageContext['userId'] = jsonDisponibleAgent.userId;  
                     messageContext['agentPlatformIdentifier'] = jsonDisponibleAgent.agentPlatformIdentifier; 
                     this.replyMessageForAgent(messageContext);  
+
+                    //De momento se usará este método para cubrir la funcionalidad del Trigger desde BD
+                    this.provisionalTriggerForActiveChats(messageContext['userId']);
                 }
                 else
                     console.log('No se pudo asignar a ningún agente por el momento'); 
@@ -191,7 +198,9 @@ export class MessengerController {
             if(messageContext['platformIdentifier'] == 'w')
                 new Whatsapp().sendWelcomeMessage(messageContext['clientPlatformIdentifier']); 
             else if(messageContext['platformIdentifier'] == 't')
-                console.log('Enviar mensaje de bienvenida desde Telegram.');
+            {
+                this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'],'Hola. Gracias por escribir al Whatsapp de PromoEspacio. En un momento le enlazamos con un agente.');                                 
+            }
         }
         catch(ex){
             console.log('Error[sendWelcomeMessage]:' + ex);
@@ -204,6 +213,7 @@ export class MessengerController {
                 new Whatsapp().replyMessageWaitingForAgent(messageContext['clientPlatformIdentifier']); 
             else if(messageContext['platformIdentifier'] == 't')
                 console.log('Enviar mensaje de espera desde Telegram.');
+                this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'], 'Seguimos conectando con un agente disponible, agradecemos tu paciencia.');                 
         }
         catch(ex){
             console.log('Error[replyMessageWaitingForAgent]:' + ex); 
@@ -217,7 +227,8 @@ export class MessengerController {
                 }
                 else if(messageContext['platformIdentifier'] === 't'){ 
                     console.log('Redirigir el mensaje de Telegram al agente');
-                }
+                    this.telegraf.telegram.sendMessage(messageContext['agentPlatformIdentifier'], messageContext['clientName'] + ' dice: ' + messageContext['comments']);                    
+                } 
         }
         catch(ex){
             console.log('Error[replyMessageForAgent]:' + ex);
@@ -379,7 +390,7 @@ export class MessengerController {
     public async assignChatAgent(agentId:any, messageContext:JSON):Promise<boolean>{
         let updateResult:boolean;
 
-        try{  
+        try{ 
             const updatedChat = await getRepository(OpeChats)
                 .createQueryBuilder()
                 .update(OpeChats)
@@ -413,9 +424,9 @@ export class MessengerController {
 
             if(user)
             {
-                payload = {
+                payload = { 
                     userId: user.ID,  
-                    activeChats: user.activeChats
+                    activeChats: user.activeChats 
                 };  
                 if(platformIdentifier === 'w')
                     payload['agentPlatformIdentifier'] = user.agentIdentifierWhatsapp;
@@ -438,5 +449,52 @@ export class MessengerController {
         {
             console.log('Error[getAgentPlatformIdentifierForMessageContext]: ' + ex);
         }
+    }
+
+    public async provisionalTriggerForActiveChats(agentId:number):Promise<void>{
+        let updateResult:boolean;
+        let newActiveChats:number;
+        //.set({ activeChats: () => "activeChats + 1" })
+        //.set({ activeChats: 3})
+        try{ 
+            console.log('Iniciando consulta de chats activos');
+            const actualActiveChats = await getRepository(CatUsers)
+                .createQueryBuilder("user")
+                .where(" user.ID = :id", {id: agentId})                   
+                .getOne();
+            let actualActiveChatsCuantity;
+            
+            
+            if(actualActiveChats)
+            {
+                actualActiveChatsCuantity = {
+                    actualActiveChats: actualActiveChats.activeChats
+                }
+                console.log(actualActiveChatsCuantity); 
+                console.log(actualActiveChatsCuantity['actualActiveChats']); 
+                actualActiveChatsCuantity['actualActiveChats'] = actualActiveChatsCuantity['actualActiveChats'] +1;
+            }
+
+            console.log('Iniciando update de chats activos del usuario: ' + agentId);
+            const updatedActiveChats = await getRepository(CatUsers)
+                .createQueryBuilder()
+                .update(CatUsers) 
+                .set({ activeChats: actualActiveChatsCuantity['actualActiveChats']})
+                .where("ID = :id", { id: agentId})
+                .execute();  
+            // console.log(updatedChat); 
+
+            if(updatedActiveChats.affected === 1) {
+             
+                console.log('activeChats del usuario actualizado'); //updateResult = true;  
+            }
+            else 
+                console.log('No se pudo actualizar activeChats del usuario'); //updateResult =false; 
+
+        }
+        catch(ex){
+            console.log('Error[provisionalTriggerForActiveChats]' + ex);
+            updateResult = false;
+        }   
     }
 }
