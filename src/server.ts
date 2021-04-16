@@ -10,7 +10,6 @@ import  http from 'http';
 import path from "path";
 import net from "net";
 import socket from 'socket.io';
-import { couldStartTrivia } from "typescript";
 
 class Server {
     public app:express.Application;
@@ -23,7 +22,7 @@ class Server {
         this.initServices();
         this.sockets();
         this.netServer();
-        this.netClient();
+       // this.netClient();
     }
     
     public config(): void {
@@ -58,23 +57,70 @@ class Server {
             console.log(`Server listening on port: ${this.app.get('port')}`);  
             this.initDatabase();
             this.sockets();
-            //this.netConnection();
         });
     }
-
     public netServer():void{
+        const host = "127.0.0.1"
+        const port = 8124;
+        let sockets = [];
         var netServer = net.createServer((socket)=>{
             console.log('client Connected')
+            //socket.write('Message send from the server\r\n');
+            socket.pipe(socket);
+
+            socket.on('data', (data)=>{
+                socket.listeners
+            });
+
+            socket.on('data', (data)=>{
+                console.log(`client says: ${data}`);
+                new Telegram().sendMessages('Agente dice: ' + data.toString(), '1743337519');
+                sockets.forEach((socket, index, array)=>{
+                    socket.write(data);
+                })
+            })
+            
+            socket.on('end', ()=>{
+                console.log('client disconnected');
+            });
+            socket.on('error', (error)=>{
+                console.log(error);
+            });
+        });
+        netServer.listen(8124,()=>{
+            console.log('Waiting for a connection');
+        })
+
+        let serviceSocket = net.connect(port, host, ()=>{
+            console.log('Connected to remote');
+        });
+
+        serviceSocket.on('data', (data)=>{
+            if(sockets.length ===0)
+            {
+                return;
+            }
+
+        });
+
+    }
+
+     /*        
+     setTimeout(() => {
+         socket.write('Message send from the server\r\n');
+         socket.pipe(socket)
+        }, 2000);
+        setTimeout(() => {
             socket.on('end', ()=>{
                 console.log('client disconnected')
             });
-            socket.write('hello\r\n');
-            socket.pipe(socket);
-        });
-        netServer.listen(8124);
-    }
+        }, 4000);
+     */
 
-    public netClient():void{
+
+
+
+/*     public netClient():void{
         var client = new net.Socket();
         client.connect(8124, 'localhost', ()=>{
             console.log('connected')
@@ -89,24 +135,27 @@ class Server {
             console.log('Connection closed');
         });
         
-    }
+    } */
 
     public sockets():void{
-        const io = require("socket.io")(this.server);
-        let users = [];
-        io.on('connection',(socket)=>{
-            socket.emit('news', { nombre: 'Carlos'} )
-            socket.on('clientEvent', (data)=>{
-                console.log(data);
-            });
-        });
+
     }
 }
 const server = new Server();
 server.start();
         
-
-
+/*
+public sockets():void{
+const io = require("socket.io")(this.server);
+let users = [];
+io.on('connection',(socket)=>{
+    socket.emit('news', { nombre: 'Carlos'} )
+        socket.on('clientEvent', (data)=>{
+            console.log(data);
+        });
+    });
+    } 
+*/
 
 /* 
         EVENTOS DEL SERVER

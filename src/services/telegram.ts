@@ -1,8 +1,9 @@
 require('dotenv').config();
+// import { Server } from 'http';
 import { Telegraf } from 'telegraf';
-import { TelegramController } from '../controllers/telegram-controller';
+import { TelegramController } from '../controllers/telegram-controller';  
 
- 
+
 export class Telegram{
     private telegraf:Telegraf;
     private telegramController:TelegramController
@@ -21,7 +22,7 @@ export class Telegram{
         
         this.telegraf.on('text', ctx =>{
             this.telegramController.sendMessages(ctx);
-            console.log(ctx)
+            console.log(ctx)  
         }); 
 
 
@@ -38,6 +39,14 @@ export class Telegram{
             console.log(ctx);
         });
     }
-
     */
+
+    public sendMessages(mensaje:string, destiny:string){
+        this.telegraf.telegram.sendMessage(destiny,mensaje);
+    }
+
+    public responseMessage(message:string, destiny:string){
+        this.telegraf.telegram.sendMessage(destiny,message)
+    }
+
 }
