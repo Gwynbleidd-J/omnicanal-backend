@@ -84,6 +84,6 @@ export class Whatsapp {
             console.log('Error: ' + err);
         }
     }
-
+ 
 
 }

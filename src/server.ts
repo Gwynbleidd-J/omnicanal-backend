@@ -1,5 +1,5 @@
 require('dotenv').config();
-
+import { Socket } from './services/socket';
 import express from "express";
 import { createConnection } from "typeorm";
 import { UserRouting } from './routes/user-routing';
@@ -50,6 +50,7 @@ class Server {
     //Init para el servicio de Telegram 
     public InitServices() {
         new Telegram();
+        new Socket();
     }
 }
 

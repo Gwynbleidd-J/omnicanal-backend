@@ -20,5 +20,5 @@ export class UserController {
             new Resolver().exception(res, 'Unexpected error.', ex);
         }
     }
-
+  
 }
