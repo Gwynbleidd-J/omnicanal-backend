@@ -29,6 +29,9 @@ export class CatUsers {
     @Column({ default: 0 })
     activeChats:number;
 
+    @Column({type:'varchar', length:15, nullable: true})
+    activeIp:String;
+
     @Column({ nullable: true })
     rolID:number;
 

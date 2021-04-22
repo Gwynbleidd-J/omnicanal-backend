@@ -1,3 +1,4 @@
+import { Socket } from './../services/socket';
 import { CatUsers } from './../models/user'; 
 import { Whatsapp } from '../services/whatsapp';
 import { NextFunction, Request, Response } from "express";
@@ -6,7 +7,9 @@ import { getRepository, SimpleConsoleLogger, UpdateResult } from "typeorm";
 import { Resolver } from "../services/resolver";
 import { Telegraf } from 'telegraf';
 import {TelegramController} from '../controllers/telegram-controller';
-import { userInfo } from 'os';
+import { userInfo } from 'os'; 
+import { Server } from 'http';
+
 
  
 export class MessengerController {
@@ -30,10 +33,9 @@ export class MessengerController {
     Fecha: Abril 09 de 2021
     */
    /* #endregion */ 
-    public async incommingMessage(req:Request, res:Response): Promise<void> {        
-        try{  
-            // console.log('Cuerpo del mensaje recibido');  
-            MessengerController.prototype.standardizeMessageContext(req.body,'w');            
+    public async whatsappIncommingMessage(req:Request, res:Response): Promise<void> {        
+        try{   
+            MessengerController.prototype.standardizeIncommingMessage(req.body,'w');            
         }
         catch(ex){
             new Resolver().exception(res, 'Unexpected error.', ex);
@@ -44,68 +46,7 @@ export class MessengerController {
     /*MÉTODO:       messageIn(Método original para enviar el msg de bienvenida, de espera y el de comunicación activa)
       Descripción:  Capta el mensaje enviado por el cliente
                     En este punto, validar si ya existe un chat activo de este cliente o sería un mensaje de bienvenida
-
-    */
-    // public async messageIn(req:Request, res:Response): Promise<void> {
-    //     try {
-    //         var incomingMessage = req.body.Body;
-    //         if(incomingMessage != undefined)
-    //         {
-    //             // console.log(req.body);
-    //             console.log(req.body.From + ' dice: ' + incomingMessage); 
-    //             const chat = await getRepository(OpeChats)
-    //             .createQueryBuilder("chat")
-    //             .where("chat.platformIdentifier = :platformIdentifier", {platformIdentifier: 'w'})
-    //             // .andWhere("chat.clientPlatformIdentifier = :clientPlatformIdentifier", {clientPlatformIdentifier: req.body.From})
-    //             // .andWhere("chat.statusId = chat.statusId", {statusId: 1})
-    //             .getOne();
-  
-                
-    //             if(chat) 
-    //                 {
-    //                     console.log(chat);                    
-    //                     console.log('Chat con estatus: ' + chat.statusId);
-    //                     console.log('Chat asignado a: ' + chat.userId); 
-
-    //                     if(chat.statusId == 1)  //El cliente ya mandó un mensaje previo, pedirle que espere
-    //                         new Whatsapp().replyMessageWaitingForAgent(req.body.Body, req.body.ProfileName , req.body.From); 
-    //                     else if(chat.statusId == 2)//Ya tiene chat en comunicación, despachar el msj al agente
-    //                         console.log('Algo más en que pueda apoyarte?');
-    //                 }
-    //             else
-    //             {
-    //                 console.log('No existe un chat activo aún');
-    //                 console.log('Registrando chat...');
-                    
-    //                 getRepository(OpeChats)
-    //                 .createQueryBuilder()
-    //                 .insert()
-    //                 .into(OpeChats) 
-    //                 .values([
-    //                     {clientPlatformIdentifier: req.body.From, clientPhoneNumber: req.body.WaId, comments: req.body.Body, platformIdentifier: 'w', statusId: 1 } 
-    //                 ])
-    //                 .execute();
-
-    //                 new Whatsapp().sendWelcomeMessage(req.body.ProfileName , req.body.From); 
-    //             } 
-                    
-    //         }
-    //     }
-    //     catch(ex) {
-    //         new Resolver().exception(res, 'Unexpected error.', ex);
-    //         console.log(ex);
-    //     }
-    // }
-  
-
-    // public messageIn(messageContext:JSON) {
-    //     try {
-    //          console.log(messageContext);
-    //     }
-    //     catch(ex) { 
-    //         console.log(ex);
-    //     }
-    // }
+    */ 
     public async messageIn(messageContext:JSON){
         try{ 
             //Pasos para el mensaje entrante:
@@ -119,11 +60,11 @@ export class MessengerController {
                 const insertedChatId = await this.registryInitialChat(messageContext); 
                 const jsonInsertedChat = await insertedChatId; 
                 messageContext['id'] = insertedChatId; 
-                this.sendWelcomeMessage(messageContext);
-                const disponibleAgent = await this.getDisponibleAgent(messageContext['platformIdentifier']);
-                const jsonDisponibleAgent = await disponibleAgent;
-                console.log('Agente disponible: ' + jsonDisponibleAgent.userId + ' con identificador: ' + jsonDisponibleAgent.agentPlatformIdentifier);                 
-                const assignedChat = await this.assignChatAgent(jsonDisponibleAgent.userId, messageContext);
+                this.sendWelcomeMessage(messageContext); 
+                const disponibleAgent = await this.getDisponibleAgent(messageContext['platformIdentifier']); 
+                const jsonDisponibleAgent = await disponibleAgent; 
+                console.log('Agente disponible: ' + jsonDisponibleAgent.userId + ' con ip[' + jsonDisponibleAgent.agentPlatformIdentifier +']');                 
+                const assignedChat = await this.assignChatAgent(jsonDisponibleAgent.userId, messageContext); 
                 
                 if(assignedChat){    //Enviar el mensaje al agente asignado
                     messageContext['userId'] = jsonDisponibleAgent.userId;  
@@ -141,7 +82,7 @@ export class MessengerController {
                 messageContext['id'] = jsonExistingChat.id;
                 const disponibleAgent = await this.getDisponibleAgent(messageContext['platformIdentifier']);
                 const jsonDisponibleAgent = await disponibleAgent;
-                console.log('Agente disponible: ' + jsonDisponibleAgent.userId + ' con número: ' + jsonDisponibleAgent.agentIdentifierWhatsapp);                 
+                console.log('Agente disponible: ' + jsonDisponibleAgent.userId + ' con identificador: ' + jsonDisponibleAgent.agentPlatformIdentifier);                 
                 const assignedChat = await this.assignChatAgent(jsonDisponibleAgent.userId, messageContext);
 
                 if(assignedChat){    //Enviar el mensaje al agente asignado 
@@ -195,12 +136,10 @@ export class MessengerController {
 
     public sendWelcomeMessage(messageContext:JSON):void{
         try{ 
-            if(messageContext['platformIdentifier'] == 'w')
+            if(messageContext['platformIdentifier'] == 'w') 
                 new Whatsapp().sendWelcomeMessage(messageContext['clientPlatformIdentifier']); 
-            else if(messageContext['platformIdentifier'] == 't')
-            {
-                this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'],'Hola. Gracias por escribir al Whatsapp de PromoEspacio. En un momento le enlazamos con un agente.');                                 
-            }
+            else if(messageContext['platformIdentifier'] == 't') 
+                this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'],'Hola. Gracias por escribir al Whatsapp de PromoEspacio. En un momento le enlazamos con un agente.');                                             
         }
         catch(ex){
             console.log('Error[sendWelcomeMessage]:' + ex);
@@ -222,16 +161,35 @@ export class MessengerController {
 
     public replyMessageForAgent(messageContext:JSON):void{
         try{     
-                if(messageContext['platformIdentifier'] === 'w'){ 
-                    new Whatsapp().replyMessageForAgent(messageContext['comments'], messageContext['clientName'], messageContext['agentPlatformIdentifier']);
+            //Proceso original: Según el platformIdentifier se mandaba un mensaje el contacto del agente[esto por efectos de pruebas]
+                // // if(messageContext['platformIdentifier'] === 'w'){ 
+                // //     new Whatsapp().replyMessageForAgent(messageContext['comments'], messageContext['clientName'], messageContext['agentPlatformIdentifier']);
+                // // }
+                // // else if(messageContext['platformIdentifier'] === 't'){ 
+                // //     console.log('Redirigir el mensaje de Telegram al agente');
+                // //     this.telegraf.telegram.sendMessage(messageContext['agentPlatformIdentifier'], messageContext['clientName'] + ' dice: ' + messageContext['comments']);                    
+                // // } 
+            //Proceso actualizado: Independientemente del platformIdentifier, se envía el msg al "agentPlatformIdentifier" [ahora este almacena el activeIp]
+            
+            //1: Acceder al arreglo global
+            // let arraySockets = window._INITIAL_DATA_.serverData;
+            
+            // console.log(global.globalArraySockets); 
+            global.globalArraySockets.forEach(element => {
+                console.log('Comprobando ' + element.remoteAddress +' vs '+  messageContext['agentPlatformIdentifier']);
+                if(element.remoteAddress == '::ffff:'+messageContext['agentPlatformIdentifier']){
+                    console.log('Direccionando mensage al socket ' + element.remoteAddress);
+                    new Socket().replyMessageForAgent(messageContext, element);           
                 }
-                else if(messageContext['platformIdentifier'] === 't'){ 
-                    console.log('Redirigir el mensaje de Telegram al agente');
-                    this.telegraf.telegram.sendMessage(messageContext['agentPlatformIdentifier'], messageContext['clientName'] + ' dice: ' + messageContext['comments']);                    
-                } 
+            });
+            
+                
+            // let messengerSOcket: Socket;            
+
+            console.log('Mensaje enviado, estoy de vuelta en replyMessageForAgent');
         }
         catch(ex){
-            console.log('Error[replyMessageForAgent]:' + ex);
+            console.log('Error[messenger-controller][replyMessageForAgent]:' + ex);
         }
     }
 
@@ -300,7 +258,7 @@ export class MessengerController {
     */
    /* #endregion */ 
    //public standardizeMessageContext(Ctx:any, platformIdentifier:String){ 
-    public standardizeMessageContext(ctx, platformIdentifier:String): void{
+    public standardizeIncommingMessage(ctx, platformIdentifier:String): void{
         try{ 
             let messageContext;
             
@@ -337,7 +295,9 @@ export class MessengerController {
  
             if(messageContext['clientPlatformIdentifier'] != 'whatsapp:+14155238886')
             {
-                console.log('Mensaje estandarizado correctamente, enviando al despachador...');            
+                console.log('Mensaje estandarizado correctamente, enviando al despachador...');     
+                console.log('Mensage de whats en formato JSON: ');
+                console.log(messageContext);       
                 this.messageIn(messageContext);
             }
             
@@ -346,7 +306,7 @@ export class MessengerController {
             console.log('Error[standardizeMessageContext]: ' + ex);
         }
     }
-
+ 
     public async getDisponibleAgent(platformIdentifier:String):Promise<any>{
         try{ 
             const user = await getRepository(CatUsers)
@@ -362,12 +322,17 @@ export class MessengerController {
             {
                 payload = {
                     userId: user.ID,  
-                    activeChats: user.activeChats
+                    activeChats: user.activeChats                
                 };  
-                if(platformIdentifier === 'w')
-                    payload['agentPlatformIdentifier'] = user.agentIdentifierWhatsapp;
-                else
-                    payload['agentPlatformIdentifier'] = user.agentIdentifierTelegram;
+                ////Proceso original: Según el platformIdentifier se devolvía el 'contacto' del agente dispponible.
+                // if(platformIdentifier === 'w')
+                //     payload['agentPlatformIdentifier'] = user.agentIdentifierWhatsapp;
+                // else
+                //     payload['agentPlatformIdentifier'] = user.agentIdentifierTelegram;
+
+                ////Proceso actualizado: Se devolverá el activeIp del agente para emplearlo en los sockets
+                payload['agentPlatformIdentifier'] = user.activeIp;
+
                 console.log(payload);
                 return payload;
             }
@@ -386,7 +351,7 @@ export class MessengerController {
             console.log('Error[getDisponibleAgent]: ' + ex);
         }
     }
-
+ 
     public async assignChatAgent(agentId:any, messageContext:JSON):Promise<boolean>{
         let updateResult:boolean;
 
@@ -428,10 +393,14 @@ export class MessengerController {
                     userId: user.ID,  
                     activeChats: user.activeChats 
                 };  
-                if(platformIdentifier === 'w')
-                    payload['agentPlatformIdentifier'] = user.agentIdentifierWhatsapp;
-                else
-                    payload['agentPlatformIdentifier'] = user.agentIdentifierTelegram;
+                // if(platformIdentifier === 'w')
+                //     payload['agentPlatformIdentifier'] = user.agentIdentifierWhatsapp;
+                // else
+                //     payload['agentPlatformIdentifier'] = user.agentIdentifierTelegram;
+
+                ////Proceso actualizado: Se devolverá el activeIp del agente para emplearlo en los sockets
+                payload['agentPlatformIdentifier'] = user.activeIp;
+
                 console.log(payload);
                 return payload;
             }
@@ -486,15 +455,71 @@ export class MessengerController {
 
             if(updatedActiveChats.affected === 1) {
              
-                console.log('activeChats del usuario actualizado'); //updateResult = true;  
+                console.log('activeChats del agente actualizado'); //updateResult = true;  
             }
             else 
-                console.log('No se pudo actualizar activeChats del usuario'); //updateResult =false; 
+                console.log('No se pudo actualizar activeChats del agente'); //updateResult =false; 
 
         }
         catch(ex){
             console.log('Error[provisionalTriggerForActiveChats]' + ex);
             updateResult = false;
         }   
+    }
+  
+    /*
+    Método:     replymessageForClient
+    Parámetros: agentIp:La ip del emisor(agente), messageString: cadena en formato JSON que contiene[mensaje, chatId y platFormIdentifier]. 
+    Descripción:Este método se ejecuta cunado llega un mensaje nuevo desde alguno de los agentes. (Se dispara en el servicio de Sockets)
+    Devuelve:   VOID, manda a llamar internamente el proceso para dirigir ese msg al cliente correspondiente.
+
+    Creó: J. Carlos Lara
+    Fecha: Abril 08 de 2021
+    */
+    public async replymessageForClient(agentIp:String, messageString:String):Promise<void>{
+        try{
+            console.log('Recibiendo mensaje de ' + agentIp);
+            console.log('['+messageString+']');
+        }
+        catch(ex){
+            console.log('Error[provisionalTriggerForActiveChats]' + ex);
+        }
+    }
+
+    public standardizeOutcommingMessage(agentIp:String, message:String): void{
+        try{ 
+            
+             
+            console.log('Recibiendo y estandarizando mensaje de ' + agentIp); 
+            console.log('[' + message + ']'); 
+
+            let messageContext = JSON.parse(message.toString());   
+            console.log('Mensage en formato JSON: ');
+            console.log(messageContext);   
+ 
+  
+                console.log('Mensaje estandarizado correctamente, enviando al despachador...');            
+                this.messageOut(messageContext);
+            
+        }
+        catch(ex){ 
+            console.log('Error[standardizeMessageContext]: ' + ex);
+        }
+    }
+
+    public async messageOut(messageContext:JSON){
+        try{
+            if(messageContext['platformIdentifier'] == 't')
+            {
+                this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'], messageContext['comments']);                    
+            }
+            else if(messageContext['platformIdentifier'] == 'w')
+            {
+                new Whatsapp().replyMessageForClient(messageContext['comments'], messageContext['clientPlatformIdentifier']); 
+            }
+        }
+        catch(ex){
+            console.log('Error[messageOut]' + ex);
+        }
     }
 }

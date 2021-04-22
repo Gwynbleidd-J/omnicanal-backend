@@ -14,6 +14,6 @@ export class MessengerRouting{
 
     private routes(): void {
         console.log();
-        this.router.post('/', this.messengerControler.incommingMessage);
+        this.router.post('/', this.messengerControler.whatsappIncommingMessage);
     }
 }

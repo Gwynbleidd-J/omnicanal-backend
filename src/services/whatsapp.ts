@@ -36,7 +36,7 @@ export class Whatsapp {
         }
     }    
 
-    public async replyMessageWaitingForAgent(whatsappClientAccount:String, ){
+    public async replyMessageWaitingForAgent(whatsappClientAccount:String){
         try{
             
             this.whatsappAcount = 'whatsapp:+14155238886';
@@ -68,7 +68,7 @@ export class Whatsapp {
         }
     }
     
-    public async replyMessageForClient(message:String, profileName:String, whatsappClientAccount:String){
+    public async replyMessageForClient(message:String, whatsappClientAccount:String){
         try{
             
             this.whatsappAcount = 'whatsapp:+14155238886';
@@ -81,7 +81,7 @@ export class Whatsapp {
                 console.log('Correctly MessageForClient sent to ' + whatsappClientAccount);  
         }
         catch(err){
-            console.log('Error: ' + err);
+            console.log('Error[Whatsapp][replyMessageForClient]: ' + err);
         }
     }
  

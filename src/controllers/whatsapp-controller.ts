@@ -34,7 +34,7 @@ export class WhatsappController {
                         console.log('Chat asignado a: ' + chat.userId); 
 
                         if(chat.statusId == 1)  //El cliente ya mandó un mensaje previo, pedirle que espere
-                            new Whatsapp().replyMessageWaitingForAgent(req.body.Body, req.body.ProfileName , req.body.From); 
+                            new Whatsapp().replyMessageWaitingForAgent(req.body.Body); 
                         else if(chat.statusId == 2)//Ya tiene chat en comunicación, despachar el msj al agente
                             console.log('Algo más en que pueda apoyarte?');
                     }
@@ -52,7 +52,7 @@ export class WhatsappController {
                     ])
                     .execute();
 
-                    new Whatsapp().sendWelcomeMessage(req.body.ProfileName , req.body.From); 
+                    new Whatsapp().sendWelcomeMessage(req.body.From); 
                 } 
                     
             }

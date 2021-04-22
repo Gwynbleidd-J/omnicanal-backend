@@ -1,20 +1,25 @@
+import { MessengerController } from './../controllers/messenger-controller';
 import * as net from 'net';
+import * as globalArraySockets from './global';
 
 export class Socket {
     private mensajeBienvenida:String;
-    private netServer:net.Server;
+    public netServer:net.Server;
     public arraySockets:any;
 
     constructor(){
-        this.initSocketServer();
+        // this.initSocketServer();
         console.log('constructor iniciado');
-        this.arraySockets = [];
+        this.arraySockets = [];    
+        global.globalArraySockets = this.arraySockets;
     }
 
-    public initSocketServer(): void {
-        console.log('initSocketServer iniciado...');
+    public initSocketServer(): void { 
         this.netServer = net.createServer(socket => {
             this.arraySockets.push(socket);
+            global.globalArraySockets.push(socket);
+
+            //Intentando escribir en la variable global;        
             console.log(socket.remoteAddress + ' is now connected');
             
             this.netServer.getConnections((error, count) => {
@@ -25,22 +30,40 @@ export class Socket {
 
             socket.on("data", data =>  {          
                 console.log(socket.remoteAddress + ' dice: ' + data.toString()); // prints the data  
-                socket.write('\n Alguien dice: ' + data.toString());  
-                
-                ////    Prueba para replicar el mensaje entrante a cada agente 
-                this.arraySockets.forEach(element => {
-                    // console.log(element);
-                    element.write('\n Disculpa ' + element.remoteAddress + ', '+ socket.remoteAddress +' dice: ' + data.toString()); 
-                });
-                 
-            //  new Telegram().sendMessages('Agente dice: ' + data.toString(), '1743337519');         
+                socket.write('\n Alguien dice: ' + data.toString());                  
+                this.replyMessageForClient(socket.remoteAddress, data.toString());
+                // ////    Prueba para replicar el mensaje entrante a cada agente 
+                // this.arraySockets.forEach(element => { 
+                //     element.write('\n Disculpa ' + element.remoteAddress + ', '+ socket.remoteAddress +' dice: ' + data.toString()); 
+                // });
+
             });
 
             socket.on('end', ()=>{ 
                 console.log('DISCONNECTED: '); 
             }); 
-        });
+        }); 
 
-        this.netServer.listen(8000);
+        this.netServer.listen(8000); 
+    }
+
+    public replyMessageForAgent(messageContext:JSON, agentSocket:net.Socket): void{
+        try{
+            console.log('Esperando a enviar a ' +  messageContext['agentPlatformIdentifier']); 
+            agentSocket.write('\n  ' +messageContext['clientName']+' ['+ messageContext['clientPlatformIdentifier'] +'] dice: ' + messageContext['comments']);   
+        }
+        catch(ex){
+            console.log('Error[socket][replyMessageForAgent]: ' + ex);
+        }
+    }
+
+    public replyMessageForClient(agentSocket:String,messageString:String){
+        try{  
+            console.log('Iniciando envío de mensaje desde el agente ' + agentSocket +' a cliente.');
+            new MessengerController().standardizeOutcommingMessage(agentSocket,messageString);
+        }
+        catch(ex){
+            console.log('Error[socket][replyMessageForClient]: ' + ex);
+        }
     }
 }

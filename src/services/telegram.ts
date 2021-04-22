@@ -23,7 +23,7 @@ export class Telegram{
         
         this.telegraf.on('text', ctx =>{
             // this.telegramController.sendMessages(ctx);
-            this.telegramController.standardizeMessageContext(ctx, 't');
+            this.telegramController.standardizeIncommingMessage(ctx, 't');
             // console.log(ctx.message.text);
             
             //Implementación temporal del direccionamiento de un mensaje de Telegram hacia los sockets

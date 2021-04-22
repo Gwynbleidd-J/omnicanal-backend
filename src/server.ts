@@ -5,11 +5,11 @@ import { createConnection } from "typeorm";
 import { UserRouting } from './routes/user-routing';
 import { AuthRouting } from './routes/auth-routing';
 import { Resolver } from "./services/resolver"; 
-import { MessengerRouting } from './routes/messenger-routing';
-import {Telegram} from './services/telegram';
+import { MessengerRouting } from './routes/messenger-routing'; 
 
 class Server {
     public app:express.Application;
+    public mySocket:Socket;
 
     constructor() {
         this.app = express();
@@ -49,8 +49,10 @@ class Server {
 
     //Init para el servicio de Telegram 
     public InitServices() {
-        new Telegram();
-        new Socket();
+        // new Telegram();
+        //new Socket();
+        this.mySocket = new Socket();        
+        this.mySocket.initSocketServer();
     }
 }
 
