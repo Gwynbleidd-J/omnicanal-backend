@@ -24,23 +24,23 @@ export class Telegram{
         this.telegraf.on('text', ctx =>{
             // this.telegramController.sendMessages(ctx);
             this.telegramController.standardizeIncommingMessage(ctx, 't');
-            // console.log(ctx.message.text);
+            // console.log(ctx);
             
-            //Implementación temporal del direccionamiento de un mensaje de Telegram hacia los sockets
-            var client = new net.Socket();
-            client.connect(8000, 'localhost', ()=>{
-                console.log('[ImpresionDeCliente] Cliente local conectado');
-                client.write('Recibido por Telegram:' + ctx.message.text);
-            });
+            // //Implementación temporal del direccionamiento de un mensaje de Telegram hacia los sockets
+            // var client = new net.Socket();
+            // client.connect(8000, 'localhost', ()=>{
+            //     console.log('[ImpresionDeCliente] Cliente local conectado');
+            //     client.write('Recibido por Telegram:' + ctx.message.text);
+            // });
 
-            client.on('data', data => {
-                console.log(` [ImpresionDeCliente] Received from server: ${data}`);
-            });
+            // client.on('data', data => {
+            //     console.log(` [ImpresionDeCliente] Received from server: ${data}`);
+            // });
 
-            client.on('close', () => {
-                console.log(' [ImpresionDeCliente] Connection closed');
-            }); 
-            //Implementación temporal
+            // client.on('close', () => {
+            //     console.log(' [ImpresionDeCliente] Connection closed');
+            // }); 
+            // // //Implementación temporal
 
         }); 
     }

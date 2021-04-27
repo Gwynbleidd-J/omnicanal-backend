@@ -1,9 +1,7 @@
 
 import { Request, Response } from "express";
-
 import { getRepository } from "typeorm";
 import { CatUsers } from "../models/user";
-
 import { Resolver } from "../services/resolver";
 import { Utils } from "../services/utils";
 

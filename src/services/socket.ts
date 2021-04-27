@@ -21,27 +21,36 @@ export class Socket {
 
             //Intentando escribir en la variable global;        
             console.log(socket.remoteAddress + ' is now connected');
-            
-            this.netServer.getConnections((error, count) => {
-                console.log('Active clients: ' + count);
-            });
 
-            socket.write('Bienvenido ');
+            socket.write('Bienvenido, este es el ejemplo de las notificaciones que enviaremos: ');
+            socket.write('{"chatId": 158, "platformIdentifier": "w"}');
 
             socket.on("data", data =>  {          
                 console.log(socket.remoteAddress + ' dice: ' + data.toString()); // prints the data  
                 socket.write('\n Alguien dice: ' + data.toString());                  
-                this.replyMessageForClient(socket.remoteAddress, data.toString());
-                // ////    Prueba para replicar el mensaje entrante a cada agente 
-                // this.arraySockets.forEach(element => { 
-                //     element.write('\n Disculpa ' + element.remoteAddress + ', '+ socket.remoteAddress +' dice: ' + data.toString()); 
-                // });
-
+                this.replyMessageForClient(socket.remoteAddress, data.toString());  
+            });
+             
+            this.netServer.getConnections((error, count) => {
+                console.log('Active clients: ' + count);
             });
 
-            socket.on('end', ()=>{ 
-                console.log('DISCONNECTED: '); 
+            this.netServer.on('error',function(error){
+                console.log('Error: ' + error);
             }); 
+
+            socket.on('close',function(error){
+                console.log('Socket closed!');
+                if(error){
+                  console.log('Socket was closed because of transmission error');
+                }
+              });
+
+            socket.on('end', ()=>{ 
+                console.log('SOCKET DISCONNECTED: '); 
+            }); 
+
+
         }); 
 
         this.netServer.listen(8000); 
@@ -50,7 +59,7 @@ export class Socket {
     public replyMessageForAgent(messageContext:JSON, agentSocket:net.Socket): void{
         try{
             console.log('Esperando a enviar a ' +  messageContext['agentPlatformIdentifier']); 
-            agentSocket.write('\n  ' +messageContext['clientName']+' ['+ messageContext['clientPlatformIdentifier'] +'] dice: ' + messageContext['comments']);   
+            agentSocket.write('\n  ' +messageContext['clientName']+' dice: ' + messageContext['comments']);   
         }
         catch(ex){
             console.log('Error[socket][replyMessageForAgent]: ' + ex);

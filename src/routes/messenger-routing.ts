@@ -14,6 +14,9 @@ export class MessengerRouting{
 
     private routes(): void {
         console.log();
-        this.router.post('/', this.messengerControler.whatsappIncommingMessage);
+        this.router.post('/whatsapp', this.messengerControler.whatsappIncommingMessage);
+        //Implementar métodos para poder recuperar el último mensaje o en su caso, el histórico de todos los msjs
+        this.router.get('/', this.messengerControler.getMessages);
+        this.router.post('/', this.messengerControler.outcommingMessage);
     }
 }

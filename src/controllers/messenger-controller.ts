@@ -1,3 +1,4 @@
+import { OpeChatHistoric } from './../models/chatHistorical';
 import { Socket } from './../services/socket';
 import { CatUsers } from './../models/user'; 
 import { Whatsapp } from '../services/whatsapp';
@@ -5,12 +6,7 @@ import { NextFunction, Request, Response } from "express";
 import { OpeChats } from './../models/chat';
 import { getRepository, SimpleConsoleLogger, UpdateResult } from "typeorm";
 import { Resolver } from "../services/resolver";
-import { Telegraf } from 'telegraf';
-import {TelegramController} from '../controllers/telegram-controller';
-import { userInfo } from 'os'; 
-import { Server } from 'http';
-
-
+import { Telegraf } from 'telegraf';  
  
 export class MessengerController {
     
@@ -97,11 +93,11 @@ export class MessengerController {
                     console.log('No se pudo asignar a ningún agente por el momento'); 
             }
             else if(jsonExistingChat.statusId == 2){
-                console.log('Chat, activo, dirigiendo el mensaje a su agente en turno...');  
+                // console.log('Chat activo, dirigiendo el mensaje a su agente en turno...');  
                 messageContext['id'] = jsonExistingChat.id;
                 const agentPlatformIdentifier = await this.getAgentPlatformIdentifierForMessageContext(jsonExistingChat.userId, messageContext['platformIdentifier']);
                 const jsonAgentPlatformIdentifier = await agentPlatformIdentifier;
-                console.log('Identificador obtenido:' + jsonAgentPlatformIdentifier.agentPlatformIdentifier);
+                console.log('Ip delagente:' + jsonAgentPlatformIdentifier.agentPlatformIdentifier);
                 messageContext['agentPlatformIdentifier'] = jsonAgentPlatformIdentifier.agentPlatformIdentifier;
             
                 if(messageContext['agentPlatformIdentifier'])
@@ -115,7 +111,6 @@ export class MessengerController {
             console.log('Error[messageIn]:' + ex);
         }
     }
- 
   
     public async registryInitialChat(messageContext:JSON):Promise<number>{
         try{ 
@@ -175,18 +170,21 @@ export class MessengerController {
             // let arraySockets = window._INITIAL_DATA_.serverData;
             
             // console.log(global.globalArraySockets); 
-            global.globalArraySockets.forEach(element => {
-                console.log('Comprobando ' + element.remoteAddress +' vs '+  messageContext['agentPlatformIdentifier']);
-                if(element.remoteAddress == '::ffff:'+messageContext['agentPlatformIdentifier']){
-                    console.log('Direccionando mensage al socket ' + element.remoteAddress);
-                    new Socket().replyMessageForAgent(messageContext, element);           
-                }
-            });
-            
-                
-            // let messengerSOcket: Socket;            
 
-            console.log('Mensaje enviado, estoy de vuelta en replyMessageForAgent');
+            const insertedChatHistoricId = this.registryIndividualMessage(messageContext);  
+
+            if(insertedChatHistoricId)
+            {
+                global.globalArraySockets.forEach(element => {
+                    console.log('Comprobando ' + element.remoteAddress +' vs '+  messageContext['agentPlatformIdentifier']);
+                    if(element.remoteAddress == '::ffff:'+messageContext['agentPlatformIdentifier']){
+                        console.log('Direccionando mensage al socket ' + element.remoteAddress);
+                        new Socket().replyMessageForAgent(messageContext, element);           
+                    }
+                }); 
+            }
+          
+            //console.log('Mensaje enviado, estoy de vuelta en replyMessageForAgent');
         }
         catch(ex){
             console.log('Error[messenger-controller][replyMessageForAgent]:' + ex);
@@ -260,6 +258,9 @@ export class MessengerController {
    //public standardizeMessageContext(Ctx:any, platformIdentifier:String){ 
     public standardizeIncommingMessage(ctx, platformIdentifier:String): void{
         try{ 
+            // console.log('Probando contexto de mensajes de whatsapp: ');
+            // console.log(ctx);
+
             let messageContext;
             
             if(platformIdentifier == 't')
@@ -274,6 +275,8 @@ export class MessengerController {
                     , "clientName": ctx.from.first_name 
                     , "userId": '' 
                     , "agentPlatformIdentifier": '' 
+                    , "messagePlatformId": ctx.message.message_id
+                    , "transmitter": 'c'
                   }
                   messageContext = Context;
             }
@@ -289,21 +292,23 @@ export class MessengerController {
                     , "clientName": ctx.ProfileName
                     , "userId": ''
                     , "agentPlatformIdentifier": ''
+                    , "messagePlatformId": ctx.SmsMessageSid
+                    , "transmitter": 'c'
                   }
                   messageContext = Context;
             }
  
             if(messageContext['clientPlatformIdentifier'] != 'whatsapp:+14155238886')
             {
-                console.log('Mensaje estandarizado correctamente, enviando al despachador...');     
-                console.log('Mensage de whats en formato JSON: ');
-                console.log(messageContext);       
+                //console.log('Mensaje estandarizado correctamente, enviando al despachador...');     
+                // console.log('Mensage de whats en formato JSON: ');
+                // console.log(messageContext);       
                 this.messageIn(messageContext);
             }
             
         }
         catch(ex){ 
-            console.log('Error[standardizeMessageContext]: ' + ex);
+            console.log('Error[standardizeIncommingMessage]: ' + ex);
         }
     }
  
@@ -311,7 +316,7 @@ export class MessengerController {
         try{ 
             const user = await getRepository(CatUsers)
                 .createQueryBuilder("user")
-                .where(" user.activeChats < :activeChats", {activeChats: 2})  
+                .where(" user.activeChats < :activeChats", {activeChats: 4})  
                 // .andWhere(" user.statusId = :statusId", {statusId: 1}) //Contemplar después añadir el filtro para el estatus del usuario
                 .orderBy(" user.activeChats", "ASC") 
                 .getOne();
@@ -379,7 +384,7 @@ export class MessengerController {
 
     public async getAgentPlatformIdentifierForMessageContext(agentId:any, platformIdentifier:String):Promise<any>{
         try{ 
-            console.log('Buscando registro del User ' + agentId + ' de plataforma ' + platformIdentifier)
+            // console.log('Buscando registro del User ' + agentId + ' de plataforma ' + platformIdentifier);
             const user = await getRepository(CatUsers)
                 .createQueryBuilder("user")
                 .where(" user.ID = :id", {id: agentId})                   
@@ -455,7 +460,7 @@ export class MessengerController {
 
             if(updatedActiveChats.affected === 1) {
              
-                console.log('activeChats del agente actualizado'); //updateResult = true;  
+                console.log('activeChats actualizado correctamente'); //updateResult = true;  
             }
             else 
                 console.log('No se pudo actualizar activeChats del agente'); //updateResult =false; 
@@ -476,10 +481,10 @@ export class MessengerController {
     Creó: J. Carlos Lara
     Fecha: Abril 08 de 2021
     */
-    public async replymessageForClient(agentIp:String, messageString:String):Promise<void>{
+    public async replymessageForClients(agentIp:String, messageString:String):Promise<void>{
         try{
             console.log('Recibiendo mensaje de ' + agentIp);
-            console.log('['+messageString+']');
+            console.log('['+messageString+']'); 
         }
         catch(ex){
             console.log('Error[provisionalTriggerForActiveChats]' + ex);
@@ -490,20 +495,18 @@ export class MessengerController {
         try{ 
             
              
-            console.log('Recibiendo y estandarizando mensaje de ' + agentIp); 
-            console.log('[' + message + ']'); 
+            console.log('Recibiendo y estandarizando mensaje de ' + agentIp);  
 
             let messageContext = JSON.parse(message.toString());   
             console.log('Mensage en formato JSON: ');
             console.log(messageContext);   
- 
-  
-                console.log('Mensaje estandarizado correctamente, enviando al despachador...');            
-                this.messageOut(messageContext);
+            
+            console.log('Mensaje estandarizado correctamente, enviando al despachador...');        
+            this.messageOut(messageContext);
             
         }
         catch(ex){ 
-            console.log('Error[standardizeMessageContext]: ' + ex);
+            console.log('Error[standardizeOutcommingMessage]: ' + ex);
         }
     }
 
@@ -511,15 +514,92 @@ export class MessengerController {
         try{
             if(messageContext['platformIdentifier'] == 't')
             {
-                this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'], messageContext['comments']);                    
-            }
+                this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'], messageContext['comments']);     
+                const insertedChatHistoricId = this.registryIndividualMessage(messageContext);                                 
+            } 
             else if(messageContext['platformIdentifier'] == 'w')
             {
                 new Whatsapp().replyMessageForClient(messageContext['comments'], messageContext['clientPlatformIdentifier']); 
+                const insertedChatHistoricId = this.registryIndividualMessage(messageContext);  
             }
+
         }
         catch(ex){
             console.log('Error[messageOut]' + ex);
         }
     }
+
+    public async registryIndividualMessage(messageContext:JSON):Promise<number>{
+        try{ 
+            // console.log(messageContext);
+            const insertedOpeChatHistoric = await getRepository(OpeChatHistoric)
+                            .createQueryBuilder() 
+                            .insert() 
+                            .into(OpeChatHistoric) 
+                            .values([ 
+                                {messagePlatformId: messageContext['messagePlatformId'], text: messageContext['comments'], chatId: messageContext['id'], transmitter: messageContext['transmitter'], statusId: 1 } 
+                            ])
+                            .execute();  
+            return insertedOpeChatHistoric.identifiers[0]['id'];
+        }
+        catch(ex){
+            console.log('Error[registryIndividualMessage]:' + ex);
+        }
+    }
+
+    //SECCIÓN: Métodos para el re-estructurado de los procesos de mensagería, haciendo las peticiones por HTTP.
+
+    /**Método para obtener todos los mensajes del chat[ya sea para recuperar una ventana cerrada o para uso del coordinador ] */
+    public async getMessages(req:Request, res:Response): Promise<void>{
+        try{
+            console.log('Obteniendo todos los mensages');
+            // console.log(req.body);
+            // console.log(req.body.chatId);
+
+            const unreadMessages = await getRepository(OpeChatHistoric)
+            .createQueryBuilder("unreadMessages")
+            // .where("unreadMessages.chatId = :chatId", {chatId: req.body.chatId}) 
+            .where("unreadMessages.chatId = :chatId", {chatId: 173})            
+            .andWhere("unreadMessages.statusId = :statusId", {statusId: 1})            
+            // .andWhere("unreadMessages.id > :id", {id: req.body.id})
+            .getMany();            
+
+            let payload = {
+                chat: unreadMessages
+            };
+
+            if(unreadMessages)
+                {
+                    // console.log(unreadMessages);
+                    new Resolver().success(res, 'Chats correctlyconsulted', payload);            
+                }
+            else 
+            { 
+                new Resolver().error(res, 'Invalid chat information.');
+            }
+
+        }
+        catch(ex){
+            console.log('Error[getMessages]' + ex);
+            new Resolver().exception(res, 'Unexpected error.', ex);
+        }
+    }
+  
+    public async outcommingMessage(req:Request, res:Response): Promise<void>{
+        try {  
+            console.log(req.body.transmitter);
+
+            getRepository(OpeChatHistoric).save(req.body)
+                .then(result => new Resolver().success(res, 'Register succesfull', result))
+                .catch(error => new Resolver().error(res, 'Register error', error));
+            
+            //Idear como usar el req.body para emular el messageContext
+        }
+        catch(ex) { 
+            console.log('Error[outcommingMessage]' + ex); 
+            new Resolver().exception(res, 'Unexpected error.', ex); 
+        }
+    }
+
+    
 }
