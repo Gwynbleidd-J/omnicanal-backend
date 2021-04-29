@@ -17,7 +17,8 @@ export class Socket {
     public initSocketServer(): void { 
         this.netServer = net.createServer(socket => {
             this.arraySockets.push(socket);
-            global.globalArraySockets.push(socket);
+            global.globalArraySockets.push(socket); 
+
 
             //Intentando escribir en la variable global;        
             console.log(socket.remoteAddress + ' is now connected');
@@ -58,8 +59,10 @@ export class Socket {
 
     public replyMessageForAgent(messageContext:JSON, agentSocket:net.Socket): void{
         try{ 
-            agentSocket.write('{"chatId": "'+messageContext['id']+'", "platformIdentifier": "'+messageContext['platformIdentifier']+'", "clientPlatformIdentifier": "'+messageContext['clientPlatformIdentifier']+'"}' );   
-            console.log('Notificación enviada a ' +  messageContext['agentPlatformIdentifier']); 
+            let notificationString = '{"chatId": "'+messageContext['id']+'", "platformIdentifier": "'+messageContext['platformIdentifier']+'", "clientPlatformIdentifier": "'+messageContext['clientPlatformIdentifier']+'"}'; 
+            console.log('Cuerpo original de la notificación: ' + notificationString); 
+            agentSocket.write(notificationString);   
+            console.log('Notificación enviada a ' +  messageContext['agentPlatformIdentifier']);  
         }
         catch(ex){
             console.log('Error[socket][replyMessageForAgent]: ' + ex);

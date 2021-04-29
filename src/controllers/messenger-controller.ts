@@ -46,7 +46,7 @@ export class MessengerController {
     public async messageIn(messageContext:JSON){
         try{ 
             //Pasos para el mensaje entrante:
-            console.log('Procesando mensaje entrante de: ' + messageContext['clientPlatformIdentifier']);
+            console.log('Procesando mensaje entrante de: ' + messageContext['clientPlatformIdentifier']);                                                        
             const existingChat = await this.chatAlreadyExist(messageContext['clientPlatformIdentifier'], messageContext['platformIdentifier']);
             //Verificar existencia del mismo 
             const jsonExistingChat = await existingChat; 
@@ -97,9 +97,11 @@ export class MessengerController {
                 messageContext['id'] = jsonExistingChat.id;
                 const agentPlatformIdentifier = await this.getAgentPlatformIdentifierForMessageContext(jsonExistingChat.userId, messageContext['platformIdentifier']);
                 const jsonAgentPlatformIdentifier = await agentPlatformIdentifier;
-                console.log('Ip delagente:' + jsonAgentPlatformIdentifier.agentPlatformIdentifier);
+                console.log('Ip del agente:' + jsonAgentPlatformIdentifier.agentPlatformIdentifier);
+                // console.log(messageContext);
                 messageContext['agentPlatformIdentifier'] = jsonAgentPlatformIdentifier.agentPlatformIdentifier;
-            
+                // console.log(messageContext);
+
                 if(messageContext['agentPlatformIdentifier'])
                     this.replyMessageForAgent(messageContext);
                 else
@@ -155,20 +157,32 @@ export class MessengerController {
     }
 
     public replyMessageForAgent(messageContext:JSON):void{
-        try{     
+        try{    
             const insertedChatHistoricId = this.registryIndividualMessage(messageContext);  
+            var sentNotification = 0; 
+            
+            let copiaGlobalArraySockets = global.globalArraySockets;
 
             if(insertedChatHistoricId)
-            {
-                global.globalArraySockets.forEach(element => {
-                    console.log('Comprobando ' + element.remoteAddress +' vs '+  messageContext['agentPlatformIdentifier']);
-                    if(element.remoteAddress == '::ffff:'+messageContext['agentPlatformIdentifier']){
+            {   
+                // console.log('Estado del Array Interno'); console.log(copiaGlobalArraySockets);
+                // console.log('Estado del Array global'); console.log(global.globalArraySockets);
+
+                copiaGlobalArraySockets.forEach(element => {                    
+                    // console.log('Comprobando ' + element.remoteAddress +' vs '+  messageContext['agentPlatformIdentifier']);
+                    //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
+                    if((element.remoteAddress == '::ffff:'+messageContext['agentPlatformIdentifier']) && (sentNotification < 1)){
                         console.log('Direccionando mensage al socket ' + element.remoteAddress);
                         new Socket().replyMessageForAgent(messageContext, element);           
+                        sentNotification++;
                     }
                 }); 
+                global.globalArraySockets = copiaGlobalArraySockets;
+                // console.log('Estado del Array Interno'); console.log(copiaGlobalArraySockets);
+                // console.log('Estado del Array global'); console.log(global.globalArraySockets);
+
             }
-          
+           
             //console.log('Mensaje enviado, estoy de vuelta en replyMessageForAgent');
         }
         catch(ex){
@@ -386,7 +400,7 @@ export class MessengerController {
                 ////Proceso actualizado: Se devolverá el activeIp del agente para emplearlo en los sockets
                 payload['agentPlatformIdentifier'] = user.activeIp;
 
-                console.log(payload);
+                // console.log(payload);
                 return payload;
             }
             else 
@@ -461,7 +475,7 @@ export class MessengerController {
     Creó: J. Carlos Lara
     Fecha: Abril 08 de 2021
     */
-    public replymessageForClient(outMessageContext:any){
+    public async replymessageForClient(outMessageContext:any): Promise<void>{
         try{
             console.log('Recibiendo mensaje de agente para: ' + outMessageContext['clientPlatformIdentifier']);
 
@@ -471,7 +485,7 @@ export class MessengerController {
                 this.telegraf.telegram.sendMessage(outMessageContext['clientPlatformIdentifier'], outMessageContext['text']);    
         }
         catch(ex){
-            console.log('Error[provisionalTriggerForActiveChats]' + ex);
+            console.log('Error[replymessageForClient]' + ex);
         }
     }
 
@@ -569,12 +583,31 @@ export class MessengerController {
   
     public async outcommingMessage(req:Request, res:Response): Promise<void>{
         try {    
-            console.log(req.body); 
+            console.log("entrando a outcommingMessage"); 
+            // console.log(req.body); 
 
-            getRepository(OpeChatHistoric).save(req.body)
-                .then(result => new Resolver().success(res, 'Register succesfull', result))
-                .then(result => this.replymessageForClient(req.body))
+            // if(req.body.platformIdentifier == 'w'){
+            //     getRepository(OpeChatHistoric).save(req.body)
+            //     .then(result => new Resolver().success(res, 'Register succesfull', result))                
+            //     .then(result => new Whatsapp().replyMessageForClient(req.body.text, req.body.clientPlatformIdentifier))    
+            //     .catch(error => new Resolver().error(res, 'Register error', error)); 
+            // }
+            // else if(req.body.platformIdentifier == 't'){
+            //     getRepository(OpeChatHistoric).save(req.body)
+            //     .then(result => new Resolver().success(res, 'Register succesfull', result))                
+            //     .then(result => this.telegraf.telegram.sendMessage(req.body.clientPlatformIdentifier, req.body.text))    
+            //     .catch(error => new Resolver().error(res, 'Register error', error)); 
+            // } 
+
+            
+                getRepository(OpeChatHistoric).save(req.body)
+                .then(result => new Resolver().success(res, 'Register succesfull', result))                  
                 .catch(error => new Resolver().error(res, 'Register error', error)); 
+                
+                if(req.body.platformIdentifier == 'w')
+                    new Whatsapp().replyMessageForClient(req.body.text, req.body.clientPlatformIdentifier);
+                else if(req.body.platformIdentifier == 't')
+                    this.telegraf.telegram.sendMessage(req.body.clientPlatformIdentifier, req.body.text);                     
         }
         catch(ex) { 
             console.log('Error[outcommingMessage]' + ex); 
