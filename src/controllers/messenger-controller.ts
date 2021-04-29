@@ -156,21 +156,6 @@ export class MessengerController {
 
     public replyMessageForAgent(messageContext:JSON):void{
         try{     
-            //Proceso original: Según el platformIdentifier se mandaba un mensaje el contacto del agente[esto por efectos de pruebas]
-                // // if(messageContext['platformIdentifier'] === 'w'){ 
-                // //     new Whatsapp().replyMessageForAgent(messageContext['comments'], messageContext['clientName'], messageContext['agentPlatformIdentifier']);
-                // // }
-                // // else if(messageContext['platformIdentifier'] === 't'){ 
-                // //     console.log('Redirigir el mensaje de Telegram al agente');
-                // //     this.telegraf.telegram.sendMessage(messageContext['agentPlatformIdentifier'], messageContext['clientName'] + ' dice: ' + messageContext['comments']);                    
-                // // } 
-            //Proceso actualizado: Independientemente del platformIdentifier, se envía el msg al "agentPlatformIdentifier" [ahora este almacena el activeIp]
-            
-            //1: Acceder al arreglo global
-            // let arraySockets = window._INITIAL_DATA_.serverData;
-            
-            // console.log(global.globalArraySockets); 
-
             const insertedChatHistoricId = this.registryIndividualMessage(messageContext);  
 
             if(insertedChatHistoricId)
@@ -397,12 +382,7 @@ export class MessengerController {
                 payload = { 
                     userId: user.ID,  
                     activeChats: user.activeChats 
-                };  
-                // if(platformIdentifier === 'w')
-                //     payload['agentPlatformIdentifier'] = user.agentIdentifierWhatsapp;
-                // else
-                //     payload['agentPlatformIdentifier'] = user.agentIdentifierTelegram;
-
+                };   
                 ////Proceso actualizado: Se devolverá el activeIp del agente para emplearlo en los sockets
                 payload['agentPlatformIdentifier'] = user.activeIp;
 
@@ -481,10 +461,14 @@ export class MessengerController {
     Creó: J. Carlos Lara
     Fecha: Abril 08 de 2021
     */
-    public async replymessageForClients(agentIp:String, messageString:String):Promise<void>{
+    public replymessageForClient(outMessageContext:any){
         try{
-            console.log('Recibiendo mensaje de ' + agentIp);
-            console.log('['+messageString+']'); 
+            console.log('Recibiendo mensaje de agente para: ' + outMessageContext['clientPlatformIdentifier']);
+
+            if(outMessageContext['platformIdentifier'] == 'w')
+                new Whatsapp().replyMessageForClient(outMessageContext['text'], outMessageContext['clientPlatformIdentifier']);
+            else if(outMessageContext['platformIdentifier'] == 't')
+                this.telegraf.telegram.sendMessage(outMessageContext['clientPlatformIdentifier'], outMessageContext['text']);    
         }
         catch(ex){
             console.log('Error[provisionalTriggerForActiveChats]' + ex);
@@ -495,7 +479,8 @@ export class MessengerController {
         try{ 
             
              
-            console.log('Recibiendo y estandarizando mensaje de ' + agentIp);  
+            console.log('Recibiendo y estandarizando mensaje de Sokcet de ' + agentIp);  
+            console.log(message);
 
             let messageContext = JSON.parse(message.toString());   
             console.log('Mensage en formato JSON: ');
@@ -551,17 +536,14 @@ export class MessengerController {
 
     /**Método para obtener todos los mensajes del chat[ya sea para recuperar una ventana cerrada o para uso del coordinador ] */
     public async getMessages(req:Request, res:Response): Promise<void>{
-        try{
-            console.log('Obteniendo todos los mensages');
-            // console.log(req.body);
-            // console.log(req.body.chatId);
+        try{ 
+            console.log('Solicitando mensages del chat: ' + req.body.chatId);
 
             const unreadMessages = await getRepository(OpeChatHistoric)
             .createQueryBuilder("unreadMessages")
-            // .where("unreadMessages.chatId = :chatId", {chatId: req.body.chatId}) 
-            .where("unreadMessages.chatId = :chatId", {chatId: 173})            
-            .andWhere("unreadMessages.statusId = :statusId", {statusId: 1})            
-            // .andWhere("unreadMessages.id > :id", {id: req.body.id})
+            .where("unreadMessages.chatId = :chatId", {chatId: req.body.chatId})  
+            .andWhere("unreadMessages.statusId = :statusId", {statusId: 1})     
+            .andWhere("unreadMessages.id > :id", {id: req.body.id? req.body.id:1}) 
             .getMany();            
 
             let payload = {
@@ -586,20 +568,21 @@ export class MessengerController {
     }
   
     public async outcommingMessage(req:Request, res:Response): Promise<void>{
-        try {  
-            console.log(req.body.transmitter);
+        try {    
+            console.log(req.body); 
 
             getRepository(OpeChatHistoric).save(req.body)
                 .then(result => new Resolver().success(res, 'Register succesfull', result))
-                .catch(error => new Resolver().error(res, 'Register error', error));
-            
-            //Idear como usar el req.body para emular el messageContext
+                .then(result => this.replymessageForClient(req.body))
+                .catch(error => new Resolver().error(res, 'Register error', error)); 
         }
         catch(ex) { 
             console.log('Error[outcommingMessage]' + ex); 
             new Resolver().exception(res, 'Unexpected error.', ex); 
-        }
+        } 
     }
+ 
+
 
     
 }

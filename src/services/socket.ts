@@ -22,8 +22,8 @@ export class Socket {
             //Intentando escribir en la variable global;        
             console.log(socket.remoteAddress + ' is now connected');
 
-            socket.write('Bienvenido, este es el ejemplo de las notificaciones que enviaremos: ');
-            socket.write('{"chatId": 158, "platformIdentifier": "w"}');
+            // socket.write('Bienvenido, este es el ejemplo de las notificaciones que enviaremos: ');
+            // socket.write('{"chatId": 158, "platformIdentifier": "w"}');
 
             socket.on("data", data =>  {          
                 console.log(socket.remoteAddress + ' dice: ' + data.toString()); // prints the data  
@@ -57,9 +57,9 @@ export class Socket {
     }
 
     public replyMessageForAgent(messageContext:JSON, agentSocket:net.Socket): void{
-        try{
-            console.log('Esperando a enviar a ' +  messageContext['agentPlatformIdentifier']); 
-            agentSocket.write('\n  ' +messageContext['clientName']+' dice: ' + messageContext['comments']);   
+        try{ 
+            agentSocket.write('{"chatId": "'+messageContext['id']+'", "platformIdentifier": "'+messageContext['platformIdentifier']+'", "clientPlatformIdentifier": "'+messageContext['clientPlatformIdentifier']+'"}' );   
+            console.log('Notificación enviada a ' +  messageContext['agentPlatformIdentifier']); 
         }
         catch(ex){
             console.log('Error[socket][replyMessageForAgent]: ' + ex);
