@@ -1,3 +1,4 @@
+import { Telegraf } from 'telegraf';
 import { MessengerController } from './../controllers/messenger-controller';
 // import { WhatsappController } from './../controllers/whatsapp-controller';
 import { Router } from "express";
@@ -6,7 +7,7 @@ export class MessengerRouting{
     public router: Router;
     private messengerControler: MessengerController;
 
-    constructor() {
+    constructor(telegraf:Telegraf) {
         this.router = Router();
         this.messengerControler = new MessengerController();
         this.routes();

@@ -11,12 +11,13 @@ import {Telegram} from './services/telegram';
 class Server {
     public app:express.Application;
     public mySocket:Socket;
+    public telegram:Telegram;
 
     constructor() {
         this.app = express();
         this.config();
-        this.loadRoutes();
         this.InitServices();
+        this.loadRoutes();
     }
 
     public config(): void {
@@ -30,7 +31,7 @@ class Server {
         this.app.use('/api/auth', new AuthRouting().router);
         // this.app.use('/api/whatsapp', new MessengerRouting().router); 
         //declarar las rutas para el pedido y organización de los mensajes 
-        this.app.use('/api/messenger', new MessengerRouting().router);
+        this.app.use('/api/messenger', new MessengerRouting(this.telegram.telegraf).router);
 
         this.app.get('*', (req, res) => new Resolver().notFound(res, 'Oops! This route not exists.'));
     } 
@@ -52,7 +53,7 @@ class Server {
 
     //Init para el servicio de Telegram 
     public InitServices() {
-        new Telegram();
+        this.telegram = new Telegram();
         
         this.mySocket = new Socket();        
         this.mySocket.initSocketServer();

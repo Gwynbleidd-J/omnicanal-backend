@@ -14,7 +14,7 @@ export class MessengerController {
     private contextoGenerico:any;
 
     constructor(telegraf?:Telegraf) {
-        this.telegraf = telegraf;
+        this.telegraf = new Telegraf(process.env.BOT_TOKEN);
     }
     
     /* #region Comments */
@@ -582,6 +582,8 @@ export class MessengerController {
     }
   
     public async outcommingMessage(req:Request, res:Response): Promise<void>{
+        let telegraf:Telegraf = new Telegraf(process.env.BOT_TOKEN);
+
         try {    
             console.log("entrando a outcommingMessage"); 
             // console.log(req.body); 
@@ -607,7 +609,7 @@ export class MessengerController {
                 if(req.body.platformIdentifier == 'w')
                     new Whatsapp().replyMessageForClient(req.body.text, req.body.clientPlatformIdentifier);
                 else if(req.body.platformIdentifier == 't')
-                    this.telegraf.telegram.sendMessage(req.body.clientPlatformIdentifier, req.body.text);                     
+                    telegraf.telegram.sendMessage(req.body.clientPlatformIdentifier, req.body.text);                     
         }
         catch(ex) { 
             console.log('Error[outcommingMessage]' + ex); 

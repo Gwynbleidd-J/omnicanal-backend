@@ -5,7 +5,7 @@ import { MessengerController  } from '../controllers/messenger-controller';
 import net from "net";
  
 export class Telegram{
-    private telegraf:Telegraf;
+    public telegraf:Telegraf;
     private telegramController:MessengerController
 
     constructor() {
