@@ -177,10 +177,7 @@ export class MessengerController {
                         sentNotification++;
                     }
                 }); 
-                global.globalArraySockets = copiaGlobalArraySockets;
-                // console.log('Estado del Array Interno'); console.log(copiaGlobalArraySockets);
-                // console.log('Estado del Array global'); console.log(global.globalArraySockets);
-
+                global.globalArraySockets = copiaGlobalArraySockets;  
             }
            
             //console.log('Mensaje enviado, estoy de vuelta en replyMessageForAgent');
@@ -258,7 +255,7 @@ export class MessengerController {
     public standardizeIncommingMessage(ctx, platformIdentifier:String): void{
         try{ 
             // console.log('Probando contexto de mensajes de whatsapp: ');
-            // console.log(ctx);
+            //  console.log(ctx);
 
             let messageContext;
             
@@ -551,13 +548,14 @@ export class MessengerController {
     /**Método para obtener todos los mensajes del chat[ya sea para recuperar una ventana cerrada o para uso del coordinador ] */
     public async getMessages(req:Request, res:Response): Promise<void>{
         try{ 
-            console.log('Solicitando mensages del chat: ' + req.body.chatId);
+            // console.log('Solicitando mensages del chat: ' + req.body.chatId);
 
             const unreadMessages = await getRepository(OpeChatHistoric)
             .createQueryBuilder("unreadMessages")
             .where("unreadMessages.chatId = :chatId", {chatId: req.body.chatId})  
             .andWhere("unreadMessages.statusId = :statusId", {statusId: 1})     
-            .andWhere("unreadMessages.id > :id", {id: req.body.id? req.body.id:1}) 
+            .andWhere("unreadMessages.id > :id", {id: req.body.id? req.body.id:1})
+            .orderBy("id", "DESC") 
             .getMany();            
 
             let payload = {
@@ -583,33 +581,47 @@ export class MessengerController {
   
     public async outcommingMessage(req:Request, res:Response): Promise<void>{
         let telegraf:Telegraf = new Telegraf(process.env.BOT_TOKEN);
+        let copiaGlobalArraySockets = global.globalArraySockets;
+        let backNotificationContext; 
+        var sentNotification = 0; 
 
-        try {    
-            console.log("entrando a outcommingMessage"); 
-            // console.log(req.body); 
-
-            // if(req.body.platformIdentifier == 'w'){
-            //     getRepository(OpeChatHistoric).save(req.body)
-            //     .then(result => new Resolver().success(res, 'Register succesfull', result))                
-            //     .then(result => new Whatsapp().replyMessageForClient(req.body.text, req.body.clientPlatformIdentifier))    
-            //     .catch(error => new Resolver().error(res, 'Register error', error)); 
-            // }
-            // else if(req.body.platformIdentifier == 't'){
-            //     getRepository(OpeChatHistoric).save(req.body)
-            //     .then(result => new Resolver().success(res, 'Register succesfull', result))                
-            //     .then(result => this.telegraf.telegram.sendMessage(req.body.clientPlatformIdentifier, req.body.text))    
-            //     .catch(error => new Resolver().error(res, 'Register error', error)); 
-            // } 
-
-            
-                getRepository(OpeChatHistoric).save(req.body)
-                .then(result => new Resolver().success(res, 'Register succesfull', result))                  
-                .catch(error => new Resolver().error(res, 'Register error', error)); 
+        try {
+            console.log("entrando a outcommingMessage");  
+            getRepository(OpeChatHistoric).save(req.body)
+            .then(result => new Resolver().success(res, 'Register succesfull', result))                  
+            .catch(error => new Resolver().error(res, 'Register error', error)); 
                 
-                if(req.body.platformIdentifier == 'w')
-                    new Whatsapp().replyMessageForClient(req.body.text, req.body.clientPlatformIdentifier);
-                else if(req.body.platformIdentifier == 't')
-                    telegraf.telegram.sendMessage(req.body.clientPlatformIdentifier, req.body.text);                     
+            if(req.body.platformIdentifier == 'w')
+                new Whatsapp().replyMessageForClient(req.body.text, req.body.clientPlatformIdentifier);
+            else if(req.body.platformIdentifier == 't')
+                telegraf.telegram.sendMessage(req.body.clientPlatformIdentifier, req.body.text); 
+                    
+            console.log('Construyendo el COntext en JSON...');
+            //De forma provisional, se enviará una notificación de vuelta al agente para que se refresque su ventana del chat             
+            const Context:JSON = <JSON><unknown>{ 
+                "id": req.body.chatId, 
+                "platformIdentifier": req.body.platformIdentifier, 
+                "clientPlatformIdentifier": req.body.clientPlatformIdentifier,  
+                "agentPlatformIdentifier": req.body.agentPlatformIdentifier 
+            }
+
+            console.log('Seteando el context al backNotificationContext...');
+            backNotificationContext = Context;
+            console.log(backNotificationContext);
+            
+            console.log('Iniciando barrido del arreglo de sockets...');
+            // console.log(copiaGlobalArraySockets);
+            copiaGlobalArraySockets.forEach(element => {                    
+                console.log('Comprobando ' + element.remoteAddress +' vs '+  backNotificationContext['agentPlatformIdentifier']);
+                //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
+                if((element.remoteAddress == '::ffff:'+backNotificationContext['agentPlatformIdentifier']) && (sentNotification < 1)){
+                    console.log('Direccionando mensage al socket ' + element.remoteAddress);
+                    new Socket().replyMessageForAgent(backNotificationContext, element);           
+                    sentNotification++;
+                }
+            }); 
+            global.globalArraySockets = copiaGlobalArraySockets;  
+            console.log('Envío de notificación termidado.');
         }
         catch(ex) { 
             console.log('Error[outcommingMessage]' + ex); 

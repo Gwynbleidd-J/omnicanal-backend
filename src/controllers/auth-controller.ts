@@ -10,7 +10,8 @@ import { Utils } from "../services/utils";
 export class AuthController {
     public async signIn(req:Request, res:Response): Promise<void> {
         try { 
-            console.log(req.body.email);
+            console.log('Intentando hacer login: ');
+            console.log(req.body);
             const user = await getRepository(CatUsers)
                 .createQueryBuilder("user")
                 .where("user.email = :email", {email: req.body.email})
