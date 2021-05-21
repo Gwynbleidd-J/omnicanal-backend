@@ -50,6 +50,7 @@ export class MessengerController {
             const existingChat = await this.chatAlreadyExist(messageContext['clientPlatformIdentifier'], messageContext['platformIdentifier']);
             //Verificar existencia del mismo 
             const jsonExistingChat = await existingChat; 
+            console.log('Chat con estatus: ' + jsonExistingChat.statusId);
  
             if(jsonExistingChat.statusId == 0){
                 console.log('Chat sin registro previo, generando registro inicial en BD...');
@@ -59,38 +60,49 @@ export class MessengerController {
                 this.sendWelcomeMessage(messageContext); 
                 const disponibleAgent = await this.getDisponibleAgent(messageContext['platformIdentifier']); 
                 const jsonDisponibleAgent = await disponibleAgent; 
-                console.log('Agente disponible: ' + jsonDisponibleAgent.userId + ' con ip[' + jsonDisponibleAgent.agentPlatformIdentifier +']');                 
-                const assignedChat = await this.assignChatAgent(jsonDisponibleAgent.userId, messageContext); 
-                
-                if(assignedChat){    //Enviar el mensaje al agente asignado
-                    messageContext['userId'] = jsonDisponibleAgent.userId;  
-                    messageContext['agentPlatformIdentifier'] = jsonDisponibleAgent.agentPlatformIdentifier; 
-                    this.replyMessageForAgent(messageContext);
+                //validar el id del agente disponible devuelto[si es 0, entonces mandar mensaje de espera y no actualizar el estatus del Chat]
+                console.log('jsonDisponibleAgent: ' + jsonDisponibleAgent.userId);
+                if(jsonDisponibleAgent.userId != '0'){     
+                    console.log('Agente disponible: ' + jsonDisponibleAgent.userId + ' con ip[' + jsonDisponibleAgent.agentPlatformIdentifier +']');                 
+                    const assignedChat = await this.assignChatAgent(jsonDisponibleAgent.userId, messageContext); 
+                    
+                    if(assignedChat){    //Enviar el mensaje al agente asignado 
+                        messageContext['userId'] = jsonDisponibleAgent.userId;  
+                        messageContext['agentPlatformIdentifier'] = jsonDisponibleAgent.agentPlatformIdentifier; 
+                        this.replyMessageForAgent(messageContext); 
 
-                    //De momento se usará este método para cubrir la funcionalidad del Trigger desde BD
-                    this.provisionalTriggerForActiveChats(messageContext['userId']);
+                        //De momento se usará este método para cubrir la funcionalidad del Trigger desde BD
+                        this.provisionalTriggerForActiveChats(messageContext['userId']);
+                    }
                 }
-                else
+                else{
                     console.log('No se pudo asignar a ningún agente por el momento');
+                    this.replyMessageWaitingForAgent(messageContext);
+                }
             }
             else if(jsonExistingChat.statusId == 1){
                 console.log('Chat previo sin agente, volviendo a canalizar...'); 
-                messageContext['id'] = jsonExistingChat.id;
+                messageContext['id'] = jsonExistingChat.id; 
                 const disponibleAgent = await this.getDisponibleAgent(messageContext['platformIdentifier']);
                 const jsonDisponibleAgent = await disponibleAgent;
-                console.log('Agente disponible: ' + jsonDisponibleAgent.userId + ' con identificador: ' + jsonDisponibleAgent.agentPlatformIdentifier);                 
-                const assignedChat = await this.assignChatAgent(jsonDisponibleAgent.userId, messageContext);
+                
+                if(jsonDisponibleAgent.userId != '0'){     
+                    console.log('Agente disponible: ' + jsonDisponibleAgent.userId + ' con identificador: ' + jsonDisponibleAgent.agentPlatformIdentifier);                 
+                    const assignedChat = await this.assignChatAgent(jsonDisponibleAgent.userId, messageContext);
+                
+                    if(assignedChat){    //Enviar el mensaje al agente asignado 
+                        messageContext['userId'] = jsonDisponibleAgent.userId;  
+                        messageContext['agentPlatformIdentifier'] = jsonDisponibleAgent.agentPlatformIdentifier; 
+                        this.replyMessageForAgent(messageContext);  
 
-                if(assignedChat){    //Enviar el mensaje al agente asignado 
-                    messageContext['userId'] = jsonDisponibleAgent.userId;  
-                    messageContext['agentPlatformIdentifier'] = jsonDisponibleAgent.agentPlatformIdentifier; 
-                    this.replyMessageForAgent(messageContext);  
-
-                    //De momento se usará este método para cubrir la funcionalidad del Trigger desde BD
-                    this.provisionalTriggerForActiveChats(messageContext['userId']);
+                        //De momento se usará este método para cubrir la funcionalidad del Trigger desde BD
+                        this.provisionalTriggerForActiveChats(messageContext['userId']);
+                    }
                 }
-                else
+                else{
                     console.log('No se pudo asignar a ningún agente por el momento'); 
+                    this.replyMessageWaitingForAgent(messageContext);
+                }
             }
             else if(jsonExistingChat.statusId == 2){
                 // console.log('Chat activo, dirigiendo el mensaje a su agente en turno...');  
@@ -136,7 +148,7 @@ export class MessengerController {
             if(messageContext['platformIdentifier'] == 'w') 
                 new Whatsapp().sendWelcomeMessage(messageContext['clientPlatformIdentifier']); 
             else if(messageContext['platformIdentifier'] == 't') 
-                this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'],'Hola. Gracias por escribir al Whatsapp de PromoEspacio. En un momento le enlazamos con un agente.');                                             
+                this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'],'Hola. Gracias por escribir al Telegram de PromoEspacio. En un momento le enlazamos con un agente.');                                             
         }
         catch(ex){
             console.log('Error[sendWelcomeMessage]:' + ex);
@@ -145,11 +157,14 @@ export class MessengerController {
 
     public replyMessageWaitingForAgent(messageContext:JSON):void{
         try{ 
-            if(messageContext['platformIdentifier'] == 'w')
-                new Whatsapp().replyMessageWaitingForAgent(messageContext['clientPlatformIdentifier']); 
-            else if(messageContext['platformIdentifier'] == 't')
-                console.log('Enviar mensaje de espera desde Telegram.');
-                this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'], 'Seguimos conectando con un agente disponible, agradecemos tu paciencia.');                 
+            //Nuevo proceso: registrar los mgs entrantes aunque no tenga un agente[para conservar el histórico]
+            const insertedChatHistoricId = this.registryIndividualMessage(messageContext); 
+            if(insertedChatHistoricId){
+                if(messageContext['platformIdentifier'] == 'w')
+                    new Whatsapp().replyMessageWaitingForAgent(messageContext['clientPlatformIdentifier']); 
+                else if(messageContext['platformIdentifier'] == 't') 
+                    this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'], 'Seguimos conectando con un agente disponible, agradecemos tu paciencia.');                 
+            }
         }
         catch(ex){
             console.log('Error[replyMessageWaitingForAgent]:' + ex); 
@@ -158,7 +173,9 @@ export class MessengerController {
 
     public replyMessageForAgent(messageContext:JSON):void{
         try{    
+            // console.log('Entrando en replyMessageForAgent');
             const insertedChatHistoricId = this.registryIndividualMessage(messageContext);  
+            // console.log('insertado con id: '+ insertedChatHistoricId);
             var sentNotification = 0; 
             
             let copiaGlobalArraySockets = global.globalArraySockets;
@@ -254,8 +271,8 @@ export class MessengerController {
    //public standardizeMessageContext(Ctx:any, platformIdentifier:String){ 
     public standardizeIncommingMessage(ctx, platformIdentifier:String): void{
         try{ 
-            // console.log('Probando contexto de mensajes de whatsapp: ');
-            //  console.log(ctx);
+            console.log('Probando contexto de mensaje de ' + platformIdentifier);
+            console.log(ctx);
 
             let messageContext;
             
@@ -312,7 +329,7 @@ export class MessengerController {
         try{ 
             const user = await getRepository(CatUsers)
                 .createQueryBuilder("user")
-                .where(" user.activeChats < :activeChats", {activeChats: 4})  
+                .where(" user.activeChats < :activeChats", {activeChats: 2})  
                 // .andWhere(" user.statusId = :statusId", {statusId: 1}) //Contemplar después añadir el filtro para el estatus del usuario
                 .orderBy(" user.activeChats", "ASC") 
                 .getOne();
@@ -474,7 +491,7 @@ export class MessengerController {
     */
     public async replymessageForClient(outMessageContext:any): Promise<void>{
         try{
-            console.log('Recibiendo mensaje de agente para: ' + outMessageContext['clientPlatformIdentifier']);
+            console.log('Enviando mensaje de espera para: ' + outMessageContext['clientPlatformIdentifier']);
 
             if(outMessageContext['platformIdentifier'] == 'w')
                 new Whatsapp().replyMessageForClient(outMessageContext['text'], outMessageContext['clientPlatformIdentifier']);
@@ -536,6 +553,7 @@ export class MessengerController {
                                 {messagePlatformId: messageContext['messagePlatformId'], text: messageContext['comments'], chatId: messageContext['id'], transmitter: messageContext['transmitter'], statusId: 1 } 
                             ])
                             .execute();  
+            // console.log(insertedOpeChatHistoric);
             return insertedOpeChatHistoric.identifiers[0]['id'];
         }
         catch(ex){
