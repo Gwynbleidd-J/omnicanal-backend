@@ -14,6 +14,6 @@ export class UserRouting{
     private routes(): void {
         this.router.post('/', this.userController.register);
         this.router.post('/myAgents', this.userController.getUsers);
-        this.router.post('/agentDetails', this.userController.getUserDetails);
+        this.router.post('/agentInfo', this.userController.getUserDetail);
     }
 }

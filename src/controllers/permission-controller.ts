@@ -12,6 +12,7 @@ export class PermissionController{
             console.log(req.body.rolId);
             const rolPermissions = await getRepository(CatPermissions)
             .createQueryBuilder("permission")
+            .leftJoinAndSelect("permission.menu", 'menu')
             .where("permission.rolId = :rolId", {rolId: req.body.rolId})
             .getMany();
 
@@ -21,7 +22,7 @@ export class PermissionController{
 
             if(rolPermissions)
                 {
-                     console.log(rolPermissions);
+                    //  console.log(rolPermissions);
                     new Resolver().success(res, 'Chats correctlyconsulted', payload);            
                 }
             else 

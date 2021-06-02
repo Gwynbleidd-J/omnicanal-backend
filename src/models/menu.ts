@@ -1,4 +1,8 @@
-import { Column, Entity, PrimaryGeneratedColumn, Table } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn, Table, OneToMany, OneToOne } from "typeorm";
+import { CatPermissions } from './permission';
+import { CatRols } from './rol';
+
+
 
 @Entity()
 export class CatMenus{
@@ -11,4 +15,6 @@ export class CatMenus{
     @Column({type:'varchar', length: 250})
     description:String;
     
+    @OneToMany(()=> CatPermissions, permission=> permission.menu)
+    permission: CatPermissions[];
 }

@@ -1,15 +1,20 @@
-import { PermissionRouting } from './routes/permission-routing';
+import { ChatController } from './controllers/chat-controller';
 
 require('dotenv').config();
 import { Socket } from './services/socket';
 import express from "express";
 import { createConnection } from "typeorm";
+import { Resolver } from "./services/resolver"; 
+import {Telegram} from './services/telegram';
+
 import { UserRouting } from './routes/user-routing';
 import { AuthRouting } from './routes/auth-routing';
-import { Resolver } from "./services/resolver"; 
 import { MessengerRouting } from './routes/messenger-routing'; 
-import {Telegram} from './services/telegram';
 import { MenuRouting } from './routes/menu-routing';
+import { PermissionRouting } from './routes/permission-routing';
+import { RolRouting } from './routes/rol-routing';
+import { ChatRouting } from './routes/chat-routing';
+
 
 class Server {
     public app:express.Application;
@@ -37,6 +42,8 @@ class Server {
         this.app.use('/api/messenger', new MessengerRouting(this.telegram.telegraf).router);
         this.app.use('/api/menu', new MenuRouting().router);
         this.app.use('/api/permission', new PermissionRouting().router);
+        this.app.use('/api/rol', new RolRouting().router);
+        this.app.use('/api/chat', new ChatRouting().router); 
 
         this.app.get('*', (req, res) => new Resolver().notFound(res, 'Oops! This route not exists.'));
     } 

@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn, Table } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, OneToOne, JoinColumn} from "typeorm";
+import{CatRols} from './rol'; 
 
 @Entity()
 export class CatUsers {
@@ -41,4 +42,8 @@ export class CatUsers {
     @Column({ nullable: true })
     leaderId:number;
     
+    @ManyToOne(() => CatRols, rol => rol.user)
+    @JoinColumn({name: 'rolID'})
+    rol: CatRols;
+   
 }

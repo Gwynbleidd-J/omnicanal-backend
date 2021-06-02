@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn, Table } from "typeorm";
+import { OpeChats } from './chat';
+import { Column, Entity, PrimaryGeneratedColumn, Table} from "typeorm";
 
 @Entity()
 export class CatNetworkCategories{ 
@@ -10,5 +11,6 @@ export class CatNetworkCategories{
     
     @Column({type:'varchar', length: 250})
     description:String;
+    
     
 }
