@@ -1,3 +1,5 @@
+import { PermissionRouting } from './routes/permission-routing';
+
 require('dotenv').config();
 import { Socket } from './services/socket';
 import express from "express";
@@ -7,6 +9,7 @@ import { AuthRouting } from './routes/auth-routing';
 import { Resolver } from "./services/resolver"; 
 import { MessengerRouting } from './routes/messenger-routing'; 
 import {Telegram} from './services/telegram';
+import { MenuRouting } from './routes/menu-routing';
 
 class Server {
     public app:express.Application;
@@ -32,6 +35,8 @@ class Server {
         // this.app.use('/api/whatsapp', new MessengerRouting().router); 
         //declarar las rutas para el pedido y organización de los mensajes 
         this.app.use('/api/messenger', new MessengerRouting(this.telegram.telegraf).router);
+        this.app.use('/api/menu', new MenuRouting().router);
+        this.app.use('/api/permission', new PermissionRouting().router);
 
         this.app.get('*', (req, res) => new Resolver().notFound(res, 'Oops! This route not exists.'));
     } 

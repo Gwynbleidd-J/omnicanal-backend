@@ -37,4 +37,8 @@ export class CatUsers {
 
     @Column({ nullable: true })
     statusID:number;
+
+    @Column({ nullable: true })
+    leaderId:number;
+    
 }

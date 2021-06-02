@@ -12,8 +12,21 @@ export class CatPermissions{
     description:String;
     
     @Column({ nullable: true })
-    rolID:number;
+    rolId:number;
 
     @Column({ nullable: true })
-    menuID:number;
+    menuId:number;
+
+    @Column({type:'varchar', length: 1, nullable: true})
+    create:String;
+    
+    @Column({type:'varchar', length: 1, nullable: true})
+    read:String;
+
+    @Column({type:'varchar', length: 1, nullable: true})
+    update:String;
+    
+    @Column({type:'varchar', length: 1, nullable: true})
+    delete:String;
+
 }

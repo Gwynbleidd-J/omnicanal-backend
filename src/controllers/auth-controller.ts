@@ -8,26 +8,29 @@ import { Resolver } from "../services/resolver";
 import { Utils } from "../services/utils";
 
 export class AuthController {
+
     public async signIn(req:Request, res:Response): Promise<void> {
         try { 
-            console.log('Intentando hacer login: ');
+            console.log('Agente intentando hacer login: ');
             console.log(req.body);
             const user = await getRepository(CatUsers)
-                .createQueryBuilder("user")
-                .where("user.email = :email", {email: req.body.email})
-                .andWhere("user.password = :password", {password: await new Utils().encrypt(req.body.password)})
+                .createQueryBuilder("user") 
+                .where("user.email = :email", {email: req.body.email}) 
+                .andWhere("user.password = :password", {password: await new Utils().encrypt(req.body.password)}) 
                 .getOne();
 
             let payload = {
+                ID: user.ID,
                 username: user.name,                
-                email: user.email            
-                // password: user.password
+                email: user.email,        
+                rolId: user.rolID  
             };
             
             if(user) {
                 payload['token'] = jwt.sign(payload, process.env.JWT_KEY, { expiresIn: 60 * 60 });
                 new Resolver().success(res, 'User authorized', payload);
-                // new Whatsapp().sendWelcomeMessage( user.name + ', iniciaste sesión en la plataforma omnicanal, si no has sido tú. Reporta a soporte', 'whatsapp:+5214625950962');
+                //Una vez que se logró consultar la info del usuario, consultamos la info de su rol
+
             }
             else new Resolver().error(res, 'Invalid credentials.');
         }
@@ -35,6 +38,38 @@ export class AuthController {
             new Resolver().exception(res, 'Unexpected error.', ex);
         }
     }
+
+
+    // public async signIn(req:Request, res:Response): Promise<void> {
+    //     try { 
+    //         console.log('Agente intentando hacer login: ');
+    //         console.log(req.body);
+    //         const user = await getRepository(CatUsers)
+    //             .createQueryBuilder("user") 
+    //             .leftJoinAndSelect("user.rolID", "rolID")
+    //             .where("user.email = :email", {email: req.body.email}) 
+    //             .andWhere("user.password = :password", {password: await new Utils().encrypt(req.body.password)}) 
+    //             .getMany();
+
+    //         let payload = {
+    //             username: user.name,                
+    //             email: user.email,        
+    //             rolId: user.rolID 
+    //             , rol
+    //         };
+            
+    //         if(user) {
+    //             payload['token'] = jwt.sign(payload, process.env.JWT_KEY, { expiresIn: 60 * 60 });
+    //             new Resolver().success(res, 'User authorized', payload);
+    //             //Una vez que se logró consultar la info del usuario, consultamos la info de su rol
+
+    //         }
+    //         else new Resolver().error(res, 'Invalid credentials.');
+    //     }
+    //     catch(ex) {
+    //         new Resolver().exception(res, 'Unexpected error.', ex);
+    //     }
+    // }
 
     public async authenticate(req:Request, res:Response, next:NextFunction): Promise<void> {
         let token = req.headers['authorization'];

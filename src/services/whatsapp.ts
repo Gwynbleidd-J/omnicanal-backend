@@ -70,7 +70,7 @@ export class Whatsapp {
     
     public async replyMessageForClient(message:String, whatsappClientAccount:String){
         try{
-            
+            // whatsappClientAccount = 'whatsapp:+5215551438864';
             this.whatsappAcount = 'whatsapp:+14155238886';
             this.client.messages.create({
                 to:   whatsappClientAccount,

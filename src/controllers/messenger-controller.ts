@@ -272,7 +272,7 @@ export class MessengerController {
     public standardizeIncommingMessage(ctx, platformIdentifier:String): void{
         try{ 
             console.log('Probando contexto de mensaje de ' + platformIdentifier);
-            console.log(ctx);
+             console.log(ctx);
 
             let messageContext;
             
@@ -329,7 +329,7 @@ export class MessengerController {
         try{ 
             const user = await getRepository(CatUsers)
                 .createQueryBuilder("user")
-                .where(" user.activeChats < :activeChats", {activeChats: 2})  
+                .where(" user.activeChats < :activeChats", {activeChats: 4})  
                 // .andWhere(" user.statusId = :statusId", {statusId: 1}) //Contemplar después añadir el filtro para el estatus del usuario
                 .orderBy(" user.activeChats", "ASC") 
                 .getOne();
@@ -577,7 +577,7 @@ export class MessengerController {
             .getMany();            
 
             let payload = {
-                chat: unreadMessages
+                messages: unreadMessages
             };
 
             if(unreadMessages)
@@ -646,8 +646,33 @@ export class MessengerController {
             new Resolver().exception(res, 'Unexpected error.', ex); 
         } 
     }
- 
 
+    public async recoverActiveChats(req:Request, res:Response): Promise<void>{
+        try{ 
+            console.log('Recuperando mensajes del agente: ' + req.body.userId);
 
-    
+            const recoveredChats = await getRepository(OpeChats)
+            .createQueryBuilder("recoveredChats") 
+            .where("recoveredChats.userId = :userId", {userId: req.body.userId})  
+            .andWhere("recoveredChats.statusId = :statusId", {statusId: 2})      
+            .orderBy("id", "DESC") 
+            .getMany();            
+
+            let payload = {
+                chats: recoveredChats
+            };
+
+            if(recoveredChats){
+                    console.log(recoveredChats);
+                    new Resolver().success(res, 'Chats correctly consulted', payload);            
+            } 
+            else { 
+                new Resolver().error(res, 'Invalid chat information.'); 
+            } 
+        } 
+        catch(ex){
+            console.log('Error[getMessages]' + ex);
+            new Resolver().exception(res, 'Unexpected error.', ex);
+        }
+    }
 }
