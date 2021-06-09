@@ -12,6 +12,7 @@ export class RolRouting {
         this.rolController = new RolController();
         this.routes();
     }
+    
 
     private routes(): void{
         this.router.post('/', this.rolController.getRols);

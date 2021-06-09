@@ -14,6 +14,8 @@ import { MenuRouting } from './routes/menu-routing';
 import { PermissionRouting } from './routes/permission-routing';
 import { RolRouting } from './routes/rol-routing';
 import { ChatRouting } from './routes/chat-routing';
+import { NetworkRouting } from './routes/network-routing';
+import { StatusRouting } from './routes/status-routing';
 
 
 class Server {
@@ -43,7 +45,9 @@ class Server {
         this.app.use('/api/menu', new MenuRouting().router);
         this.app.use('/api/permission', new PermissionRouting().router);
         this.app.use('/api/rol', new RolRouting().router);
-        this.app.use('/api/chat', new ChatRouting().router); 
+        this.app.use('/api/chat', new ChatRouting().router);
+        this.app.use('/api/network', new  NetworkRouting().router);
+        this.app.use('/api/status', new StatusRouting().router);
 
         this.app.get('*', (req, res) => new Resolver().notFound(res, 'Oops! This route not exists.'));
     } 

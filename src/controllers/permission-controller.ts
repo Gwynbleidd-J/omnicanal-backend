@@ -10,7 +10,7 @@ export class PermissionController{
     public async getRolPermissions(req:Request, res:Response): Promise<void>{
         try{
             console.log(req.body.rolId);
-            const rolPermissions = await getRepository(CatPermissions)
+            const  rolPermissions = await getRepository(CatPermissions)
             .createQueryBuilder("permission")
             .leftJoinAndSelect("permission.menu", 'menu')
             .where("permission.rolId = :rolId", {rolId: req.body.rolId})

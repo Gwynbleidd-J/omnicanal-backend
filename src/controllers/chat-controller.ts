@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";  
 import { Connection, getRepository, Repository } from "typeorm";  
-import { Resolver } from "../services/resolver";
+import { Resolver } from '../services/resolver';
 import { Utils } from "../services/utils"; 
 import { OpeChats } from '../models/chat';
 
@@ -22,12 +22,47 @@ export class ChatController {
                 console.log('Chat cerrado correctamente'); //updateResult = true;  
                 new Resolver().success(res, 'Chat correctly finished');
             }
-            else 
+            else {
                 console.log('No se pudo cerrar correctamente el chat'); //updateResult =false; 
+            }
  
         }
         catch(ex){
             new Resolver().exception(res, 'Unexpected error.', ex);
         }
     }
+
+    public async updateNetworkCategory(req:Request, res:Response): Promise<void>{
+        try{
+            console.log(`Agregando NetCategory al id: ${req.body.chatId}`);
+            
+            const updateNetworkCategory = await getRepository(OpeChats)
+            .createQueryBuilder()
+            .update(OpeChats)
+            .set({networkCategoryId: req.body.networkId})
+            .where("id = :id", {id: req.body.chatId})
+            .execute();
+
+            if(updateNetworkCategory.affected === 1){
+                console.log('Network Category Asignado Correctamente');
+                new Resolver().success(res, 'Network Category correctly inserted');
+            }
+            else{
+                console.log('No se pudo actualizar Network Category en OpeChats');
+            }
+
+        }
+        catch(ex){
+            new Resolver().exception(res, 'Unexpected error', ex);
+        }
+    }
+    //a)Crear un updateNetworkCategory
+    //b) en lugar de darle un 3 al status, SET networkcategoryId = req.neetworkId
+    // const updatedActiveChats = await getRepository(OpeChats)
+    //             .createQueryBuilder() 
+    //             .update(OpeChats) 
+    //             .set({ statusId: 3}) 
+    //             .where("id = :id", { id: req.body.chatId}) 
+    //             .execute();  
+
 }

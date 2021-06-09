@@ -19,10 +19,10 @@ export class Socket {
         this.netServer = net.createServer(socket => {
             this.arraySockets.push(socket);
             global.globalArraySockets.push(socket); 
-            
-            this.netServer.on('close', ()=>{
-                console.log('Server closed!');
-            });
+        });
+
+        this.netServer.on('close', ()=>{
+            console.log('Server closed!');
         });
         
         this.netServer.on('connection', (socket)=>{
@@ -38,6 +38,7 @@ export class Socket {
                 console.log('Socket time out');
             });
 
+
             // socket.write('Bienvenido, este es el ejemplo de las notificaciones que enviaremos: ');
             // socket.write('{"chatId": 158, "platformIdentifier": "w"}');
             socket.on("data", data =>  {          
@@ -45,6 +46,7 @@ export class Socket {
                 socket.write('\n Alguien dice: ' + data.toString());                  
                 this.replyMessageForClient(socket.remoteAddress, data.toString());  
             });
+
             
             socket.on('drain', ()=>{
                 console.log('write buffer is now empty');
@@ -57,6 +59,8 @@ export class Socket {
             socket.on('timeout', ()=>{
                 console.log('Socket timed out');
                 socket.end('timed out');
+                socket.destroy();
+                
             });
 
             socket.on('end', (data)=>{ 
@@ -70,6 +74,10 @@ export class Socket {
                 if(error){
                     console.log('Socket was closed because a due of transmission error');
                 }
+                socket.destroy();
+                //socket.removeAllListeners();
+                //socket.removeListener();
+                console.log('Se removieron todos los eyentes del socket');
             });
 
             setTimeout(() => {

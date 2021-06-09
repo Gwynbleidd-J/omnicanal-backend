@@ -2,8 +2,9 @@ import { Request, Response } from "express";
 import { getRepository } from "typeorm";
 import { CatUsers } from "../models/user"; 
 import { CatRols } from './../models/rol';
-import { Resolver } from "../services/resolver";
+import { Resolver } from '../services/resolver';
 import { Utils } from "../services/utils";
+import { CatAuxiliarStatuses } from '../models/auxiliarStatus';
 
 
 export class UserController {
@@ -55,17 +56,45 @@ export class UserController {
     public async getUserDetail(req:Request, res:Response): Promise<void> {
         try{ 
             //Usando el repositorio
+
+            ////Estructura de la clase en la aplicacion
+            // // public string name { get; set; }
+            // // public string solvedChats { get; set; }
+            // // public string activeChats { get; set; }
+            // // public string solvedCalls { get; set; }
+            // // public string activeCalls { get; set; }
+            // // public string score { get; set; }
+            // // public string status { get; set; }
+
+
+            let payload = { 
+                name: req.body.id,  
+                 solvedChats:2, 
+                activeChats:2,  
+                solvedCalls:2,  
+                 activeCalls:2,  
+                 score:1,
+                 status:'estatus'
+            }
             // const userRepository = getRepository(CatUsers);
             // const users = await userRepository.find({ relations: ["rol"] });
 
+            
             ///Usando el QueryBuilder
+            console.log('Consultando los agentes de un agente');
             const users = await getRepository(CatUsers)
             .createQueryBuilder("user")
             .leftJoinAndSelect("user.rol", "rol") 
             .getMany();
  
-            let payload;
-            if(users)
+
+            if(users){
+                new Resolver().success(res, 'Agents correctly consulted', payload); 
+            }
+            else{
+                new Resolver().error(res, 'Something bad with agents info.');
+            }
+/*             if(users)
             {  
                 console.log(users);
                 payload = {
@@ -74,8 +103,9 @@ export class UserController {
                 console.log(payload);
                 new Resolver().success(res, 'Agents correctly consulted', payload); 
             }
-            else 
+            else {
                 new Resolver().error(res, 'Something bad with agents info.'); 
+            } */
         }
         catch(ex) 
         {

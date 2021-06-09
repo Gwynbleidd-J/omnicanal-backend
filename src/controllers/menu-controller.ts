@@ -5,7 +5,9 @@ import {Resolver} from "../services/resolver";
 import {Utils} from "../services/utils";
 
 export class MenuController {
+
     public async getAllMenus(req:Request, res:Response): Promise<void>{
+        
         try{
             const allMenus = await getRepository(CatMenus).find();
 
@@ -16,8 +18,9 @@ export class MenuController {
             if(allMenus){
                 new Resolver().success(res, 'Menus correctly consulted', payload);
             }
-            else 
-                new Resolver().exception(res, 'Invalid menus info.');
+            else {
+                new Resolver().exception(res, 'Invalid menus info.');  
+            }
 
             
         }
@@ -33,12 +36,8 @@ export class MenuController {
             .where("menu.id = :id", {id: req.body.id})
             .getMany(); 
 
-            let payload = {
-                menus: menus
-            };
-
             if(menus){
-                new Resolver().success(res, 'Menus correctly consulted', payload);
+                new Resolver().success(res, 'Menus correctly consulted', menus);
             }
             else 
                 new Resolver().exception(res, 'Invalid menus info.');
