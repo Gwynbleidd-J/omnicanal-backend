@@ -74,10 +74,10 @@ export class Socket {
                 if(error){
                     console.log('Socket was closed because a due of transmission error');
                 }
-                socket.destroy();
+                socket.end();
                 //socket.removeAllListeners();
                 //socket.removeListener();
-                console.log('Se removieron todos los eyentes del socket');
+                //console.log('Se removieron todos los eyentes del socket');
             });
 
             setTimeout(() => {
@@ -105,49 +105,6 @@ export class Socket {
             this.netServer.close();
         }, 5000000);
     }
-
-/*     public initSocketServer(): void { 
-        this.netServer = net.createServer(socket => {
-            this.arraySockets.push(socket);
-            global.globalArraySockets.push(socket); 
-
-
-            //Intentando escribir en la variable global;        
-            console.log(socket.remoteAddress + ' is now connected');
-
-            // socket.write('Bienvenido, este es el ejemplo de las notificaciones que enviaremos: ');
-            // socket.write('{"chatId": 158, "platformIdentifier": "w"}');
-
-            socket.on("data", data =>  {          
-                console.log(socket.remoteAddress + ' dice: ' + data.toString()); // prints the data  
-                socket.write('\n Alguien dice: ' + data.toString());                  
-                this.replyMessageForClient(socket.remoteAddress, data.toString());  
-            });
-             
-            this.netServer.getConnections((error, count) => {
-                console.log('Active clients: ' + count);
-            });
-
-            this.netServer.on('error',function(error){
-                console.log('Error: ' + error);
-            }); 
-
-            socket.on('close',function(error){
-                console.log('Socket closed!');
-                if(error){
-                  console.log('Socket was closed because of transmission error');
-                }
-              });
-
-            socket.on('end', ()=>{ 
-                console.log('SOCKET DISCONNECTED: '); 
-            }); 
-
-
-        }); 
-
-        this.netServer.listen(8000); 
-    } */
 
     public replyMessageForAgent(messageContext:JSON, agentSocket:net.Socket): void{
         try{ 

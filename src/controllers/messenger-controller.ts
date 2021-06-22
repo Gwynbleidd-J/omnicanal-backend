@@ -145,6 +145,7 @@ export class MessengerController {
 
     public sendWelcomeMessage(messageContext:JSON):void{
         try{ 
+            console.log(messageContext)
             if(messageContext['platformIdentifier'] == 'w') 
                 new Whatsapp().sendWelcomeMessage(messageContext['clientPlatformIdentifier']); 
             else if(messageContext['platformIdentifier'] == 't') 
@@ -158,6 +159,7 @@ export class MessengerController {
     public replyMessageWaitingForAgent(messageContext:JSON):void{
         try{ 
             //Nuevo proceso: registrar los mgs entrantes aunque no tenga un agente[para conservar el histórico]
+            console.log(messageContext)
             const insertedChatHistoricId = this.registryIndividualMessage(messageContext); 
             if(insertedChatHistoricId){
                 if(messageContext['platformIdentifier'] == 'w')
@@ -614,7 +616,7 @@ export class MessengerController {
             else if(req.body.platformIdentifier == 't')
                 telegraf.telegram.sendMessage(req.body.clientPlatformIdentifier, req.body.text); 
                     
-            console.log('Construyendo el COntext en JSON...');
+            console.log('Construyendo el Context en JSON...');
             //De forma provisional, se enviará una notificación de vuelta al agente para que se refresque su ventana del chat             
             const Context:JSON = <JSON><unknown>{ 
                 "id": req.body.chatId, 

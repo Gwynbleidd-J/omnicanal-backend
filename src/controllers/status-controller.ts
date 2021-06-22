@@ -38,7 +38,7 @@ export class StatusUserController{
             const updateUserStatus = await getRepository(CatUsers)
             .createQueryBuilder()
             .update(CatUsers)
-            .set({statusID: req.body.status})
+            .set({status: req.body.status})
             .where("ID = :id", {id: req.body.id})
             .execute();
             

@@ -19,7 +19,7 @@ export class Whatsapp {
     // }
 
     //Método para el envío del mensaje automático.
-    public async sendWelcomeMessage(whatsappClientAccount:String, ){
+    public async sendWelcomeMessage(whatsappClientAccount:String){
         try{
             
             this.whatsappAcount = 'whatsapp:+14155238886';

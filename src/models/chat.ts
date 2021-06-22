@@ -32,9 +32,6 @@ export class OpeChats{
     @Column({type:'varchar', length: 250, nullable: true})
     file:String; 
     
-
-
-
     @Column({type:'integer', nullable: true})
     userId:number; 
     

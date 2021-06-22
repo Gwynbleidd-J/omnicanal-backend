@@ -56,13 +56,4 @@ export class ChatController {
             new Resolver().exception(res, 'Unexpected error', ex);
         }
     }
-    //a)Crear un updateNetworkCategory
-    //b) en lugar de darle un 3 al status, SET networkcategoryId = req.neetworkId
-    // const updatedActiveChats = await getRepository(OpeChats)
-    //             .createQueryBuilder() 
-    //             .update(OpeChats) 
-    //             .set({ statusId: 3}) 
-    //             .where("id = :id", { id: req.body.chatId}) 
-    //             .execute();  
-
 }

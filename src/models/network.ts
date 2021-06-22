@@ -10,7 +10,5 @@ export class CatNetworks{
     name:String; 
 
     @Column({type:'varchar', length: 50}) 
-    category:String; 
-    
-      
+    category:String;   
 }

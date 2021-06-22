@@ -13,5 +13,6 @@ export class AuthRouting {
 
     private routes(): void {
         this.router.post('/', this.authController.signIn);
+        this.router.post('/logOut', this.authController.logOut);
     }
 }
