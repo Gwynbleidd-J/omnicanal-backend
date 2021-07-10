@@ -1,5 +1,7 @@
 // import { OpeChats } from './chat';
-import { Column, Entity, PrimaryGeneratedColumn, Table} from "typeorm";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn, Table} from "typeorm"
+import { OpeCalls } from './call';
+import { OpeChats } from "./chat";
 
 @Entity()
 export class CatNetworks{    
@@ -10,5 +12,15 @@ export class CatNetworks{
     name:String; 
 
     @Column({type:'varchar', length: 50}) 
-    category:String;   
+    category:String;
+    
+    @OneToMany(() => OpeChats, chat => chat.network)
+    chat: OpeChats[];
+
+    @OneToMany(()=> OpeCalls, call => call.network)
+    call:OpeCalls[];
+    /*
+        @OneToMany(() => CatUsers, user => user.rol)
+        user: CatUsers[]; 
+    */
 }

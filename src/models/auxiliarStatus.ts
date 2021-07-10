@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn, Table, JoinColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn, Table, JoinColumn, OneToOne } from 'typeorm';
 import { CatUsers } from './user';
 
 @Entity()
@@ -11,8 +11,15 @@ export class CatAuxiliarStatuses{
     
     @Column({type:'varchar', length: 100})
     description:String;
-
-    /*@OneToMany(() => CatUsers, user => user.ID)
+    
+    @OneToMany(() => CatUsers, user => user.status)
     @JoinColumn({name: 'status'})
-    user: CatUsers*/
+    user: CatUsers[];
+
+    
+
+    /*
+        @OneToMany(() => CatUsers, user => user.rol)
+        user: CatUsers[]; 
+    */
 }

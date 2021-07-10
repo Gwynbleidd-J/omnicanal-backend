@@ -1,12 +1,14 @@
 import { Request, Response } from "express";
-import { getRepository } from "typeorm";
+import { getRepository, createConnection, QueryBuilder, Brackets } from 'typeorm';
 import { CatUsers } from '../models/user'; 
 import { CatRols } from './../models/rol';
 import { Resolver } from '../services/resolver';
 import { Utils } from "../services/utils";
 import { CatAuxiliarStatuses } from '../models/auxiliarStatus';
 import { OpeChats } from '../models/chat';
-
+import { DeactivationsList } from "twilio/lib/rest/messaging/v1/deactivation";
+import { CatComunicationStatuses } from "../models/comunicationStatus";
+import { OpeCalls } from '../models/call';
 
 export class UserController {
     public async register(req:Request, res:Response): Promise<void> {
@@ -56,32 +58,72 @@ export class UserController {
     
     public async getUserDetail(req:Request, res:Response): Promise<void> {
         try{ 
-            /*
-            en éste método necesito poner las relaciones de las distintas tablas
-            con el having de typeorm para que los campos:
-                public string solvedChats { get; set; }
-                public string activeChats { get; set; }
-                public string solvedCalls { get; set; }
-                public string activeCalls { get; set; }
-                public string score { get; set; }
-                public string status { get; set; }
-                puedan ser guardados
-            Usando el repositorio
-            Usando el QueryBuilder
-            */
-
             console.log('Consultando los agentes acargo de un supervisor');
+             /* 
             const agent = await getRepository(CatUsers)
             .createQueryBuilder("user")
             .leftJoinAndSelect("user.rol", "rol")
             .leftJoinAndSelect("user.status", 'status')
-            .where("user.ID= :id",{id: req.body.id})
-            .getMany();
+            .leftJoinAndSelect("user.chat", "chat")
+            .leftJoinAndSelect("user.call", "call")
+            .where("user.ID = :id",{id: req.body.userId})
+            .getOne();
+            */
 
+            const details = await getRepository(CatUsers)
+            .createQueryBuilder("user")
+            .leftJoin("user.chat", "chat")
+            .leftJoinAndSelect("user.status", "status")
+            .leftJoinAndSelect("user.rol", "rol")
+            //.select(["user.name, user.paternalSurname, user.maternalSurname"])
+            .where("user.ID = :id",{id: req.body.userId})
+            .getOne();
+            
+            const solvedChats = await getRepository(CatUsers)
+            .createQueryBuilder("user")
+            .innerJoin("user.chat", "chat")
+            .select(["COUNT (chat.statusId) AS solvedChats"])
+            .where("user.ID = :id",{id: req.body.userId})
+            .andWhere("chat.statusId = :statusId", {statusId: 3})
+            .getRawOne();
+
+            const activeChats = await getRepository(CatUsers)
+            .createQueryBuilder("user")
+            .innerJoin("user.chat", "chat")
+            .select(["COUNT (chat.statusId) AS activeChats"])
+            .where("user.ID = :id",{id: req.body.userId})
+            .andWhere("chat.statusId = :statusId", {statusId: 2})
+            .getRawOne();
+
+            const solvedCalls = await getRepository(CatUsers)
+            .createQueryBuilder("user")
+            .innerJoin("user.call", "call")
+            .select(["COUNT (call.statusId) AS solvedCalls"])
+            .where("user.ID = :id",{id: req.body.userId})
+            .andWhere("call.statusId = :statusId", {statusId: 3})
+            .getRawOne();
+
+            const activeCalls = await getRepository(CatUsers)
+            .createQueryBuilder("user")
+            .innerJoin("user.call", "call")
+            .select(["COUNT (call.statusId) AS activeCalls"])
+            .where("user.ID = :id",{id: req.body.userId})
+            .andWhere("call.statusId = :statusId", {statusId: 2})
+            .getRawOne();
+
+           
+            
+  
             let payload ={
-                details:agent
-            }; 
-            if(agent){
+                details,                 
+                solvedChats,
+                activeChats,
+                solvedCalls,
+                activeCalls
+            }
+ 
+            
+            if(payload){
                 new Resolver().success(res, 'Agent detail correctly consulted', payload); //payload
             }
             else{
@@ -90,7 +132,7 @@ export class UserController {
         }
         catch(ex) 
         {
-            console.log('Error[getUsers]: ' + ex); 
+            console.log('Error[getUsersDetails]: ' + ex); 
         }
 
         
@@ -118,99 +160,4 @@ export class UserController {
             console.log(`Error[updateUserActiveIp ${ex}`);
         }
     }
-
-    public async updateActiveChats(req:Request, res:Response): Promise<void>{
-        try{
-            console.log(`Actualizando el campo Active Chats`);
-            const activeChats = await getRepository(OpeChats)
-            .createQueryBuilder("chat")
-            .leftJoinAndSelect("chat.userId", "user")
-            .update(CatUsers)
-            //leftJoinAndSelect("chat.userId", "user")
-            //.update(CatUsers)
-            //.set({activeChats: 1})
-           .set({activeChats: ()=> "OpeChats.activeChats+1"})
-            .where("chat.userId = :id", {id: req.body.id})
-            .andWhere("chat.statusId = :status", {status:3})
-            .execute();
-
-            if(activeChats.affected === 1){
-                console.log('campo activeIp actualizado correctamente');
-                new Resolver().success(res, 'activeIp Correctly modified');
-            }
-            else{
-                console.log('No se puedo actualizar correctamente activeIp');
-            }
-        }
-        catch(ex){
-            console.log(`Error[updateActiveChats] ${ex}`);
-        }
-    }
-
-    public async updateSolvedChats(req:Request, res:Response): Promise<void>{
-        try{
-            console.log(`Actualizando el campo solvedChats`)
-            const solvedChats = await getRepository(OpeChats)
-            .createQueryBuilder("chat")
-            .leftJoinAndSelect("chat.userId", "chat")
-            .update(CatUsers)
-            .set({activeChats:1})
-           // .set({activeChats: ()=> "OpeChats.activeChats+1"})
-            .where("chat.id = :id", {id: req.body.id})
-            .andWhere("user.status = :status", {status:2})
-            .execute();
-
-            if(solvedChats.affected === 1){
-                console.log('campo activeIp actualizado correctamente');
-                new Resolver().success(res, 'activeIp Correctly modified');
-            }
-            else{
-                console.log('No se puedo actualizar correctamente activeIp');
-            }
-        }
-        catch(ex){
-            console.log(`Error[updateSolvedChats] ${ex}`);
-        }
-    }
-
-    public async updateActiveCalls(req:Request, res:Response): Promise<void>{
-        try{
-            console.log(`Actualizando el campo updateActiveCalls`);
-        }
-        catch(ex){
-            console.log(`Error[updateActiveCalls]${ex}`)
-        }
-    }
-
-    public async updateSolvedCalls(req:Request, res:Response): Promise<void>{
-        try{
-
-        }
-        catch(ex){
-            console.log(`Error[updateSolvedCalls] ${ex}`)
-        }
-    }
 }
-
-/*             
-if(users)
-{  
-console.log(users);
-payload = {
-    users: users 
-};    
-console.log(payload);
-new Resolver().success(res, 'Agents correctly consulted', payload); 
-}
-else {
-new Resolver().error(res, 'Something bad with agents info.'); 
-} */
-
-            ////Estructura de la clase en la aplicacion
-            // // public string name { get; set; }
-            // // public string solvedChats { get; set; }
-            // // public string activeChats { get; set; }
-            // // public string solvedCalls { get; set; }
-            // // public string activeCalls { get; set; }
-            // // public string score { get; set; }
-            // // public string status { get; set; }

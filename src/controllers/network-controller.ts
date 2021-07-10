@@ -9,10 +9,10 @@ export class NetworkController{
             console.log('Consultando networks');
             //console.log(req.body);
             const networks = await getRepository(CatNetworks)
-            .createQueryBuilder("network")
+            .createQueryBuilder("network").getMany();
             //.leftJoinAndSelect("network.name", 'name')
             //.where("network.id = :id", {id: req.body.id})
-            .getMany();
+            //.getMany();
 
             let payload = {
                 networks: networks 

@@ -1,6 +1,8 @@
 import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, OneToOne, JoinColumn, OneToMany} from "typeorm";
 import { CatAuxiliarStatuses } from "./auxiliarStatus";
 import { CatSoftphoneCredentials } from './softphoneCredentials';
+import { OpeChats } from './chat';
+import { OpeCalls } from './call';
 import{CatRols} from './rol'; 
 
 @Entity()
@@ -38,22 +40,52 @@ export class CatUsers {
     @Column({ nullable: true })
     rolID:number;
 
-    
     @Column({ nullable: true })
     leaderId:number;
 
-    @Column({default: 0})
-    solvedChats:number;
-    
+    @Column({ nullable: true })
+    statusID:number;
+
+/*     @Column({ nullable: true })
+    credentialsId:number; */
+
     @ManyToOne(() => CatRols, rol => rol.user)
     @JoinColumn({name: 'rolID'})
     rol: CatRols;
 
-    @ManyToOne(() => CatAuxiliarStatuses, status => status.id)
+    @ManyToOne(() => CatAuxiliarStatuses, status => status.user)
     @JoinColumn({name: 'statusID'})
     status: CatAuxiliarStatuses;
     
-    @OneToOne(()=> CatSoftphoneCredentials, credentials => credentials.id)
-    @JoinColumn({name: 'credentialsId'})
-    credentialsSoftphone:CatSoftphoneCredentials;
+    @OneToOne(()=> CatSoftphoneCredentials, credentials => credentials.user)
+    @JoinColumn()
+    credentials:CatSoftphoneCredentials;
+
+    @OneToMany(()=>OpeChats, chat =>chat.user)
+    chat:OpeChats;
+    
+    @OneToMany(()=>OpeCalls, call =>call.user)
+    call:OpeChats; 
+
+    
+
+        /*
+        @Column({ nullable: true })
+        rolID:number;
+
+        @ManyToOne(() => CatRols, rol => rol.user)
+        @JoinColumn({name: 'rolID'})
+        rol: CatRols;
+
+        @OneToMany(() => CatUsers, user => user.rol)
+        user: CatUsers[];
+    */
+
+
+    /*
+        @OneToMany(() => CatUsers, user => user.rol)
+        user: CatUsers[]; 
+    */
+
+
 }

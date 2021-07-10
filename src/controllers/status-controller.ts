@@ -10,14 +10,7 @@ export class StatusUserController{
         console.log('Consultado los status disponibles de los agentes');
         try{
            const userStatus = await getRepository(CatAuxiliarStatuses).find();
-           //const userStatus = await getRepository(CatAuxiliarStatuses)
-           //.createQueryBuilder('status')
-           //.getMany()
 
-           //let payload = {
-           //    status: status
-          // }
-           
             if(userStatus){
                 let status= userStatus;
                 new Resolver().success(res, 'User status correctly consulted', {status});
@@ -38,7 +31,7 @@ export class StatusUserController{
             const updateUserStatus = await getRepository(CatUsers)
             .createQueryBuilder()
             .update(CatUsers)
-            .set({status: req.body.status})
+            .set({statusID: req.body.status})
             .where("ID = :id", {id: req.body.id})
             .execute();
             

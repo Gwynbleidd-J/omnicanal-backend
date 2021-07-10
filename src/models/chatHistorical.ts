@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn, Table, Timestamp } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Table, Timestamp } from "typeorm";
+import { CatComunicationStatuses } from './comunicationStatus';
+import { OpeChats } from './chat';
 
 @Entity()
 export class OpeChatHistoric{
@@ -22,6 +24,30 @@ export class OpeChatHistoric{
 
     @Column({type:'integer', nullable: true})
     chatId:number;
+
+    @ManyToOne(() => CatComunicationStatuses, status => status.historic)
+    @JoinColumn({name: 'statusId'})
+    status:CatComunicationStatuses;
+
+    @ManyToOne(() => OpeChats, chat => chat.historic)
+    @JoinColumn({name: 'chatId'})
+    chat:OpeChats; 
+
+
+    
+    /*
+        @Column({ nullable: true })
+        rolID:number;
+    
+        @ManyToOne(() => CatRols, rol => rol.user)
+        @JoinColumn({name: 'rolID'})
+        rol: CatRols;
+    
+        @OneToMany(() => CatUsers, user => user.rol)
+        user: CatUsers[];
+    */
+
+
 }
 
  

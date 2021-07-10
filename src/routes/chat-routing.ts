@@ -16,5 +16,6 @@ export class ChatRouting {
     private routes(): void{
         this.router.post('/closeChat', this.chatController.closeChat);
         this.router.post('/updateNetworkCategory', this.chatController.updateNetworkCategory);
+        this.router.post('/subtractActiveChat', this.chatController.subtractActiveChat);
     }
 }

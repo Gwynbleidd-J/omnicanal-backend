@@ -273,8 +273,8 @@ export class MessengerController {
    //public standardizeMessageContext(Ctx:any, platformIdentifier:String){ 
     public standardizeIncommingMessage(ctx, platformIdentifier:String): void{
         try{ 
-            console.log('Probando contexto de mensaje de ' + platformIdentifier);
-             console.log(ctx);
+            //console.log('Probando contexto de mensaje de ' + platformIdentifier);
+            // console.log(ctx);
 
             let messageContext;
             
@@ -331,8 +331,9 @@ export class MessengerController {
         try{ 
             const user = await getRepository(CatUsers)
                 .createQueryBuilder("user")
+                .leftJoinAndSelect("user.status", 'status')
                 .where(" user.activeChats < :activeChats", {activeChats: 4})  
-                // .andWhere(" user.statusId = :statusId", {statusId: 1}) //Contemplar después añadir el filtro para el estatus del usuario
+                .andWhere(" user.statusID = :statusID", {statusID: 7}) //Contemplar después añadir el filtro para el estatus del usuario
                 .orderBy(" user.activeChats", "ASC") 
                 .getOne();
 
