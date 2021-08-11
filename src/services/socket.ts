@@ -60,7 +60,8 @@ export class Socket {
                 //console.log(index);
                 if(index !==1)
                 this.sockets.splice(index, 1)
-                console.log(`closed: Remote Address:${socket.remoteAddress} Remote Port:${socket.remotePort}`);
+                console.log(`Closed: Remote Address:${socket.remoteAddress} Remote Port:${socket.remotePort}`);
+                socket.destroy();
             });
             
             socket.on('error',(error)=>{
@@ -170,8 +171,8 @@ export class Socket {
     } */
 
     public replyMessageForAgent(messageContext:JSON, agentSocket:net.Socket): void{
-        try{ 
-            let notificationString = '{"chatId": "'+messageContext['id']+'", "platformIdentifier": "'+messageContext['platformIdentifier']+'", "clientPlatformIdentifier": "'+messageContext['clientPlatformIdentifier']+'"}'; 
+        try{
+            let notificationString = '{"chatId": "'+messageContext['id']+'", "platformIdentifier": "'+messageContext['platformIdentifier']+'", "clientPlatformIdentifier": "'+messageContext['clientPlatformIdentifier']+'"}'; //, "numberToSend": "'+messageContext['NumberToSend']+'", "notificacionType": "'+messageContext['notificationType']+'"
             console.log('Cuerpo original de la notificación: ' + notificationString); 
             agentSocket.write(notificationString);   
             console.log('Notificación enviada a ' +  messageContext['agentPlatformIdentifier']);  

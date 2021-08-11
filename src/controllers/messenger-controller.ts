@@ -7,7 +7,9 @@ import { OpeChats } from './../models/chat';
 import { getRepository, SimpleConsoleLogger, UpdateResult } from "typeorm";
 import { Resolver } from "../services/resolver";
 import { Telegraf } from 'telegraf';  
- 
+
+//CÓDIGO QUE ESTA EN LA CARPETA DEL PROYECTO.
+
 export class MessengerController {
     
     private telegraf:Telegraf;
@@ -127,7 +129,8 @@ export class MessengerController {
     }
   
     public async registryInitialChat(messageContext:JSON):Promise<number>{
-        try{ 
+        try{
+            console.log("Entró");
             const insertedOpeChat = await getRepository(OpeChats)
                             .createQueryBuilder() 
                             .insert() 
@@ -172,8 +175,43 @@ export class MessengerController {
             console.log('Error[replyMessageWaitingForAgent]:' + ex); 
         }
     }
+    //Se comenta el código a consideración de que podría haber un error
+/*     public replyMessageForAgent(messageContext:JSON):void{
+        try{   
+            console.log('Entrando en replyMessageForAgent  1'); 
+            console.log(messageContext);
+            console.log('Entrando en replyMessageForAgent[messenger-controller]');
+            const insertedChatHistoricId = this.registryIndividualMessage(messageContext);  
+            console.log('insertado con id: '+ insertedChatHistoricId);
+            var sentNotification = 0; 
+            
+            let copiaGlobalArraySockets = global.globalArraySockets;
 
-    public replyMessageForAgent(messageContext:JSON):void{
+            if(insertedChatHistoricId)
+            {   
+                // console.log('Estado del Array Interno'); console.log(copiaGlobalArraySockets);
+                // console.log('Estado del Array global'); console.log(global.globalArraySockets);
+
+                copiaGlobalArraySockets.forEach(element => {                    
+                    // console.log('Comprobando ' + element.remoteAddress +' vs '+  messageContext['agentPlatformIdentifier']);
+                    //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
+                    if((element.remoteAddress == '::ffff:'+messageContext['agentPlatformIdentifier']) && (sentNotification < 1)){
+                        console.log('Direccionando mensage al socket ' + element.remoteAddress);
+                        new Socket().replyMessageForAgent(messageContext, element);           
+                        sentNotification++;
+                    }
+                }); 
+                global.globalArraySockets = copiaGlobalArraySockets;  
+            }
+           
+            //console.log('Mensaje enviado, estoy de vuelta en replyMessageForAgent');
+        }
+        catch(ex){
+            console.log('Error[messenger-controller][replyMessageForAgent]:' + ex);
+        }
+    } */
+
+/*     public replyMessageForAgent(messageContext:JSON):void{
         try{    
             // console.log('Entrando en replyMessageForAgent');
             const insertedChatHistoricId = this.registryIndividualMessage(messageContext);  
@@ -198,6 +236,81 @@ export class MessengerController {
                 }); 
                 global.globalArraySockets = copiaGlobalArraySockets;  
             }
+           
+            //console.log('Mensaje enviado, estoy de vuelta en replyMessageForAgent');
+        }
+        catch(ex){
+            console.log('Error[messenger-controller][replyMessageForAgent]:' + ex);
+        }
+    } */
+
+    public replyMessageForAgent(messageContext:JSON):void{
+        try{    
+            // console.log('Entrando en replyMessageForAgent');
+            const insertedChatHistoricId = this.registryIndividualMessage(messageContext);  
+            // console.log('insertado con id: '+ insertedChatHistoricId);
+            var sentNotification = 0; 
+            
+            let copiaGlobalArraySockets = global.globalArraySockets;
+
+            if(insertedChatHistoricId)
+            {   
+                // console.log('Estado del Array Interno'); console.log(copiaGlobalArraySockets);
+                // console.log('Estado del Array global'); console.log(global.globalArraySockets);
+                copiaGlobalArraySockets.forEach(element => {                    
+                    // console.log('Comprobando ' + element.remoteAddress +' vs '+  messageContext['agentPlatformIdentifier']);
+                    //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
+                    if((element.remoteAddress == '::ffff:'+messageContext['agentPlatformIdentifier']) && (sentNotification < 1)){
+                        console.log('Direccionando mensage al socket ' + element.remoteAddress);
+                        new Socket().replyMessageForAgent(messageContext, element);           
+                        sentNotification++;
+                    }
+                }); 
+                global.globalArraySockets = copiaGlobalArraySockets;  
+            }
+           
+            //console.log('Mensaje enviado, estoy de vuelta en replyMessageForAgent');
+        }
+        catch(ex){
+            console.log('Error[messenger-controller][replyMessageForAgent]:' + ex);
+        }
+    }
+
+
+    public replyMessageForAgentTwo(cadena:string){
+        try{ 
+            console.log(cadena);
+
+            // const Context:JSON = <JSON><unknown>{
+            //     "id": '' 
+            //   }
+
+            //   let fgfg = Context;
+            // console.log('Entrando en replyMessageForAgent  1'); 
+            // // console.log(messageContext);
+            // console.log('Entrando en replyMessageForAgent');
+            // // const insertedChatHistoricId = this.registryIndividualMessage(messageContext);  
+            // // console.log('insertado con id: '+ insertedChatHistoricId);
+            // var sentNotification = 0; 
+            
+            // let copiaGlobalArraySockets = global.globalArraySockets;
+
+            // // if(insertedChatHistoricId)
+            // // {   
+            //     // console.log('Estado del Array Interno'); console.log(copiaGlobalArraySockets);
+            //     // console.log('Estado del Array global'); console.log(global.globalArraySockets);
+
+            //     copiaGlobalArraySockets.forEach(element => {                    
+            //         // console.log('Comprobando ' + element.remoteAddress +' vs '+  messageContext['agentPlatformIdentifier']);
+            //         //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
+            //         if((element.remoteAddress == '::ffff:192.168.1.145') && (sentNotification < 1)){
+            //             console.log('Direccionando mensage al socket ' + element.remoteAddress);
+            //             new Socket().replyMessageForAgent(fgfg, element);           
+            //             sentNotification++;
+            //         }
+            //     }); 
+            //     global.globalArraySockets = copiaGlobalArraySockets;  
+            // }
            
             //console.log('Mensaje enviado, estoy de vuelta en replyMessageForAgent');
         }
@@ -550,7 +663,7 @@ export class MessengerController {
             // console.log(messageContext);
             const insertedOpeChatHistoric = await getRepository(OpeChatHistoric)
                             .createQueryBuilder() 
-                            .insert() 
+                            .insert()
                             .into(OpeChatHistoric) 
                             .values([ 
                                 {messagePlatformId: messageContext['messagePlatformId'], text: messageContext['comments'], chatId: messageContext['id'], transmitter: messageContext['transmitter'], statusId: 1 } 
@@ -673,9 +786,128 @@ export class MessengerController {
                 new Resolver().error(res, 'Invalid chat information.'); 
             } 
         } 
+        
         catch(ex){
             console.log('Error[getMessages]' + ex);
             new Resolver().exception(res, 'Unexpected error.', ex);
+        }
+    }
+
+    public async createEmptyChat(req:Request, res:Response): Promise<void>{
+        try{
+            let messageContext; 
+        console.log('Entrando a createEmptyChat');
+        // let IpRequest = req.body.agentPlatformIdentifier;
+        let platformIdentifier = req.body.platformIdentifier;
+        let clientPlatformIdentifier = req.body.clientPlatformIdentifier;
+        //comentar a JuanCarlos acerca de la línea de abajo
+        let clientPhoneNumber = req.body.clientPhoneNumber;
+        let agentId = parseInt(req.body.userId); 
+        let idChat = '';
+        //let agentId = req.body.userId;
+
+ 
+        // // Generar el JSON a partir del ctx de Telegramr
+        const Context:JSON = <JSON><unknown>{
+            "id": 0, 
+            "clientPlatformIdentifier": clientPlatformIdentifier, 
+            "clientPhoneNumber": clientPhoneNumber, //clientPhoneNumber;  
+            "comments": req.body.text, 
+            "platformIdentifier": platformIdentifier 
+            , "clientName": '' 
+            , "userId": agentId
+            , "agentPlatformIdentifier": req.body.agentPlatformIdentifier
+            , "messagePlatformId": ''
+            , "transmitter": req.body.transmitter
+          }
+          
+        messageContext = Context; 
+        //
+        console.log(messageContext);
+        //línea 755 es dónde marca error la API [TypeError: Cannot read property 'registryInitialChat' of undefined]
+        //const insertedChatId = await this.registryInitialChat(messageContext);
+        //const jsonInsertedChat = await insertedChatId;
+        const insertedOpeChat = await getRepository(OpeChats)
+        .createQueryBuilder() 
+        .insert() 
+        .into(OpeChats) 
+        .values([ 
+            {clientPlatformIdentifier: messageContext['clientPlatformIdentifier'], clientPhoneNumber: messageContext['clientPhoneNumber'], comments: messageContext['comments'], platformIdentifier: messageContext['platformIdentifier'], statusId: 1 } 
+        ])
+        .execute();  
+        await insertedOpeChat.identifiers[0]['id'];
+        console.log(insertedOpeChat.identifiers[0]['id']);
+        console.log('paso a'); 
+        
+        idChat = insertedOpeChat.identifiers[0]['id'].toString();
+        messageContext['id'] = idChat;
+        console.log('paso b');
+        
+
+        if(messageContext['id']){
+            const updatedChat = await getRepository(OpeChats)
+                .createQueryBuilder()
+                .update(OpeChats)
+                .set({ userId: agentId, statusId: 2})
+                .where("id = :id", { id: idChat })
+                .execute();
+
+                if(updatedChat.affected === 1){
+                    const actualActiveChats = await getRepository(CatUsers)
+                    .createQueryBuilder("user")
+                    .where(" user.ID = :id", {id: agentId})                   
+                    .getOne();
+                let actualActiveChatsCuantity;
+
+                if(actualActiveChats){
+                    actualActiveChatsCuantity = {
+                        actualActiveChats: actualActiveChats.activeChats
+                    }
+                    console.log(actualActiveChatsCuantity); 
+                    console.log(actualActiveChatsCuantity['actualActiveChats']); 
+                    actualActiveChatsCuantity['actualActiveChats'] = actualActiveChatsCuantity['actualActiveChats'] +1;    
+                }
+
+                console.log('Iniciando update de chats activos del usuario: ' + agentId);
+                const updatedActiveChats = await getRepository(CatUsers)
+                .createQueryBuilder()
+                .update(CatUsers) 
+                .set({ activeChats: actualActiveChatsCuantity['actualActiveChats']})
+                .where("ID = :id", { id: agentId})
+                .execute(); 
+                if(updatedActiveChats.affected === 1){
+                    console.log('activeChats actualizado correctamente');
+                }
+                else{
+                    console.log('No se pudo actualizar activeChats del agente');
+                }
+            }
+        }
+
+        //---Aquí no le muevas-------
+        var sentNotification = 0; 
+        let copiaGlobalArraySockets = global.globalArraySockets;
+        if(req.body.agentPlatformIdentifier)
+            {   
+                // console.log('Estado del Array Interno'); console.log(copiaGlobalArraySockets);
+                // console.log('Estado del Array global'); console.log(global.globalArraySockets);
+
+                copiaGlobalArraySockets.forEach(element => {                    
+                    // console.log('Comprobando ' + element.remoteAddress +' vs '+  messageContext['agentPlatformIdentifier']);
+                    //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
+                    if((element.remoteAddress == '::ffff:'+messageContext['agentPlatformIdentifier']) && (sentNotification < 1)){
+                        console.log('Direccionando mensage al socket ' + element.remoteAddress);
+                        new Socket().replyMessageForAgent(messageContext, element);           
+                        sentNotification++;
+                    }
+                }); 
+                global.globalArraySockets = copiaGlobalArraySockets;  
+            }
+
+        }
+        catch(ex){
+            console.log(ex)
+            new Resolver().exception(res, 'Unexpected error', ex);
         }
     }
 }

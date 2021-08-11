@@ -20,5 +20,6 @@ export class MessengerRouting{
         this.router.post('/recoverActiveChats', this.messengerControler.recoverActiveChats);
         this.router.post('/', this.messengerControler.getMessages);
         this.router.post('/outMessage', this.messengerControler.outcommingMessage);
+        this.router.post('/newEmptyChat', this.messengerControler.createEmptyChat);
     }
 }
