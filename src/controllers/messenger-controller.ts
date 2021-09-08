@@ -9,6 +9,8 @@ import { Resolver } from "../services/resolver";
 import { Telegraf } from 'telegraf';  
 
 //CÓDIGO QUE ESTA EN LA CARPETA DEL PROYECTO.
+//CODIGO QUE ESTA EN MI COPIA DEL REPOSITORIO CODIGO QUE ESTÁ EN MI COPIA DEL PROYECTO.
+
 
 export class MessengerController {
     
@@ -246,29 +248,36 @@ export class MessengerController {
 
     public replyMessageForAgent(messageContext:JSON):void{
         try{    
-            // console.log('Entrando en replyMessageForAgent');
-            const insertedChatHistoricId = this.registryIndividualMessage(messageContext);  
-            // console.log('insertado con id: '+ insertedChatHistoricId);
-            var sentNotification = 0; 
+            console.log('Entrando en replyMessageForAgent');
+            console.log(messageContext);
+            console.log('Entrando en replyMessageForAgent[messenger-controller]');
+            //const insertedChatHistoricId = this.registryIndividualMessage(messageContext);
             
-            let copiaGlobalArraySockets = global.globalArraySockets;
-
-            if(insertedChatHistoricId)
-            {   
-                // console.log('Estado del Array Interno'); console.log(copiaGlobalArraySockets);
-                // console.log('Estado del Array global'); console.log(global.globalArraySockets);
-                copiaGlobalArraySockets.forEach(element => {                    
-                    // console.log('Comprobando ' + element.remoteAddress +' vs '+  messageContext['agentPlatformIdentifier']);
-                    //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
-                    if((element.remoteAddress == '::ffff:'+messageContext['agentPlatformIdentifier']) && (sentNotification < 1)){
-                        console.log('Direccionando mensage al socket ' + element.remoteAddress);
-                        new Socket().replyMessageForAgent(messageContext, element);           
-                        sentNotification++;
-                    }
-                }); 
-                global.globalArraySockets = copiaGlobalArraySockets;  
-            }
-           
+            var insertedChatHistoricId = 0;
+            (async () => {
+                const meta = await this.registryIndividualMessage(messageContext)
+                insertedChatHistoricId = meta;
+                //console.log(`insertado con id: ${insertedChatHistoricId}`);
+                var sentNotification = 0; 
+            
+                let copiaGlobalArraySockets = global.globalArraySockets;
+    
+                if(insertedChatHistoricId)
+                {   
+                    // console.log('Estado del Array Interno'); console.log(copiaGlobalArraySockets);
+                    // console.log('Estado del Array global'); console.log(global.globalArraySockets);
+                    copiaGlobalArraySockets.forEach(element => {                    
+                        // console.log('Comprobando ' + element.remoteAddress +' vs '+  messageContext['agentPlatformIdentifier']);
+                        //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
+                        if((element.remoteAddress == '::ffff:'+messageContext['agentPlatformIdentifier']) && (sentNotification < 1)){
+                            console.log('Direccionando mensaje al socket ' + element.remoteAddress);
+                            new Socket().replyMessageForAgent(messageContext, element);           
+                            sentNotification++;
+                        }
+                    }); 
+                    global.globalArraySockets = copiaGlobalArraySockets;  
+                }
+            })(); 
             //console.log('Mensaje enviado, estoy de vuelta en replyMessageForAgent');
         }
         catch(ex){
@@ -621,9 +630,7 @@ export class MessengerController {
 
     public standardizeOutcommingMessage(agentIp:String, message:String): void{
         try{ 
-            
-             
-            console.log('Recibiendo y estandarizando mensaje de Sokcet de ' + agentIp);  
+            console.log('Recibiendo y estandarizando mensaje de socket de ' + agentIp);  
             console.log(message);
 
             let messageContext = JSON.parse(message.toString());   
@@ -632,7 +639,6 @@ export class MessengerController {
             
             console.log('Mensaje estandarizado correctamente, enviando al despachador...');        
             this.messageOut(messageContext);
-            
         }
         catch(ex){ 
             console.log('Error[standardizeOutcommingMessage]: ' + ex);
@@ -721,7 +727,7 @@ export class MessengerController {
 
         try {
             console.log("entrando a outcommingMessage");  
-            getRepository(OpeChatHistoric).save(req.body)
+            await getRepository(OpeChatHistoric).save(req.body)
             .then(result => new Resolver().success(res, 'Register succesfull', result))                  
             .catch(error => new Resolver().error(res, 'Register error', error)); 
                 
@@ -806,7 +812,6 @@ export class MessengerController {
         let idChat = '';
         //let agentId = req.body.userId;
 
- 
         // // Generar el JSON a partir del ctx de Telegramr
         const Context:JSON = <JSON><unknown>{
             "id": 0, 
@@ -837,11 +842,11 @@ export class MessengerController {
         .execute();  
         await insertedOpeChat.identifiers[0]['id'];
         console.log(insertedOpeChat.identifiers[0]['id']);
-        console.log('paso a'); 
+        //console.log('paso a'); 
         
         idChat = insertedOpeChat.identifiers[0]['id'].toString();
         messageContext['id'] = idChat;
-        console.log('paso b');
+        //console.log('paso b');
         
 
         if(messageContext['id']){

@@ -7,6 +7,7 @@ export class Socket {
     public netServer:net.Server;
     public sockets:any;
     public port:Number;
+    public clientAddress:any;
 
     constructor(){
         // this.initSocketServer();
@@ -17,7 +18,9 @@ export class Socket {
 
     public initSocketServer(): void{
         this.port = 8000;
+        let clientAddress:any;
         this.netServer = net.createServer();
+        
         
         /*Checar cual metodo para crear un array de sockets es el mejor el que se 
         creo en el codigo comentado o el que actualmente se está utilizando en la
@@ -27,14 +30,60 @@ export class Socket {
         //this.sockets.push(socket);
         //global.globalArraySockets.push(socket);      
         //})
+
         this.netServer.listen(this.port,() =>{
             console.log(`TCP server is running on port: ${this.port}`);
         });
 
-        this.netServer.on('connection', (socket) =>{
-            console.log(`Client Connected, Remote Address:${socket.remoteAddress} Remote Port:${socket.remotePort}`);
-            this.sockets.push(socket);
+        this.netServer.on('connection', socket =>{
+            this.clientAddress = `${socket.remoteAddress}: ${socket.remotePort}`;
+            console.log(`client connected: ${this.clientAddress}`);
+            global.globalArraySockets.push(socket);
 
+            this.netServer.getConnections((error, count)=>{
+                if(error){
+                    console.log(`${error}`)
+                }
+                console.log(`Active Clients ${count}`)
+            });
+
+             socket.on('data', (data) =>{
+                console.log(`${this.clientAddress}: ${data}`);
+                global.globalArraySockets.forEach((sock) =>{
+                    // sock.write(socket.remoteAddress + ':' + socket.remotePort + "said" + data + '\n');
+                    sock.write('mensaje desde la API de la aplicacion');
+                    //this.replyMessageForClient(socket.remoteAddress, data.toString());
+                });
+            });
+
+            socket.on('close', ()=>{
+                let index = global.globalArraySockets.findIndex((o) =>{
+                    return o.remoteAddress === socket.remoteAddress && o.remotePort === socket.remotePort;
+                });
+
+                if(index !== 1){
+                    global.globalArraySockets.splice(index, 1);
+                }
+                global.globalArraySockets.forEach((sock)=>{
+                    sock.write(`${this.clientAddress} disconnected`)
+                });
+                console.log(`connection closed: ${this.clientAddress}`);
+            });
+            socket.on('error', err=>{
+                
+                console.log(`Error occurred in ${this.clientAddress}: ${err.message}`);
+            });
+        });
+
+        this.netServer.on('close', ()=>{
+            console.log('Server closed!');
+        });
+
+        /* this.netServer.on('connection', (socket) =>{
+            console.log(`Client Connected, Remote Address:${socket.remoteAddress} Remote Port:${socket.remotePort}`);
+            //this.sockets.push(socket); se comenta para meter el del globla.globalsockets
+            global.globalArraySockets.push(socket);
+            
             this.netServer.getConnections((error, count)=>{
                 if(error){
                     console.log(`${error}`)
@@ -49,7 +98,7 @@ export class Socket {
                 this.replyMessageForClient(socket.remoteAddress, data.toString());
             });
 
-            socket.on('end', (data)=>{ 
+            socket.on('end', (data)=>{
                 console.log('Closing connection with the client');
             });
 
@@ -67,11 +116,11 @@ export class Socket {
             socket.on('error',(error)=>{
                 console.log(`${error}`);
             })
-        });
+        }); 
 
         this.netServer.on('close', ()=>{
             console.log('Server closed!');
-        });
+        });*/
     }
 
     /* Se comenta el codigo anterior para la creacion y manipulacion de sockets
@@ -182,9 +231,13 @@ export class Socket {
         }
     }
 
+    /*
+        El metodo de replyMessageForClient no se está invocando en ninguna parte del código
+        por consiguiente no es indispensable para la API, ya se probo, considerar quitarlo.
+     */
     public replyMessageForClient(agentSocket:String,messageString:String){
         try{  
-            console.log('Iniciando envío de mensaje desde el agente ' + agentSocket +' a cliente.');
+            console.log('replyMessageForClient: Iniciando envío de mensaje desde el agente ' + agentSocket +' a cliente.');
             new MessengerController().standardizeOutcommingMessage(agentSocket,messageString);
         }
         catch(ex){

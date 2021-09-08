@@ -1,6 +1,8 @@
 import { Telegraf } from 'telegraf'; 
 import { getRepository } from 'typeorm';
 import { OpeChats } from '../models/chat';
+import { Telegram } from '../services/telegram';
+
 
 
 export class TelegramController{
@@ -20,6 +22,18 @@ export class TelegramController{
         .values([{
             clientPlatformIdentifier:ctx.from.id, comments: ctx.message.text, platformIdentifier: 't' } 
         ])
-        .execute();
+        .execute(); 
     }
+    /*
+    bot.onText(/\/keyboard/, (msg) => {
+   bot.sendMessage(msg.chat.id, 'Alternative keybaord layout', {
+       'reply_markup': {
+           'keyboard': [['Sample text', 'Second sample'], ['Keyboard'], ['I\'m robot']],
+           resize_keyboard: true,
+           one_time_keyboard: true,
+           force_reply: true,
+       }
+   });
+}); 
+     */
 }

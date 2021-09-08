@@ -16,6 +16,7 @@ import { RolRouting } from './routes/rol-routing';
 import { ChatRouting } from './routes/chat-routing';
 import { NetworkRouting } from './routes/network-routing';
 import { StatusRouting } from './routes/status-routing';
+import { TablaRouting } from './routes/tabla-routing';
 
 
 class Server {
@@ -48,14 +49,27 @@ class Server {
         this.app.use('/api/chat', new ChatRouting().router);
         this.app.use('/api/network', new  NetworkRouting().router);
         this.app.use('/api/status', new StatusRouting().router);
+        this.app.use('/api/tabla', new TablaRouting().router);
 
         this.app.get('*', (req, res) => new Resolver().notFound(res, 'Oops! This route not exists.'));
     } 
 
     public initDatabase(): void {
-        createConnection().then(connect => {
-            console.log(`Database connected`);
+
+/*         createConnection().then(connect =>{
+            console.log(`Databases connected`);
+        }).catch(err =>{
+            console.log(`Can't connect to database ${err}`);
+        }); */
+        createConnection("default").then(connect => {
+            console.log(`PostgreSQL Database connected`);
         }).catch(err => {
+            console.log(`Can't connect to database: ${err}`);
+        });
+        
+        createConnection("second-connection").then(connect =>{
+            console.log(`Mysql Database connected`);
+        }).catch(err=>{
             console.log(`Can't connect to database: ${err}`);
         });
     }

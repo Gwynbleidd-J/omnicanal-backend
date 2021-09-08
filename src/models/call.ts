@@ -41,7 +41,7 @@ export class OpeCalls{
 
     @Column({type:'integer'})
     networkCategoryId:String;
-
+    
     @ManyToOne(() => CatUsers, user => user.call)
     @JoinColumn({name: 'userId'})
     user: CatUsers; 
