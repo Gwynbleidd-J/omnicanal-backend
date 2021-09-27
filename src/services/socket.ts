@@ -48,6 +48,30 @@ export class Socket {
             });
 
              socket.on('data', (data) =>{
+                //TODO:Borrar luego
+                console.log("Entrando a al recibimiento de data en el server")
+                try {
+                    console.log("Asi se ve la data recibida: " +data);
+                    var rawData = data.toString();
+                    var clearData = JSON.parse(rawData);
+                    if (clearData.hasOwnProperty('platformIdentifier')) {
+                        console.log("Si tiene la identificacion de plataforma!");
+                        if (clearData.platformIdentifier == 'c') {
+                            console.log("Y si viene desde un chat web!");
+                            try{   
+                                MessengerController.prototype.standardizeIncommingMessage(clearData,'c');            
+                            }
+                            catch(ex){
+                                console.log('Error[incommingWebMessage]:' + ex);
+                            }
+
+                        }
+                    }
+                } catch (error) {
+                    console.log("La data recibida en el socket no pudo ser convertida a json: "+error);
+                }
+                
+
                 console.log(`${this.clientAddress}: ${data}`);
                 global.globalArraySockets.forEach((sock) =>{
                     // sock.write(socket.remoteAddress + ':' + socket.remotePort + "said" + data + '\n');

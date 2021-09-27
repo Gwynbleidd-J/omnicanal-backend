@@ -67,11 +67,11 @@ class Server {
             console.log(`Can't connect to database: ${err}`);
         });
         
-        createConnection("second-connection").then(connect =>{
-            console.log(`Mysql Database connected`);
-        }).catch(err=>{
-            console.log(`Can't connect to database: ${err}`);
-        });
+        // createConnection("second-connection").then(connect =>{
+        //     console.log(`Mysql Database connected`);
+        // }).catch(err=>{
+        //     console.log(`Can't connect to database: ${err}`);
+        // });
     }
 
     public start(): void {

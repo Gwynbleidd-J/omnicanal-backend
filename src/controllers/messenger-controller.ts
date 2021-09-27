@@ -155,7 +155,11 @@ export class MessengerController {
                 new Whatsapp().sendWelcomeMessage(messageContext['clientPlatformIdentifier']); 
             else if(messageContext['platformIdentifier'] == 't') 
                 this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'],'Hola. Gracias por escribir al Telegram de PromoEspacio. En un momento le enlazamos con un agente.');                                             
-        }
+            else if(messageContext['platformIdentifier'] == 'c') 
+                global.globalArraySockets.write('Hola, bienvenido al chat de omnicanal, en un momento le atenderemos')
+            //sock.write('mensaje desde la API de la aplicacion');
+        
+            }
         catch(ex){
             console.log('Error[sendWelcomeMessage]:' + ex);
         }
@@ -430,6 +434,25 @@ export class MessengerController {
                     , "userId": ''
                     , "agentPlatformIdentifier": ''
                     , "messagePlatformId": ctx.SmsMessageSid
+                    , "transmitter": 'c'
+                  }
+                  
+
+                  messageContext = Context;
+            }
+            else if(platformIdentifier == 'c')
+            {
+                //Generar el JSON a partir del ctx de Whatssap
+                    const Context:JSON = <JSON><unknown>{
+                    "id": '',
+                    "clientPlatformIdentifier": ctx.clientPlatformIdentifier, 
+                    "clientPhoneNumber": '', 
+                    "comments": ctx.text, 
+                    "platformIdentifier": platformIdentifier
+                    , "clientName": ctx.userName
+                    , "userId": ''
+                    , "agentPlatformIdentifier": ''
+                    , "messagePlatformId": ctx.messagePlatformId
                     , "transmitter": 'c'
                   }
                   messageContext = Context;
@@ -776,7 +799,9 @@ export class MessengerController {
             const recoveredChats = await getRepository(OpeChats)
             .createQueryBuilder("recoveredChats") 
             .where("recoveredChats.userId = :userId", {userId: req.body.userId})  
-            .andWhere("recoveredChats.statusId = :statusId", {statusId: 2})      
+            .andWhere("recoveredChats.statusId = :statusId", {statusId: 2})
+            //Esto es para no recuperar los chats web en la pestaña de chats
+            .andWhere("recoveredChats.platformIdentifier != :chatWebIdentifier", {chatWebIdentifier: 'c'})            
             .orderBy("id", "DESC") 
             .getMany();            
 
