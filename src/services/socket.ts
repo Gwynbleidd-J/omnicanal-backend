@@ -48,43 +48,52 @@ export class Socket {
             });
 
              socket.on('data', (data) =>{
+                let sentNotification = 0; 
                 //TODO:Borrar luego
                 console.log("Entrando a al recibimiento de data en el server")
                 try {
                     console.log("Asi se ve la data recibida: " +data);
-                    var rawData = data.toString();
-                    var clearData = JSON.parse(rawData);
+                    let rawData = data.toString();
+                    let clearData = JSON.parse(rawData);
                     if (clearData.hasOwnProperty('platformIdentifier')) {
                         console.log("Si tiene la identificacion de plataforma!");
-                        if (clearData.platformIdentifier == 'c') {
+                        if (clearData.platformIdentifier == 'c' && clearData.transmitter == 'c') {
                             console.log("Y si viene desde un chat web!");
                             try{   
-                                MessengerController.prototype.standardizeIncommingMessage(clearData,'c');            
+                                MessengerController.prototype.standardizeIncommingMessage(clearData,'c');               
                             }
                             catch(ex){
                                 console.log('Error[incommingWebMessage]:' + ex);
                             }
-
+                        }
+                        else if(clearData.platformIdentifier == 'c' && clearData.transmitter == 'a'){
+                            console.log("Mensaje hacia el chat web");
+                            try{
+                                global.globalArraySockets.forEach(element => {
+                                    if((element.remoteAddress == '::ffff:'+clearData['clientPlatformIdentifier']) && (sentNotification < 1)){
+                                        console.log('Direccionando mensaje al socket ' + element.remoteAddress);
+                                        this.replyMessageForAgent(clearData, element);
+                                        sentNotification++
+                                    }
+                                    
+                                });
+                                //socket.write(data);
+                            }
+                            catch(ex){
+                                console.log(`Erro al mandar mensaje al cliente Web ${ex}`)
+                            }
                         }
                     }
                 } catch (error) {
                     console.log("La data recibida en el socket no pudo ser convertida a json: "+error);
                 }
                 
-
-                console.log(`${this.clientAddress}: ${data}`);
-                global.globalArraySockets.forEach((sock) =>{
-                    // sock.write(socket.remoteAddress + ':' + socket.remotePort + "said" + data + '\n');
-                    sock.write('mensaje desde la API de la aplicacion');
-                    //this.replyMessageForClient(socket.remoteAddress, data.toString());
-                });
             });
 
             socket.on('close', ()=>{
                 let index = global.globalArraySockets.findIndex((o) =>{
                     return o.remoteAddress === socket.remoteAddress && o.remotePort === socket.remotePort;
                 });
-
                 if(index !== 1){
                     global.globalArraySockets.splice(index, 1);
                 }
@@ -102,8 +111,45 @@ export class Socket {
         this.netServer.on('close', ()=>{
             console.log('Server closed!');
         });
+    }
 
-        /* this.netServer.on('connection', (socket) =>{
+    public replyMessageForAgent(messageContext:JSON, agentSocket:net.Socket): void{
+        try{
+            if(messageContext['platformIdentifier'] == 'c' && messageContext['transmitter'] == 'a' ){
+                let notificationString = '{"clientPlatformIdentifier": "'+messageContext['clientPlatformIdentifier']+'", "text": "'+messageContext['text']+'", "platformIdentifier": "'+messageContext['clientPlatformIdentifier']+', "transmitter": "'+messageContext['transmitter']+'"}';
+                console.log('Cuerpo original de la notificación: ' + notificationString); 
+                agentSocket.write(notificationString);   
+                console.log('Notificación enviada a ' +  messageContext['clientPlatformIdentifier']);   
+            }
+            else{
+                let notificationString = '{"chatId": "'+messageContext['id']+'", "platformIdentifier": "'+messageContext['platformIdentifier']+'", "clientPlatformIdentifier": "'+messageContext['clientPlatformIdentifier']+'"}'; //, "numberToSend": "'+messageContext['NumberToSend']+'", "notificacionType": "'+messageContext['notificationType']+'"
+                console.log('Cuerpo original de la notificación: ' + notificationString); 
+                agentSocket.write(notificationString);   
+                console.log('Notificación enviada a ' +  messageContext['agentPlatformIdentifier']);
+            }
+  
+        }
+        catch(ex){
+            console.log('Error[socket][replyMessageForAgent]: ' + ex);
+        }
+    }
+
+    /*
+        El metodo de replyMessageForClient no se está invocando en ninguna parte del código
+        por consiguiente no es indispensable para la API, ya se probo, considerar quitarlo.
+     */
+    public replyMessageForClient(agentSocket:String,messageString:String){
+        try{  
+            console.log('replyMessageForClient: Iniciando envío de mensaje desde el agente ' + agentSocket +' a cliente.');
+            new MessengerController().standardizeOutcommingMessage(agentSocket,messageString);
+        }
+        catch(ex){
+            console.log('Error[socket][replyMessageForClient]: ' + ex);
+        }
+    }
+}
+
+/* this.netServer.on('connection', (socket) =>{
             console.log(`Client Connected, Remote Address:${socket.remoteAddress} Remote Port:${socket.remotePort}`);
             //this.sockets.push(socket); se comenta para meter el del globla.globalsockets
             global.globalArraySockets.push(socket);
@@ -145,9 +191,8 @@ export class Socket {
         this.netServer.on('close', ()=>{
             console.log('Server closed!');
         });*/
-    }
 
-    /* Se comenta el codigo anterior para la creacion y manipulacion de sockets
+/* Se comenta el codigo anterior para la creacion y manipulacion de sockets
       debido a que en está versión del codigo el se cerraba correctamente el socket 
       que se creaba para la comunicacion con el usuario.  
       public initSocketServer(): void {
@@ -242,30 +287,3 @@ export class Socket {
             this.netServer.close();
         }, 5000000);
     } */
-
-    public replyMessageForAgent(messageContext:JSON, agentSocket:net.Socket): void{
-        try{
-            let notificationString = '{"chatId": "'+messageContext['id']+'", "platformIdentifier": "'+messageContext['platformIdentifier']+'", "clientPlatformIdentifier": "'+messageContext['clientPlatformIdentifier']+'"}'; //, "numberToSend": "'+messageContext['NumberToSend']+'", "notificacionType": "'+messageContext['notificationType']+'"
-            console.log('Cuerpo original de la notificación: ' + notificationString); 
-            agentSocket.write(notificationString);   
-            console.log('Notificación enviada a ' +  messageContext['agentPlatformIdentifier']);  
-        }
-        catch(ex){
-            console.log('Error[socket][replyMessageForAgent]: ' + ex);
-        }
-    }
-
-    /*
-        El metodo de replyMessageForClient no se está invocando en ninguna parte del código
-        por consiguiente no es indispensable para la API, ya se probo, considerar quitarlo.
-     */
-    public replyMessageForClient(agentSocket:String,messageString:String){
-        try{  
-            console.log('replyMessageForClient: Iniciando envío de mensaje desde el agente ' + agentSocket +' a cliente.');
-            new MessengerController().standardizeOutcommingMessage(agentSocket,messageString);
-        }
-        catch(ex){
-            console.log('Error[socket][replyMessageForClient]: ' + ex);
-        }
-    }
-}

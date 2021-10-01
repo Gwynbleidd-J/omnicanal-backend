@@ -15,8 +15,8 @@ export class AuthController {
     
     public async signIn(req:Request, res:Response): Promise<void> {
          try { 
-             console.log('Agente intentando hacer login: ');
-             console.log(req.body);
+             //console.log('Agente intentando hacer login: ');
+             //console.log(req.body);
              const user = await getRepository(CatUsers) 
                  .createQueryBuilder("user") 
                  //.leftJoinAndSelect("user.chat", "chat")

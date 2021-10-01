@@ -56,7 +56,7 @@ export class ChatController {
                 .execute();
                 
                 if(subtractActiveChats.affected === 1){
-                    console.log('Campo activeChats modificado correctamente')
+                    //console.log('Campo activeChats modificado correctamente')
                     new Resolver().success(res, 'ActiveChat correctly modified');
                 }
                 else{

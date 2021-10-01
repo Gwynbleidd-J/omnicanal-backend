@@ -155,8 +155,8 @@ export class MessengerController {
                 new Whatsapp().sendWelcomeMessage(messageContext['clientPlatformIdentifier']); 
             else if(messageContext['platformIdentifier'] == 't') 
                 this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'],'Hola. Gracias por escribir al Telegram de PromoEspacio. En un momento le enlazamos con un agente.');                                             
-            else if(messageContext['platformIdentifier'] == 'c') 
-                global.globalArraySockets.write('Hola, bienvenido al chat de omnicanal, en un momento le atenderemos')
+            /* else if(messageContext['platformIdentifier'] == 'c') 
+                global.globalArraySockets.write('Hola, bienvenido al chat de omnicanal, en un momento le atenderemos') */
             //sock.write('mensaje desde la API de la aplicacion');
         
             }
@@ -289,49 +289,7 @@ export class MessengerController {
         }
     }
 
-
-    public replyMessageForAgentTwo(cadena:string){
-        try{ 
-            console.log(cadena);
-
-            // const Context:JSON = <JSON><unknown>{
-            //     "id": '' 
-            //   }
-
-            //   let fgfg = Context;
-            // console.log('Entrando en replyMessageForAgent  1'); 
-            // // console.log(messageContext);
-            // console.log('Entrando en replyMessageForAgent');
-            // // const insertedChatHistoricId = this.registryIndividualMessage(messageContext);  
-            // // console.log('insertado con id: '+ insertedChatHistoricId);
-            // var sentNotification = 0; 
-            
-            // let copiaGlobalArraySockets = global.globalArraySockets;
-
-            // // if(insertedChatHistoricId)
-            // // {   
-            //     // console.log('Estado del Array Interno'); console.log(copiaGlobalArraySockets);
-            //     // console.log('Estado del Array global'); console.log(global.globalArraySockets);
-
-            //     copiaGlobalArraySockets.forEach(element => {                    
-            //         // console.log('Comprobando ' + element.remoteAddress +' vs '+  messageContext['agentPlatformIdentifier']);
-            //         //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
-            //         if((element.remoteAddress == '::ffff:192.168.1.145') && (sentNotification < 1)){
-            //             console.log('Direccionando mensage al socket ' + element.remoteAddress);
-            //             new Socket().replyMessageForAgent(fgfg, element);           
-            //             sentNotification++;
-            //         }
-            //     }); 
-            //     global.globalArraySockets = copiaGlobalArraySockets;  
-            // }
-           
-            //console.log('Mensaje enviado, estoy de vuelta en replyMessageForAgent');
-        }
-        catch(ex){
-            console.log('Error[messenger-controller][replyMessageForAgent]:' + ex);
-        }
-    }
-
+    
     /* #region Comments */
     /*
     Método:     chatAlreadyExist
@@ -447,9 +405,9 @@ export class MessengerController {
                     "id": '',
                     "clientPlatformIdentifier": ctx.clientPlatformIdentifier, 
                     "clientPhoneNumber": '', 
-                    "comments": ctx.text, 
+                    "comments": ctx.comments, 
                     "platformIdentifier": platformIdentifier
-                    , "clientName": ctx.userName
+                    , "clientName": ctx.clientName
                     , "userId": ''
                     , "agentPlatformIdentifier": ''
                     , "messagePlatformId": ctx.messagePlatformId

@@ -1,9 +1,8 @@
-import { ChatController } from './controllers/chat-controller';
-
 require('dotenv').config();
 import { Socket } from './services/socket';
 import express from "express";
 import { createConnection } from "typeorm";
+import cors from 'cors';
 import { Resolver } from "./services/resolver"; 
 import {Telegram} from './services/telegram';
 
@@ -17,6 +16,7 @@ import { ChatRouting } from './routes/chat-routing';
 import { NetworkRouting } from './routes/network-routing';
 import { StatusRouting } from './routes/status-routing';
 import { TablaRouting } from './routes/tabla-routing';
+import { ChatWebRouting } from './routes/chatweb-routing';
 
 
 class Server {
@@ -34,6 +34,9 @@ class Server {
     public config(): void {
         this.app.set('port', process.env.SERVER_PORT || 3000);
         this.app.use(express.urlencoded({ extended: true }));
+        this.app.use(cors());
+        this.app.use(express.json());
+        this.app.use(express.urlencoded({extended: true}));
     }
 
     public loadRoutes(): void {
@@ -49,6 +52,7 @@ class Server {
         this.app.use('/api/chat', new ChatRouting().router);
         this.app.use('/api/network', new  NetworkRouting().router);
         this.app.use('/api/status', new StatusRouting().router);
+        this.app.use('/api/chatweb', cors(), new ChatWebRouting().router);
         this.app.use('/api/tabla', new TablaRouting().router);
 
         this.app.get('*', (req, res) => new Resolver().notFound(res, 'Oops! This route not exists.'));

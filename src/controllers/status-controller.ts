@@ -7,7 +7,7 @@ import { CatUsers } from '../models/user';
 
 export class StatusUserController{
     public async getUserStatus(req:Request, res: Response): Promise<void>{
-        console.log('Consultado los status disponibles de los agentes');
+        //console.log('Consultado los status disponibles de los agentes');
         try{
            const userStatus = await getRepository(CatAuxiliarStatuses).find();
 
