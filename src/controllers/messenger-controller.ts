@@ -2,11 +2,12 @@ import { OpeChatHistoric } from './../models/chatHistorical';
 import { Socket } from './../services/socket';
 import { CatUsers } from './../models/user'; 
 import { Whatsapp } from '../services/whatsapp';
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Request, Response, response } from 'express';
 import { OpeChats } from './../models/chat';
 import { getRepository, SimpleConsoleLogger, UpdateResult } from "typeorm";
 import { Resolver } from "../services/resolver";
-import { Telegraf } from 'telegraf';  
+import { Telegraf } from 'telegraf'; 
+import { SocketIO } from '../services/socketIO';
 
 //CÓDIGO QUE ESTA EN LA CARPETA DEL PROYECTO.
 //CODIGO QUE ESTA EN MI COPIA DEL REPOSITORIO CODIGO QUE ESTÁ EN MI COPIA DEL PROYECTO.
@@ -16,9 +17,12 @@ export class MessengerController {
     
     private telegraf:Telegraf;
     private contextoGenerico:any;
+    public dataObject: any;
 
     constructor(telegraf?:Telegraf) {
         this.telegraf = new Telegraf(process.env.BOT_TOKEN);
+        this.dataObject = [];
+        global.dataObject = this.dataObject;
     }
     
     /* #region Comments */
@@ -36,6 +40,17 @@ export class MessengerController {
     public async whatsappIncommingMessage(req:Request, res:Response): Promise<void> {        
         try{   
             MessengerController.prototype.standardizeIncommingMessage(req.body,'w');            
+        }
+        catch(ex){
+            new Resolver().exception(res, 'Unexpected error.', ex);
+            console.log('Error[incommingMessage]:' + ex);
+        }
+    } 
+
+    public async chatWebIncommingMessage(req:Request, res:Response): Promise<void>{
+        try{   
+            MessengerController.prototype.standardizeIncommingMessage(req.body,'c');
+            res.send(req.body);         
         }
         catch(ex){
             new Resolver().exception(res, 'Unexpected error.', ex);
@@ -405,7 +420,7 @@ export class MessengerController {
                     "id": '',
                     "clientPlatformIdentifier": ctx.clientPlatformIdentifier, 
                     "clientPhoneNumber": '', 
-                    "comments": ctx.comments, 
+                    "comments": ctx.message, 
                     "platformIdentifier": platformIdentifier
                     , "clientName": ctx.clientName
                     , "userId": ''
@@ -423,7 +438,6 @@ export class MessengerController {
                 // console.log(messageContext);       
                 this.messageIn(messageContext);
             }
-            
         }
         catch(ex){ 
             console.log('Error[standardizeIncommingMessage]: ' + ex);
@@ -700,38 +714,111 @@ export class MessengerController {
         }
     }
   
-    public async outcommingMessage(req:Request, res:Response): Promise<void>{
+    public async outcommingMessage(req:Request, res:Response, next:NextFunction): Promise<void>{
         let telegraf:Telegraf = new Telegraf(process.env.BOT_TOKEN);
         let copiaGlobalArraySockets = global.globalArraySockets;
         let backNotificationContext; 
         var sentNotification = 0; 
-
         try {
-            console.log("entrando a outcommingMessage");  
+            console.log("entrando a outcommingMessage");
+            
             await getRepository(OpeChatHistoric).save(req.body)
-            .then(result => new Resolver().success(res, 'Register succesfull', result))                  
-            .catch(error => new Resolver().error(res, 'Register error', error)); 
-                
-            if(req.body.platformIdentifier == 'w')
+            //.then(result => new Resolver().success(res, 'Register succesfull', result))                  
+            //.catch(error => new Resolver().error(res, 'Register error', error)); 
+            
+            if(req.body.platformIdentifier == 'w'){
                 new Whatsapp().replyMessageForClient(req.body.text, req.body.clientPlatformIdentifier);
-            else if(req.body.platformIdentifier == 't')
-                telegraf.telegram.sendMessage(req.body.clientPlatformIdentifier, req.body.text); 
-                    
+            }
+            else if(req.body.platformIdentifier == 't'){
+                telegraf.telegram.sendMessage(req.body.clientPlatformIdentifier, req.body.text);
+            }
+            
             console.log('Construyendo el Context en JSON...');
             //De forma provisional, se enviará una notificación de vuelta al agente para que se refresque su ventana del chat             
             const Context:JSON = <JSON><unknown>{ 
                 "id": req.body.chatId, 
-                "platformIdentifier": req.body.platformIdentifier, 
+                "platformIdentifier": req.body.platformIdentifier,
+                "message": req.body.text, 
                 "clientPlatformIdentifier": req.body.clientPlatformIdentifier,  
                 "agentPlatformIdentifier": req.body.agentPlatformIdentifier 
             }
 
+            let array = Context;
+            let data =global.dataObject.push(array);
+            console.log(data);
+            
             console.log('Seteando el context al backNotificationContext...');
             backNotificationContext = Context;
             console.log(backNotificationContext);
             
             console.log('Iniciando barrido del arreglo de sockets...');
-            // console.log(copiaGlobalArraySockets);
+            //console.log(copiaGlobalArraySockets);
+            if (req.body.platformIdentifier != 'c') {
+                copiaGlobalArraySockets.forEach(element => {                    
+                    console.log('Comprobando ' + element.remoteAddress +' vs '+  backNotificationContext['agentPlatformIdentifier']);
+                    //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
+                    if((element.remoteAddress == '::ffff:'+backNotificationContext['agentPlatformIdentifier']) && (sentNotification < 1)){
+                        console.log('Direccionando mensage al socket ' + element.remoteAddress);
+                        new Socket().replyMessageForAgent(backNotificationContext, element);           
+                        sentNotification++;
+                    }
+                }); 
+            }else{
+                socketIOArraySockets.forEach(element => {                    
+                    console.log('Comprobando ' + element.id +' vs '+  backNotificationContext['clientPlatformIdentifier']);
+                    //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
+                    if((element.id == backNotificationContext['clientPlatformIdentifier']) && (sentNotification < 1)){
+                        console.log('Direccionando mensage al socket ' + element.id);
+                        let notificationString = '{"agentPlatformIdentifier": "'+backNotificationContext['agentPlatformIdentifier']+'", "text": "'+backNotificationContext['message']+'", "platformIdentifier": "'+backNotificationContext['platformIdentifier']+'", "transmitter": "'+'a'+'"}';
+                        
+                        new SocketIO().IOEventEmit('server-message',element,notificationString);
+                        //new Socket().replyMessageForAgent(backNotificationContext, element);           
+                        sentNotification++;
+                    }
+                }); 
+            }    
+
+            
+            global.globalArraySockets = copiaGlobalArraySockets;  
+            console.log('Envío de notificación termidado.');
+            
+        }
+        catch(ex) { 
+            console.log('Error[outcommingMessage]' + ex); 
+            //new Resolver().exception(res, 'Unexpected error.', ex); 
+        }
+        //res.end(); 
+        next();
+    }
+
+    /* public async outcommingWebMessage(req:Request, res:Response, next:NextFunction): Promise<void>{        
+        let copiaGlobalArraySockets = global.globalArraySockets;
+        let backNotificationContext;
+        let sentNotification = 0;
+
+        try{
+            console.log('Entrando a outcommingWebMessage');
+            await getRepository(OpeChatHistoric).save(req.body)
+            .then(result => { new Resolver().success(res, 'Register succesfull', result)})
+            .catch(error => { new Resolver().error(res, 'Register error', error)});
+
+            console.log('Construyendo el Contexto en Json');
+
+            const Context:JSON = <JSON><unknown>{
+                "id": req.body.chatId, 
+                "platformIdentifier": req.body.platformIdentifier,
+                "message": req.body.text, 
+                "clientPlatformIdentifier": req.body.clientPlatformIdentifier,  
+                "agentPlatformIdentifier": req.body.agentPlatformIdentifier 
+            }
+
+            console.log('Seteando el context al backNotificationContext');
+            backNotificationContext = Context;
+            //res.json(backNotificationContext);
+            console.log(backNotificationContext);
+
+            console.log('Iniciando barrido del arreglo de sockets...');
+            //console.log(copiaGlobalArraySockets);
             copiaGlobalArraySockets.forEach(element => {                    
                 console.log('Comprobando ' + element.remoteAddress +' vs '+  backNotificationContext['agentPlatformIdentifier']);
                 //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
@@ -743,13 +830,12 @@ export class MessengerController {
             }); 
             global.globalArraySockets = copiaGlobalArraySockets;  
             console.log('Envío de notificación termidado.');
+        }catch(ex){
+            console.log(`Error[outcommingMessage]: ${ex}`);
+            new Resolver().exception(res, `Unexpected error: ${ex}`);
         }
-        catch(ex) { 
-            console.log('Error[outcommingMessage]' + ex); 
-            new Resolver().exception(res, 'Unexpected error.', ex); 
-        } 
-    }
-
+    } */
+    
     public async recoverActiveChats(req:Request, res:Response): Promise<void>{
         try{ 
             console.log('Recuperando mensajes del agente: ' + req.body.userId);

@@ -2,7 +2,6 @@ import { Request, Response} from "express";
 import {getRepository} from "typeorm";
 import {CatMenus} from "../models/menu";
 import {Resolver} from "../services/resolver";
-import {Utils} from "../services/utils";
 
 export class MenuController {
 

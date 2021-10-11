@@ -1,6 +1,7 @@
 import { MessengerController } from './../controllers/messenger-controller';
 import * as net from 'net';
 import * as globalArraySockets from './global';
+import { SocketIO } from './socketIO';
 
 export class Socket {
     private mensajeBienvenida:String;
@@ -60,7 +61,7 @@ export class Socket {
                         if (clearData.platformIdentifier == 'c' && clearData.transmitter == 'c') {
                             console.log("Y si viene desde un chat web!");
                             try{   
-                                MessengerController.prototype.standardizeIncommingMessage(clearData,'c');               
+                                MessengerController.prototype.standardizeIncommingMessage(clearData,'c');
                             }
                             catch(ex){
                                 console.log('Error[incommingWebMessage]:' + ex);
@@ -75,12 +76,11 @@ export class Socket {
                                         this.replyMessageForAgent(clearData, element);
                                         sentNotification++
                                     }
-                                    
                                 });
                                 //socket.write(data);
                             }
                             catch(ex){
-                                console.log(`Erro al mandar mensaje al cliente Web ${ex}`)
+                                console.log(`Error  al mandar mensaje al cliente Web ${ex}`)
                             }
                         }
                     }
@@ -115,16 +115,19 @@ export class Socket {
 
     public replyMessageForAgent(messageContext:JSON, agentSocket:net.Socket): void{
         try{
+            //OUTCOMMING
             if(messageContext['platformIdentifier'] == 'c' && messageContext['transmitter'] == 'a' ){
-                let notificationString = '{"clientPlatformIdentifier": "'+messageContext['clientPlatformIdentifier']+'", "text": "'+messageContext['text']+'", "platformIdentifier": "'+messageContext['clientPlatformIdentifier']+', "transmitter": "'+messageContext['transmitter']+'"}';
+                let notificationString = '{"agentPlatformIdentifier": "'+messageContext['agentPlatformIdentifier']+'", "text": "'+messageContext['text']+'", "platformIdentifier": "'+messageContext['platformIdentifier']+'", "transmitter": "'+messageContext['transmitter']+'"}';
                 console.log('Cuerpo original de la notificación: ' + notificationString); 
-                agentSocket.write(notificationString);   
+                //agentSocket.write(notificationString);
+                new SocketIO().IOEventEmit('server-message', notificationString);
                 console.log('Notificación enviada a ' +  messageContext['clientPlatformIdentifier']);   
             }
             else{
                 let notificationString = '{"chatId": "'+messageContext['id']+'", "platformIdentifier": "'+messageContext['platformIdentifier']+'", "clientPlatformIdentifier": "'+messageContext['clientPlatformIdentifier']+'"}'; //, "numberToSend": "'+messageContext['NumberToSend']+'", "notificacionType": "'+messageContext['notificationType']+'"
                 console.log('Cuerpo original de la notificación: ' + notificationString); 
-                agentSocket.write(notificationString);   
+                agentSocket.write(notificationString);
+                //new SocketIO().sendMessage('no-client', 'socket', agentSocket);   
                 console.log('Notificación enviada a ' +  messageContext['agentPlatformIdentifier']);
             }
   
@@ -134,10 +137,6 @@ export class Socket {
         }
     }
 
-    /*
-        El metodo de replyMessageForClient no se está invocando en ninguna parte del código
-        por consiguiente no es indispensable para la API, ya se probo, considerar quitarlo.
-     */
     public replyMessageForClient(agentSocket:String,messageString:String){
         try{  
             console.log('replyMessageForClient: Iniciando envío de mensaje desde el agente ' + agentSocket +' a cliente.');

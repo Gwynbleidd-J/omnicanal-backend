@@ -22,4 +22,6 @@ import * as net from 'net';
 declare global{
     var cadenaGlobal: string;
     var globalArraySockets:any;
+    var dataObject:any;
+    var socketIOArraySockets:any;
 }
