@@ -67,7 +67,8 @@ export class CatUsers {
     @OneToMany(()=>OpeCalls, call =>call.user)
     call:OpeChats; 
 
-    
+    @Column({ default: 2 })
+    maxActiveChats:number;
 
         /*
         @Column({ nullable: true })

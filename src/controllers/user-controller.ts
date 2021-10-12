@@ -161,4 +161,28 @@ export class UserController {
             console.log(`Error[updateUserActiveIp ${ex}`);
         }
     }
+
+    public async updateMaxActiveChats(req:Request, res:Response): Promise<void>{
+        try{
+            console.log('Actualizando el campo MaxActiveChats del Usuario')
+            const maxActiveChats = await getRepository(CatUsers)
+            .createQueryBuilder()
+            .update(CatUsers)
+            .set({maxActiveChats: req.body.maxActiveChats})
+            .where("ID = :id",{id:req.body.id})
+            .execute();
+
+            if(maxActiveChats.affected === 1){
+                console.log('campo maxActiveChats actualizado correctamente');
+                new Resolver().success(res, 'maxActiveChat Correctly modified');
+            }
+            else{
+                console.log('No se pudo actualizar correctamente maxActiveChats');
+            }
+        }
+        catch(ex){
+            console.log(`Error[updateMaxActiveChats ${ex}`);
+        }
+    }
+
 }

@@ -446,10 +446,20 @@ export class MessengerController {
  
     public async getDisponibleAgent(platformIdentifier:String):Promise<any>{
         try{ 
+            //CONSULTA DE AGENTES ACTIVOS CON UN LIMITE GENERAL DE CHATS
+            // const user = await getRepository(CatUsers)
+            //     .createQueryBuilder("user")
+            //     .leftJoinAndSelect("user.status", 'status')
+            //     .where(" user.activeChats < :activeChats", {activeChats: 4})  
+            //     .andWhere(" user.statusID = :statusID", {statusID: 7}) //Contemplar después añadir el filtro para el estatus del usuario
+            //     .orderBy(" user.activeChats", "ASC") 
+            //     .getOne();
+
+            //CONSULTA DE AGENTES ACTIVOS CON CAMPO maxActiveChats de catUsers
             const user = await getRepository(CatUsers)
                 .createQueryBuilder("user")
                 .leftJoinAndSelect("user.status", 'status')
-                .where(" user.activeChats < :activeChats", {activeChats: 4})  
+                .where(" user.activeChats < user.maxActiveChats")  
                 .andWhere(" user.statusID = :statusID", {statusID: 7}) //Contemplar después añadir el filtro para el estatus del usuario
                 .orderBy(" user.activeChats", "ASC") 
                 .getOne();
