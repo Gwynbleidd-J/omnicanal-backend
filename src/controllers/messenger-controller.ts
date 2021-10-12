@@ -772,8 +772,23 @@ export class MessengerController {
                         let notificationString = '{"agentPlatformIdentifier": "'+backNotificationContext['agentPlatformIdentifier']+'", "text": "'+backNotificationContext['message']+'", "platformIdentifier": "'+backNotificationContext['platformIdentifier']+'", "transmitter": "'+'a'+'"}';
                         
                         new SocketIO().IOEventEmit('server-message',element,notificationString);
+                        
                         //new Socket().replyMessageForAgent(backNotificationContext, element);           
                         sentNotification++;
+
+                        //Esto es para enviarle la notificacion al agente
+                        let sentNotificationIO= 0;
+                        copiaGlobalArraySockets.forEach(element => {                    
+                            console.log('Comprobando ' + element.remoteAddress +' vs '+  backNotificationContext['agentPlatformIdentifier']);
+                            //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
+                            if((element.remoteAddress == '::ffff:'+backNotificationContext['agentPlatformIdentifier']) && (sentNotificationIO < 1)){
+                                console.log('Direccionando mensage al socket ' + element.remoteAddress);
+                                new Socket().replyMessageForAgent(backNotificationContext, element);           
+                                sentNotificationIO++;
+                            }
+                        }); 
+
+
                     }
                 }); 
             }    

@@ -117,15 +117,12 @@ export class Server {
             //console.log(`Array: ${global.socketIOArraySockets}`);
             
             new SocketIO().IOEventOn('client-message', socket);
-
-            new SocketIO().IOEventOn('no-client', socket);
+            //new SocketIO().IOEventOn('no-client', socket);
 
             socket.on('disconnect', ()=>{
                 console.log(`A client has disconnect: ${socket.handshake.address}:${socket.id}`);
-
-                socket.emit('no-client', {
-                    message: 'cliente desconectado'
-                })
+                global.socketIOArraySockets.pop(socket.id);
+                //console.log(`Array: ${global.socketIOArraySockets}`);
             });
 
         });

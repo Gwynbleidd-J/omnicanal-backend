@@ -16,14 +16,9 @@ export class SocketIO{
             new MessengerController().standardizeIncommingMessage(data, 'c');
         })
     }
+        
     public IOEventEmit(event:string, type?:any,data?:any){
         type.emit(event, data);
         console.log(data);
-    }
-
-    public sendMessage(event:string, type?:any, data?:any, agentSocket?:any){
-        type.on(event, ()=>{
-            agentSocket.write('cliente desconectado');
-        })
     }
 }

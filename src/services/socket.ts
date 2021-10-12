@@ -127,7 +127,8 @@ export class Socket {
                 let notificationString = '{"chatId": "'+messageContext['id']+'", "platformIdentifier": "'+messageContext['platformIdentifier']+'", "clientPlatformIdentifier": "'+messageContext['clientPlatformIdentifier']+'"}'; //, "numberToSend": "'+messageContext['NumberToSend']+'", "notificacionType": "'+messageContext['notificationType']+'"
                 console.log('Cuerpo original de la notificación: ' + notificationString); 
                 agentSocket.write(notificationString);
-                //new SocketIO().sendMessage('no-client', 'socket', agentSocket);   
+
+                /////------Linea de codigo para mandar un mesaje cuando se cierre una página-----//////
                 console.log('Notificación enviada a ' +  messageContext['agentPlatformIdentifier']);
             }
   
