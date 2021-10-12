@@ -41,7 +41,7 @@ export class StatusUserController{
                 new Resolver().success(res, 'User Status correctly inserted');
             }
             else{
-                console.log('No se pudo actualizar StatusId en Cat_Users');
+                console.log('No se pudo actualizar StatusId en CatUsers');
             }
         }
         catch(ex){

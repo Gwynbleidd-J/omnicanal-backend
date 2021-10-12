@@ -34,6 +34,7 @@ export class UserController {
                 .orderBy("users.name", "ASC") 
                 .getMany(); 
 
+
             // const users = await getRepository(CatUsers);
 
 
@@ -58,7 +59,7 @@ export class UserController {
     
     public async getUserDetail(req:Request, res:Response): Promise<void> {
         try{ 
-            console.log('Consultando los agentes acargo de un supervisor');
+            console.log(`Consultado el detalle del agente con ID:${req.body.userI}`);
              /* 
             const agent = await getRepository(CatUsers)
             .createQueryBuilder("user")

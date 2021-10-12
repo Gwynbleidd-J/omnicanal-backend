@@ -108,7 +108,7 @@ export class Server {
         this.io = new socketio.Server(this.server, {
             cors:{
                 origin: '*'
-            },    
+            },  
         })
 
         this.io.on('connection', (socket)=>{
