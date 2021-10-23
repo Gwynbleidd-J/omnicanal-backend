@@ -2,6 +2,7 @@ import { MessengerController } from './../controllers/messenger-controller';
 import * as net from 'net';
 import * as globalArraySockets from './global';
 import { SocketIO } from './socketIO';
+import { UserController } from '../controllers/user-controller';
 
 export class Socket {
     private mensajeBienvenida:String;
@@ -90,7 +91,7 @@ export class Socket {
                 
             });
 
-            socket.on('close', ()=>{
+            socket.on('close', async ()=>{
                 let index = global.globalArraySockets.findIndex((o) =>{
                     return o.remoteAddress === socket.remoteAddress && o.remotePort === socket.remotePort;
                 });
@@ -101,6 +102,10 @@ export class Socket {
                     sock.write(`${this.clientAddress} disconnected`)
                 });
                 console.log(`connection closed: ${this.clientAddress}`);
+                let activeIP = this.clientAddress.substring(7,20);
+                console.log("Su direccion es:" +activeIP);
+                let agent = new UserController().getAgentByIP(activeIP);
+                new MessengerController().NotificateLeader("FS", (await agent).ID , null, null);
             });
             socket.on('error', err=>{
                 

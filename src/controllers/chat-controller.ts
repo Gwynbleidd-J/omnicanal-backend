@@ -5,6 +5,8 @@ import { Utils } from "../services/utils";
 import { OpeChats } from '../models/chat';
 import { CatUsers } from '../models/user';
 import { Console } from "console";
+import { MessengerController } from "./messenger-controller";
+import { UserController } from "./user-controller";
 
 export class ChatController {
     public async closeChat(req:Request, res:Response): Promise<void>{
@@ -17,8 +19,17 @@ export class ChatController {
                 .set({ statusId: 3})
                 .where("id = :id", { id: req.body.chatId}) 
                 .execute();  
-            // console.log(updatedChat); 
-            if(updatedActiveChats.affected === 1) { 
+            // console.log(updatedChat);
+            
+       
+            if(updatedActiveChats.affected === 1) {
+                
+
+                //let chatO = await (this.getChatAgent.bind(this)(req.body.chatId));
+                
+                let chat = await new UserController().getAgentByChat(req.body.chatId)
+                new MessengerController().NotificateLeader("FC",chat.userId, chat, null);
+         
                 console.log('Chat cerrado correctamente'); //updateResult = true;
                 new Resolver().success(res, 'Chat correctly finished');
             }

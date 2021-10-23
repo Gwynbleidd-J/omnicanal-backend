@@ -4,6 +4,7 @@ import { Resolver } from '../services/resolver';
 import { Utils } from "../services/utils";
 import { CatAuxiliarStatuses } from '../models/auxiliarStatus';
 import { CatUsers } from '../models/user';
+import { MessengerController } from "./messenger-controller";
 
 export class StatusUserController{
     public async getUserStatus(req:Request, res: Response): Promise<void>{
@@ -37,6 +38,10 @@ export class StatusUserController{
             
 
             if(updateUserStatus.affected === 1){
+
+                let status = await new StatusUserController().getAgentStatus(req.body.status);
+                new MessengerController().NotificateLeader("CS", req.body.id, null, status);
+
                 console.log('User Status Asignado Correctamente');
                 new Resolver().success(res, 'User Status correctly inserted');
             }
@@ -48,4 +53,20 @@ export class StatusUserController{
             new Resolver().exception(res, 'Unexpected error', ex);
         }
     }
+
+    public async getAgentStatus(statusId: any) {
+        try {
+            console.log("\nObteniendo status del agente...");
+            const status = await getRepository(CatAuxiliarStatuses)
+                .createQueryBuilder("status")
+                .where("status.id = :id", {  id: statusId })
+                .getOne();
+
+            console.log("Status del agente:" + status.status );
+            return status.status;
+        } catch (error) {
+            console.log("Error[getAgentStatus]status-controller:" + error);
+        }
+    }
+
 }
