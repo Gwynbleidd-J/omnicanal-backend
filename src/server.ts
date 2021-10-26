@@ -8,7 +8,7 @@ import  cors from 'cors';
 import { Resolver } from "./services/resolver"; 
 import {Telegram} from './services/telegram';
 import { SocketIO } from './services/socketIO';
-// import path from 'path';
+import path from 'path';
  import * as socketio from 'socket.io';
 //Routes Imports
 import { UserRouting } from './routes/user-routing';
@@ -23,6 +23,7 @@ import { StatusRouting } from './routes/status-routing';
 import { ParametersRouting } from './routes/applicationParameters-routing';
 import { getRepository } from "typeorm";
 import { CatAppParameters } from './models/appParameters';
+import { Console } from 'console';
 
 
 export class Server {
@@ -32,9 +33,11 @@ export class Server {
     public socketio:SocketIO;
     public io:socketio.Server;
     public server:any;
-    public botToken:any
+    public dataObject:any;
     
     constructor() {
+        this.dataObject = [];
+        global.appParameters = this.dataObject;
         this.app = express();
         this.config();
         this.InitServices();
@@ -44,7 +47,7 @@ export class Server {
 
     public config(): void {
         this.app.set('port', process.env.SERVER_PORT || 3000);
-        /* this.app.use(express.static(path.join(__dirname, 'public'))); */
+        this.app.use(express.static(path.join(__dirname, 'public')));
         this.app.use(express.urlencoded({ extended: true }));
         this.app.use(cors());
         this.app.use(express.json());
@@ -100,8 +103,9 @@ export class Server {
         global.socketIOArraySockets = [];
         this.io = new socketio.Server(this.server, {
             cors:{
-                origin: '*'
-            },  
+                origin: '*',
+                methods:["GET", "POST"]
+            },
         })
 
         this.io.on('connection', (socket)=>{
@@ -123,15 +127,15 @@ export class Server {
 
     public async AppParameters():Promise<void>{
         try{
-            this.botToken = await getRepository(CatAppParameters)
+            const botToken = await getRepository(CatAppParameters)
             .createQueryBuilder("parameters")
             .select(["parameters.twilioAccountSID", "parameters.twilioAuthToken", "parameters.whatsappAccount", "parameters.botTokenTelegram"])
             .where("id = :id" ,{ id:1 })
             .getOne();
-            console.log(this.botToken);
-            
-            let jsonData = JSON.stringify(this.botToken);
-            console.log(jsonData);
+            //console.log(botToken , "\n");
+            let jsonData = JSON.stringify(botToken);
+            let jsonParsed = JSON.parse(jsonData);
+            //console.log(jsonParsed);
         }
         catch(ex){
             console.log(`Unexpected error ${ex}`)

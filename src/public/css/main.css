@@ -1,0 +1,195 @@
+html {
+    box-sizing: border-box;
+    font-size: 62.5%;
+    /*RESET PARA REMS  --62.5% = 10px DE 16px*/
+    /*CON ESTA SENTENCIA HACE QUE UN 1rem SEA EQUIVALENTE A 10px*/
+}
+
+*,
+*:before,
+*:after {
+    box-sizing: inherit;
+}
+
+body {
+    font-family: 'Lato', sans-serif;
+    font-size: 1.6rem;
+    line-height: 2;
+}
+
+
+/*GLOBALES*/
+
+.contenedor {
+    width: 95%;
+    max-width: 120rem;
+    margin: 0 auto;
+}
+
+h1 {
+    font-size: 3.8rem;
+}
+
+h2 {
+    font-size: 3.4rem;
+}
+
+
+/*UTILIDADES*/
+
+.seccion {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+.fw-300 {
+    font-weight: 300;
+}
+
+.centrar-texto {
+    text-align: center;
+}
+
+.contenido-centrado {
+    max-width: 80rem;
+}
+
+
+/*BOTONES*/
+
+.boton {
+    color: #FFFFFF;
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 1.8rem;
+    padding: 1rem 3rem;
+    display: inline-block;
+    text-align: center;
+    border: none;
+    display: block;
+    flex: 0 0 100%;
+}
+
+@media (min-width: 768px) {
+    .boton {
+        display: inline-block;
+        flex: 0 0 auto;
+    }
+}
+
+.boton:hover {
+    cursor: pointer;
+}
+
+.boton-verde {
+    background-color: #71B100;
+}
+
+
+/*HEADER*/
+
+.contenido-header {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: center;
+}
+
+
+/*FOOTER*/
+
+.site-footer {
+    background-color: #333333;
+    margin: 0;
+}
+
+.contenedor-footer {
+    padding: 2rem 0;
+    text-align: center;
+}
+
+@media (min-width: 768px) {
+    .contenedor-footer {
+        display: flex;
+        justify-content: space-between;
+    }
+}
+
+.copyright {
+    margin: auto;
+    color: #FFFFFF;
+}
+
+legend {
+    font-size: 2rem;
+    color: #4f4f4f;
+}
+
+label {
+    font-weight: 700;
+    text-transform: uppercase;
+    display: block;
+}
+
+
+/* FORM MESSAGE */
+
+input:not([type="submit"]),
+select {
+    padding: 1.5rem;
+    display: block;
+    width: 100%;
+    background-color: #E1E1E1;
+    margin-bottom: 2rem;
+    border: none;
+    border-radius: 1rem;
+}
+
+select {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.container {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 36rem;
+    background-color: #E1E1E1;
+    margin-bottom: 2rem;
+    border: none;
+    border-radius: 1rem;
+    overflow: auto;
+}
+
+.paragraf {
+    border-radius: .4rem;
+    width: 35rem;
+    padding-left: 1%;
+}
+
+.p-client {
+    border: .1rem solid #0D4B46;
+    background-color: #0D4B46;
+    color: #FFFFFF;
+}
+
+.p-server {
+    border: .1rem solid #42424A;
+    background-color: #42424A;
+    color: #FFFFFF;
+    margin-left: auto;
+}
+
+
+/* #messages p {
+    border: .1rem solid #0D4B46;
+    background-color: #0D4B46;
+    color: #FFFFFF;
+    COLOR PARA MENSAJES DESDE EL SERVER: #42424A
+    border-radius: .4rem;
+    width: 30rem;
+    padding-left: 1%;
+} */

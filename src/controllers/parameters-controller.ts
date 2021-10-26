@@ -130,7 +130,6 @@ export class ParametersController{
             else{
                 new Resolver().exception(res, 'Something went wrong with bot parameters info.');
             }
-            
         }catch(ex){
             new Resolver().exception(res,'Unexpected error.', ex);
         }
