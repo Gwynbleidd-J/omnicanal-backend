@@ -1,23 +1,13 @@
 import { Column, Entity, OneToOne, PrimaryGeneratedColumn, Table,  } from "typeorm";
-import { CatRols } from "./rol";
-import { CatUsers } from "./user";
+import {CatUsers}  from "./user";
 
 @Entity()
-export class CatSoftphoneCredentials{
+export class CatSoftphoneParameters{
     @PrimaryGeneratedColumn('increment')
     id:number;
 
-    @Column({type:'bool'})
-    requiredRegister:boolean;
-    
-    @Column({type:'varchar', length: 50, nullable: true})
-    displayName:string;
-
     @Column({type:'varchar', length: 50})
     userName:string;
-
-    @Column({type:'varchar', length: 50})
-    registerName:string
 
     @Column({type:'varchar', length: 50})
     password:string
@@ -25,11 +15,17 @@ export class CatSoftphoneCredentials{
     @Column({type:'varchar', length: 50})
     domain:string
 
-    @Column({type:'integer', nullable: true})
-    port:number
-
     @Column({type:'varchar', length: 50})
-    proxy:string
+    displayName:string;
+    
+    @Column({type:'varchar', length: 50})
+    authName:string
+
+    @Column({type: 'varchar', length: 50})
+    server:string;
+
+    @Column({type:'integer'})
+    port:number;
 
     @OneToOne(()=> CatUsers, user => user.credentials)
     user:CatUsers;

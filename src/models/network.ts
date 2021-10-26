@@ -8,12 +8,12 @@ export class CatNetworks{
     @PrimaryGeneratedColumn('increment')   
     id:number; 
 
-    @Column({type:'varchar', length: 250})
-    name:String; 
-
     @Column({type:'varchar', length: 50}) 
-    category:String;
-    
+    typification:String;
+
+    @Column({type:'varchar', length: 250})
+    description:String; 
+
     @OneToMany(() => OpeChats, chat => chat.network)
     chat: OpeChats[];
 

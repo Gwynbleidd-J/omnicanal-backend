@@ -3,7 +3,7 @@ import { getRepository } from "typeorm";
 import { Resolver } from '../services/resolver';
 import { Utils } from "../services/utils";
 import { CatAuxiliarStatuses } from '../models/auxiliarStatus';
-import { CatUsers } from '../models/user';
+import  {CatUsers}  from '../models/user';
 
 export class StatusUserController{
     public async getUserStatus(req:Request, res: Response): Promise<void>{

@@ -1,6 +1,6 @@
 import { OpeChatHistoric } from './../models/chatHistorical';
 import { Socket } from './../services/socket';
-import { CatUsers } from './../models/user'; 
+import  {CatUsers}  from './../models/user'; 
 import { Whatsapp } from '../services/whatsapp';
 import { NextFunction, Request, Response, response } from 'express';
 import { OpeChats } from './../models/chat';
@@ -8,6 +8,8 @@ import { getRepository, SimpleConsoleLogger, UpdateResult } from "typeorm";
 import { Resolver } from "../services/resolver";
 import { Telegraf } from 'telegraf'; 
 import { SocketIO } from '../services/socketIO';
+import { CatAppParameters } from '../models/appParameters';
+import { Utils } from '../services/utils';
 
 //CÓDIGO QUE ESTA EN LA CARPETA DEL PROYECTO.
 //CODIGO QUE ESTA EN MI COPIA DEL REPOSITORIO CODIGO QUE ESTÁ EN MI COPIA DEL PROYECTO.
@@ -19,12 +21,17 @@ export class MessengerController {
     private contextoGenerico:any;
     public dataObject: any;
 
+    
+
+
     constructor(telegraf?:Telegraf) {
         this.telegraf = new Telegraf(process.env.BOT_TOKEN);
+        //this.telegraf = new Telegraf(new Utils().token);
+        //new Utils().getBotToken();
         this.dataObject = [];
         global.dataObject = this.dataObject;
     }
-    
+
     /* #region Comments */
     /*
     Método:     incommingMessage
@@ -726,6 +733,7 @@ export class MessengerController {
   
     public async outcommingMessage(req:Request, res:Response, next:NextFunction): Promise<void>{
         let telegraf:Telegraf = new Telegraf(process.env.BOT_TOKEN);
+        //let telegraf:Telegraf = new Telegraf(new Utils().token);
         let copiaGlobalArraySockets = global.globalArraySockets;
         let backNotificationContext; 
         var sentNotification = 0; 

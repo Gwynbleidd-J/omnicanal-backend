@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getRepository, createConnection, QueryBuilder, Brackets } from 'typeorm';
+import { getRepository, createConnection, QueryBuilder, Brackets, getConnection, getManager } from 'typeorm';
 import { CatUsers } from '../models/user'; 
 import { CatRols } from './../models/rol';
 import { Resolver } from '../services/resolver';
@@ -60,17 +60,7 @@ export class UserController {
     public async getUserDetail(req:Request, res:Response): Promise<void> {
         try{ 
             console.log(`Consultado el detalle del agente con ID:${req.body.userI}`);
-             /* 
-            const agent = await getRepository(CatUsers)
-            .createQueryBuilder("user")
-            .leftJoinAndSelect("user.rol", "rol")
-            .leftJoinAndSelect("user.status", 'status')
-            .leftJoinAndSelect("user.chat", "chat")
-            .leftJoinAndSelect("user.call", "call")
-            .where("user.ID = :id",{id: req.body.userId})
-            .getOne();
-            */
-
+            
             const details = await getRepository(CatUsers)
             .createQueryBuilder("user")
             .leftJoin("user.chat", "chat")
@@ -158,7 +148,7 @@ export class UserController {
             }
         }
         catch(ex){
-            console.log(`Error[updateUserActiveIp ${ex}`);
+            console.log(`Error updateUserActiveIp ${ex}`);
         }
     }
 

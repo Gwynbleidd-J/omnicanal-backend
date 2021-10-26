@@ -3,7 +3,7 @@ import { NextFunction, request, Request, response, Response } from "express";
 import jwt from "jsonwebtoken";
 
 import { Connection, getRepository, Repository } from "typeorm";
-import { CatUsers } from "../models/user";
+import  {CatUsers}  from "../models/user";
 
 import { Resolver } from '../services/resolver';
 import { Utils } from "../services/utils";

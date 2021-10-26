@@ -1,6 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, OneToOne, JoinColumn, OneToMany} from "typeorm";
 import { CatAuxiliarStatuses } from "./auxiliarStatus";
-import { CatSoftphoneCredentials } from './softphoneCredentials';
+import { CatSoftphoneParameters } from './softphoneParameters';
 import { OpeChats } from './chat';
 import { OpeCalls } from './call';
 import{CatRols} from './rol'; 
@@ -57,10 +57,10 @@ export class CatUsers {
     @JoinColumn({name: 'statusID'})
     status: CatAuxiliarStatuses;
     
-    @OneToOne(()=> CatSoftphoneCredentials, credentials => credentials.user)
+    @OneToOne(()=> CatSoftphoneParameters, credentials => credentials.user)
     @JoinColumn()
-    credentials:CatSoftphoneCredentials;
-
+    credentials:CatSoftphoneParameters;
+    
     @OneToMany(()=>OpeChats, chat =>chat.user)
     chat:OpeChats;
     

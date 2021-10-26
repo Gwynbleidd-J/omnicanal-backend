@@ -3,7 +3,7 @@ import { Connection, getRepository, Repository } from "typeorm";
 import { Resolver } from '../services/resolver';
 import { Utils } from "../services/utils"; 
 import { OpeChats } from '../models/chat';
-import { CatUsers } from '../models/user';
+import  {CatUsers}  from '../models/user';
 import { Console } from "console";
 
 export class ChatController {

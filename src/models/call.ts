@@ -1,5 +1,5 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Table, Timestamp, JoinColumn, OneToMany } from 'typeorm';
-import { CatUsers } from './user';
+import  {CatUsers}  from './user';
 import { CatComunicationStatuses } from './comunicationStatus';
 import { CatAuxiliarStatuses } from './auxiliarStatus';
 import { CatNetworks } from './network';

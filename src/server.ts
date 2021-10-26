@@ -1,9 +1,10 @@
 //Libraries Import
 require('dotenv').config();
 import { Socket } from './services/socket';
+import 'reflect-metadata'
 import express from "express";
 import { createConnection, Connection } from 'typeorm';
-import cors from 'cors';
+import  cors from 'cors';
 import { Resolver } from "./services/resolver"; 
 import {Telegram} from './services/telegram';
 import { SocketIO } from './services/socketIO';
@@ -19,8 +20,9 @@ import { RolRouting } from './routes/rol-routing';
 import { ChatRouting } from './routes/chat-routing';
 import { NetworkRouting } from './routes/network-routing';
 import { StatusRouting } from './routes/status-routing';
-import { TablaRouting } from './routes/tabla-routing';
-
+import { ParametersRouting } from './routes/applicationParameters-routing';
+import { getRepository } from "typeorm";
+import { CatAppParameters } from './models/appParameters';
 
 
 export class Server {
@@ -30,14 +32,14 @@ export class Server {
     public socketio:SocketIO;
     public io:socketio.Server;
     public server:any;
-    public socket:any;
+    public botToken:any
     
     constructor() {
         this.app = express();
         this.config();
         this.InitServices();
         this.loadRoutes();
-        
+
     }
 
     public config(): void {
@@ -56,7 +58,7 @@ export class Server {
         this.app.get('/api', (req, res) => { res.send({message: process.env.WELCOME_MESSAGE}) });
         this.app.use('/api/user', new UserRouting().router);
         this.app.use('/api/auth', new AuthRouting().router);
-        // this.app.use('/api/whatsapp', new MessengerRouting().router); 
+        //this.app.use('/api/whatsapp', new MessengerRouting().router); 
         //declarar las rutas para el pedido y organización de los mensajes 
         this.app.use('/api/messenger', new MessengerRouting(this.telegram.telegraf).router);
         this.app.use('/api/menu', new MenuRouting().router);
@@ -65,28 +67,17 @@ export class Server {
         this.app.use('/api/chat', new ChatRouting().router);
         this.app.use('/api/network', new  NetworkRouting().router);
         this.app.use('/api/status', new StatusRouting().router);
-        this.app.use('/api/tabla', new TablaRouting().router);
+        this.app.use('/api/parameters', new ParametersRouting().router)
         this.app.get('*', (req, res) => new Resolver().notFound(res, 'Oops! This route not exists.'));
     } 
 
     public initDatabase(): void {
-        
-        /* createConnection().then(connect =>{
-            console.log(`Databases connected`);
-        }).catch(err =>{
-            console.log(`Can't connect to database ${err}`);
-        }); */
-        createConnection("default").then(connect => {
-            console.log(`PostgreSQL Database connected`);
+        createConnection().then(connect => {
+            console.log(`PostgreSQL Database connected on ${connect.name}`);
+            this.AppParameters();
         }).catch(err => {
             console.log(`Can't connect to database: ${err}`);
         });
-        
-        // createConnection("second-connection").then(connect =>{
-        //     console.log(`Mysql Database connected`);
-        // }).catch(err=>{
-        //     console.log(`Can't connect to database: ${err}`);
-        // });
     }
 
     public start(): void {
@@ -94,9 +85,11 @@ export class Server {
             console.log(`Server listen on port: ${this.app.get('port')}`);
             this.initDatabase();
             this.InitSocketIO();
+            
         });        
     }
 
+     //Metodo InitServices
     public InitServices():void {
         this.telegram = new Telegram();
         this.mySocket = new Socket(); 
@@ -127,7 +120,23 @@ export class Server {
 
         });
     }    
-    //Metodo InitServices
+
+    public async AppParameters():Promise<void>{
+        try{
+            this.botToken = await getRepository(CatAppParameters)
+            .createQueryBuilder("parameters")
+            .select(["parameters.twilioAccountSID", "parameters.twilioAuthToken", "parameters.whatsappAccount", "parameters.botTokenTelegram"])
+            .where("id = :id" ,{ id:1 })
+            .getOne();
+            console.log(this.botToken);
+            
+            let jsonData = JSON.stringify(this.botToken);
+            console.log(jsonData);
+        }
+        catch(ex){
+            console.log(`Unexpected error ${ex}`)
+        }
+    }
 
 }
 

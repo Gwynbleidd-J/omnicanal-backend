@@ -1,4 +1,7 @@
 import { getManager } from "typeorm";
+import { getRepository } from "typeorm";
+import { CatAppParameters } from "../models/appParameters";
+import { Telegraf } from "telegraf";
 
 export class Utils {
     public async encrypt(password:string): Promise<string> {
@@ -7,4 +10,6 @@ export class Utils {
 
         return pass[0].md5;
     }
+
+
 }

@@ -1,5 +1,5 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn, Table, JoinColumn, OneToOne } from 'typeorm';
-import { CatUsers } from './user';
+import  {CatUsers}  from './user';
 
 @Entity()
 export class CatAuxiliarStatuses{
