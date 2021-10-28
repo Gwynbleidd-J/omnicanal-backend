@@ -156,7 +156,7 @@ export class MessengerController {
         let agentId = agent;
 
         let leader = await this.getLeader(agentId);
-        console.log("Lider: " + leader);
+        console.log("\nLider: " + JSON.stringify(leader));
 
         let message = "";
 
@@ -240,7 +240,7 @@ export class MessengerController {
                 .where("user.ID = :id", { id: leaderId })
                 .getOne();
 
-            console.log("Lider obtenido: " + leader);
+            console.log("\nLider obtenido: " + JSON.stringify(leader));
             let payload;
 
 
@@ -408,11 +408,22 @@ export class MessengerController {
                     copiaGlobalArraySockets.forEach(element => {
                         // console.log('Comprobando ' + element.remoteAddress +' vs '+  messageContext['agentPlatformIdentifier']);
                         //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
-                        if ((element.remoteAddress == '::ffff:' + messageContext['agentPlatformIdentifier']) && (sentNotification < 1)) {
+                        
+                        
+                        // if ((element.remoteAddress == '::ffff:' + messageContext['agentPlatformIdentifier']) && (sentNotification < 1)) {
+                        //     console.log('Direccionando mensaje al socket ' + element.remoteAddress);
+                        //     new Socket().replyMessageForAgent(messageContext, element);
+                        //     sentNotification++;
+                        // }
+
+                        console.log('Comprobando ' + element.remotePort +' vs '+  messageContext['agentPlatformIdentifier']);
+                        if ((element.remotePort == messageContext['agentPlatformIdentifier']) && (sentNotification < 1)) {
                             console.log('Direccionando mensaje al socket ' + element.remoteAddress);
                             new Socket().replyMessageForAgent(messageContext, element);
                             sentNotification++;
                         }
+
+
                     });
                     global.globalArraySockets = copiaGlobalArraySockets;
                 }
