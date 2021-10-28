@@ -206,9 +206,9 @@ export class MessengerController {
 
         console.log("Recorrido de sockets en busca del supervisor");
         copiaGlobalArraySockets.forEach(element => {
-            console.log('Comprobando ' + element.remoteAddress + ' vs ' + leader['agentPlatformIdentifier']);
-            if (element.remoteAddress == '::ffff:' + leader['agentPlatformIdentifier'] && (sentNotification < 1)) {
-                console.log('Enviando notificacion a: ' + element.remoteAddress);
+            console.log('Comprobando ' + element.remotePort + ' vs ' + leader['agentPlatformIdentifier']);
+            if (element.remotePort == leader['agentPlatformIdentifier'] && (sentNotification < 1)) {
+                console.log('Enviando notificacion a: ' + element.remotePort);
 
                 let notificationString = '{"Agent": "' + leader.agent + ' ", "message": "' + message + '"}';
                 console.log('Notificacion del lider: ' + notificationString);
