@@ -97,7 +97,7 @@ export class Socket {
                 
             });
 
-            socket.on('close', async ()=>{
+            socket.on('close', ()=>{
                 let index = global.globalArraySockets.findIndex((o) =>{
                     return o.remoteAddress === socket.remoteAddress && o.remotePort === socket.remotePort;
                 });
@@ -108,10 +108,10 @@ export class Socket {
                     sock.write(`${this.clientAddress} disconnected`)
                 });
                 console.log(`connection closed: ${this.clientAddress}`);
-                let activeIP = this.clientAddress.substring(7,20);
+                let activeIP = this.clientAddress.split(": ")[1];
                 console.log("Su direccion es:" +activeIP);
-                let agent = new UserController().getAgentByIP(activeIP);
-                new MessengerController().NotificateLeader("FS", (await agent).ID , null, null);
+                let agent = new UserController().NotificateSessionClose(activeIP);
+                // new MessengerController().NotificateLeader("FS", (agent).ID , null, null);
             });
             socket.on('error', err=>{
                 

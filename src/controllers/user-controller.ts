@@ -214,7 +214,7 @@ export class UserController {
         }
     }
 
-    public async getAgentByIP(activeIP: any) {
+    public async NotificateSessionClose(activeIP: any) {
         try {
             console.log("\nObteniendo agente cerrando sesion...");
             const agent = await getRepository(CatUsers)
@@ -223,10 +223,11 @@ export class UserController {
                 .getOne();
 
             //let agentId = Chat.userId;
+            new MessengerController().NotificateLeader("FS", agent.ID , null, null);
             console.log("Agente obtenido:" + JSON.stringify(agent));
             return agent;
         } catch (error) {
-            console.log("Error[getAgentByIP]chat-controller:" + error);
+            console.log("Error[NotificateSessionClose]chat-controller:" + error);
         }
     }
 
