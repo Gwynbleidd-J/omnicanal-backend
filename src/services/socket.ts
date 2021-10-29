@@ -3,6 +3,7 @@ import * as net from 'net';
 import * as globalArraySockets from './global';
 import { SocketIO } from './socketIO';
 import { UserController } from '../controllers/user-controller';
+import { Console } from 'console';
 
 export class Socket {
     private mensajeBienvenida:String;
@@ -41,6 +42,11 @@ export class Socket {
             this.clientAddress = `${socket.remoteAddress}: ${socket.remotePort}`;
             console.log(`client connected: ${this.clientAddress}`);
             global.globalArraySockets.push(socket);
+
+            //Proceso handshake con el agente
+            var Hello = '{"socketPort": "'+socket.remotePort+'"}';
+            console.log("\nSe le mandara al agente lo siguiente:"+Hello);
+            socket.write(Hello)
 
             this.netServer.getConnections((error, count)=>{
                 if(error){
