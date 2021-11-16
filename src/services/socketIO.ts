@@ -16,7 +16,7 @@ export class SocketIO{
             new MessengerController().standardizeIncommingMessage(data, 'c');
         })
     }
-        
+      
     public IOEventEmit(event:string, type?:any,data?:any){
         type.emit(event, data);
         console.log(data);

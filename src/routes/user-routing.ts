@@ -14,6 +14,7 @@ export class UserRouting{
     private routes(): void {
         this.router.post('/', this.userController.register);
         this.router.post('/myAgents', this.userController.getUsers);
+        this.router.get('/supervisorAgents', this.userController.getSupervisorAgents);
         this.router.post('/agentInfo', this.userController.getUserDetail);
         this.router.post('/agentUpdateActiveIp', this.userController.updateUserActiveIp);
         this.router.post('/agentUpdateMaxActiveChats', this.userController.updateMaxActiveChats);

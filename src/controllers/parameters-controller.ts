@@ -92,7 +92,7 @@ export class ParametersController{
         try{
             
             const user = await getRepository(CatUsers)
-            .createQueryBuilder()
+            .createQueryBuilder("users")
             .getMany();
 
             let payload = {

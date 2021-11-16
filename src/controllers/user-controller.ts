@@ -56,6 +56,38 @@ export class UserController {
         }
     }
 
+    public async getSupervisorAgents(req: Request, res: Response): Promise<void> {
+        try {
+            console.log('Consultando a todos los agentes');
+            //console.log(req.body.leaderId);
+            const users = await getRepository(CatUsers)
+                .createQueryBuilder("users")
+                //.where("users.leaderId = :leaderId", { leaderId: req.body.leaderId })
+                .where("users.rolID = :rolId", {rolId: 1}) //El rolId 1  hace refrerencia al rol de Agente[Después habría que diferenciar cada rol en la petición] 
+                .orderBy("users.name", "ASC")
+                .getMany();
+
+
+            // const users = await getRepository(CatUsers);
+
+
+            let payload;
+
+            if (users) {
+                payload = {
+                    users: users
+                };
+                console.log(payload);
+                new Resolver().success(res, 'Agents correctly consulted', payload);
+            }
+            else
+                new Resolver().error(res, 'Something bad with agents info.');
+        }
+        catch (ex) {
+            console.log('Error[getUsers]: ' + ex);
+        }
+    }
+
     public async getCountCalls(req: Request, res: Response): Promise<void> {
         try {
             console.log('Consultando las llamadas en curso: ');

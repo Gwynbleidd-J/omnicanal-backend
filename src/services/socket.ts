@@ -3,7 +3,6 @@ import * as net from 'net';
 import * as globalArraySockets from './global';
 import { SocketIO } from './socketIO';
 import { UserController } from '../controllers/user-controller';
-import { Console } from 'console';
 
 export class Socket {
     private mensajeBienvenida:String;
