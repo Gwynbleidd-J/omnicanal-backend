@@ -24,6 +24,8 @@ import { ParametersRouting } from './routes/applicationParameters-routing';
 import { getRepository } from "typeorm";
 import { CatAppParameters } from './models/appParameters';
 import { Console } from 'console';
+import { ChatController } from './controllers/chat-controller';
+import { UserController } from './controllers/user-controller';
 
 
 export class Server {
@@ -120,6 +122,15 @@ export class Server {
                 console.log(`A client has disconnect: ${socket.handshake.address}:${socket.id}`);
                 global.socketIOArraySockets.pop(socket.id);
                 //console.log(`Array: ${global.socketIOArraySockets}`);
+
+                //Deteccion de cliente desconectado
+                // let chat = await new ChatController().getChatBySocket(socket.id);
+                // let agent = await new UserController().getAgentById(chat.userId);
+
+
+                let notificationString = '{"SocketInterrumpido": "' + socket.handshake.address + '"}';
+                console.log('Notificacion del lider: ' + notificationString);
+                socket.write(notificationString);
             });
 
         });

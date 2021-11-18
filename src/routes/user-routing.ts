@@ -18,6 +18,8 @@ export class UserRouting{
         this.router.post('/agentUpdateActiveIp', this.userController.updateUserActiveIp);
         this.router.post('/agentUpdateMaxActiveChats', this.userController.updateMaxActiveChats);
         this.router.post('/callResume', this.userController.getCountCalls);
+        this.router.get('/getAllAgents', this.userController.getAllAgents);
+        this.router.post('/validateTransferAgent', this.userController.ValidateTransferAgent);
         //this.router.post('/agentUpdateActiveChats',this.userController.updateActiveChats);
     }
 }

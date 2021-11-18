@@ -1,5 +1,5 @@
 console.log('connection success with index.html');
-const socket = io.connect('http://192.168.1.145:3001', { forceNew: true });
+const socket = io.connect('http://192.168.1.103:3001', { forceNew: true });
 
 //Esto puede funcionar si el cliente de SocketIO está en una direccion diferente del index.
 //const socket = io("https://server-domain.com/admin");

@@ -56,6 +56,81 @@ export class UserController {
         }
     }
 
+    public async getAllAgents(req: Request, res: Response) {
+        try {
+            console.log('\nObteniendo a todos los usuarios con rol 1: ');
+            const users = await getRepository(CatUsers)
+                .createQueryBuilder("users")
+                .where("users.rolID = :rolId", { rolId: 1 })
+                .orderBy("users.name", "ASC")
+                .getMany();
+
+            let payload;
+            let asu = [];
+
+
+            users.forEach(element => {
+                let objeto = {
+                    "agente": element.name + " " + element.paternalSurname + " " + element.maternalSurname,
+                    "id": element.ID
+                };
+
+                asu.push(objeto);
+            });
+
+            if (users) {
+                // payload = {
+                //     users: users
+                // };
+                console.log("Usuarios obtenidos:" + JSON.stringify(payload));
+                new Resolver().success(res, 'Agentes consultados', asu);
+            }
+            else
+                new Resolver().error(res, 'Something bad with agents info.');
+        }
+        catch (ex) {
+            console.log('Error[getUsers]: ' + ex);
+        }
+    }
+
+    public async ValidateTransferAgent(req: Request, res: Response) {
+
+        try {
+            console.log("Validando si el agente puede recibir un chat");
+            const agent = getRepository(CatUsers)
+                .createQueryBuilder("agent")
+                .where("agent.ID = :id", { id: req.body.id })
+                .getOne();
+
+            let activeChats = (await agent).activeChats;
+            let maxActiveChats = (await agent).maxActiveChats;
+            let status = (await agent).statusID;
+
+            let imprimir = await agent;
+
+            console.log("Estado del agente que esta siendo verificado:" + JSON.stringify(imprimir));
+
+            let capacidad = activeChats < maxActiveChats ? true : false;
+            let disponibilidad = status == 7 ? true : false;
+
+            let estado = {
+                capacidad,
+                disponibilidad
+            }
+
+            if (agent) {
+                new Resolver().success(res, "Agente consultado correctamente", estado);
+            } else {
+                new Resolver().exception(res, "Ha ocurrido un error consultando al agente");
+            }
+        } catch (error) {
+            console.log("Error[ValidateTransferAgent]user-controller:"+error);
+            new Resolver().exception(res, "Ocurrio un error", error);
+        }
+
+    }
+
+
     public async getCountCalls(req: Request, res: Response): Promise<void> {
         try {
             console.log('Consultando las llamadas en curso: ');
@@ -184,7 +259,7 @@ export class UserController {
             if (activeIp.affected === 1) {
 
                 let agent = await new UserController().getAgentByEmail(req.body.email);
-                new MessengerController().NotificateLeader("NS", agent.ID , null, null);
+                new MessengerController().NotificateLeader("NS", agent.ID, null, null);
 
                 console.log('campo activeIp actualizado correctamente');
                 new Resolver().success(res, 'activeIp Correctly modified');
@@ -203,14 +278,14 @@ export class UserController {
             console.log("\nObteniendo agente iniciando sesion...");
             const agent = await getRepository(CatUsers)
                 .createQueryBuilder("agent")
-                .where("agent.email = :email", {  email: email })
+                .where("agent.email = :email", { email: email })
                 .getOne();
 
             //let agentId = Chat.userId;
             console.log("Agente obtenido:" + JSON.stringify(agent));
             return agent;
         } catch (error) {
-            console.log("Error[getAgentByEmail]chat-controller:" + error);
+            console.log("Error[getAgentByEmail]user-controller:" + error);
         }
     }
 
@@ -219,30 +294,30 @@ export class UserController {
             console.log("\nObteniendo agente cerrando sesion...");
             const agent = await getRepository(CatUsers)
                 .createQueryBuilder("agent")
-                .where("agent.activeIp = :activeIp", {  activeIp: activeIP })
+                .where("agent.activeIp = :activeIp", { activeIp: activeIP })
                 .getOne();
 
             //let agentId = Chat.userId;
-            new MessengerController().NotificateLeader("FS", agent.ID , null, null);
+            new MessengerController().NotificateLeader("FS", agent.ID, null, null);
             console.log("Agente obtenido:" + JSON.stringify(agent));
             return agent;
         } catch (error) {
-            console.log("Error[NotificateSessionClose]chat-controller:" + error);
+            console.log("Error[NotificateSessionClose]user-controller:" + error);
         }
     }
 
-    public async getAgentByChat(chatId: any){
+    public async getAgentById(agentId: any) {
         try {
-            console.log("\nObteniendo agente asignado al chat...");
-            const Chat = await getRepository(OpeChats)
-                .createQueryBuilder("chat")
-                .where("chat.id = :id", { id: chatId })
+            console.log("\nObteniendo agente");
+            const agent = await getRepository(CatUsers)
+                .createQueryBuilder("agent")
+                .where("agent.ID = :id", { id: agentId })
                 .getOne();
-    
+
             //let agentId = Chat.userId;
-            return Chat;
+            return agent;
         } catch (error) {
-         console.log("Error[getAgentByChat]chat-controller:" +error);   
+            console.log("Error[getAgentById]user-controller:" + error);
         }
     }
 
