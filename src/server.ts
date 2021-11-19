@@ -1,6 +1,7 @@
 //Libraries Import
 require('dotenv').config();
 import { Socket } from './services/socket';
+import { UDPSocket } from './services/UdpSocket';
 import 'reflect-metadata'
 import express from "express";
 import { createConnection, Connection } from 'typeorm';
@@ -26,11 +27,13 @@ import { CatAppParameters } from './models/appParameters';
 import { Console } from 'console';
 import { ChatController } from './controllers/chat-controller';
 import { UserController } from './controllers/user-controller';
+import { PruebaRouting } from './routes/prueba-routing';
 
 
 export class Server {
     public app:express.Application;
     public mySocket:Socket;
+    public udpSocket:UDPSocket;
     public telegram:Telegram;
     public socketio:SocketIO;
     public io:socketio.Server;
@@ -73,13 +76,14 @@ export class Server {
         this.app.use('/api/network', new  NetworkRouting().router);
         this.app.use('/api/status', new StatusRouting().router);
         this.app.use('/api/parameters', new ParametersRouting().router)
+        this.app.use('/api/prueba', new PruebaRouting().router)
         this.app.get('*', (req, res) => new Resolver().notFound(res, 'Oops! This route not exists.'));
     } 
 
     public initDatabase(): void {
         createConnection().then(connect => {
             console.log(`PostgreSQL Database connected on ${connect.name}`);
-            this.AppParameters();
+            //this.AppParameters();
         }).catch(err => {
             console.log(`Can't connect to database: ${err}`);
         });
@@ -98,7 +102,9 @@ export class Server {
     public InitServices():void {
         this.telegram = new Telegram();
         this.mySocket = new Socket(); 
+        this.udpSocket = new UDPSocket();
         this.mySocket.initSocketServer();
+        this.udpSocket.InitUDPServer();
     }
     
     public InitSocketIO():void{
