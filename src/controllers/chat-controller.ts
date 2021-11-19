@@ -208,7 +208,7 @@ export class ChatController {
         }
     }
 
-    public async TransferChat(req: Request, res: Response) {
+    public async transferChat(req: Request, res: Response) {
 
         try {
             let idAgenteAnterior = req.body.idAntiguo;
@@ -249,13 +249,29 @@ export class ChatController {
             .where("chat.id = :chatId", { chatId: idChat})
             .execute();
 
+            let chat = await this.getChatById(idChat);
+
+            let objeto = {
+                id : null,
+                messagePlatformId :null,
+                time: null,
+                text: null,
+                transmitter: null,
+                statusId :null,
+                chatId : chat.id ,
+                platformIdentifier : chat.platformIdentifier,
+                clientPlatformIdentifier : chat.clientPlatformIdentifier 
+            }
+
             console.log("\nAgente anterior afectado:"+ agenteAnteriorAfectado + "\nAgente nuevo afectado:"+agenteNuevoAfectado + "\nChat afectado:"+chatAfectado)
 
-            if (agenteAnteriorAfectado.affected == 1 && agenteNuevoAfectado.affected == 1 && chatAfectado.affected == 1) {
+            if (agenteAnteriorAfectado.affected == 1 && agenteNuevoAfectado.affected == 1 && chatAfectado.affected == 1 && chat) {
                 console.log("Se modificaron a los agentes y el chat corectamente");
+                new Resolver().success(res, "Se completo la logica de la transferencia exitosamente", objeto);
 
             }else{
                 console.log("No se pudieron modificar a los agentes o al chat correctamente");
+                new Resolver().exception(res, "Ocurrio un error durante la logica de la transferencia");
             }
 
 

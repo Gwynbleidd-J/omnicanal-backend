@@ -18,5 +18,6 @@ export class ChatRouting {
         this.router.post('/updateNetworkCategory', this.chatController.updateNetworkCategory);
         this.router.post('/subtractActiveChat', this.chatController.subtractActiveChat);
         this.router.get('/getAllActiveChats', this.chatController.getActiveChats);
+        this.router.post('/transferChat', this.chatController.transferChat);
     }
 }
