@@ -142,12 +142,12 @@ export class UserController {
 
             console.log("Estado del agente que esta siendo verificado:" + JSON.stringify(imprimir));
 
-            let capacidad = activeChats < maxActiveChats ? true : false;
-            let disponibilidad = status == 7 ? true : false;
+            let capacidad = activeChats < maxActiveChats ? "true" : "false";
+            let disponibilidad = status == 7 ? "true" : "false";
 
             let estado = {
-                capacidad,
-                disponibilidad
+                "capacidad" : capacidad ,
+                "disponibilidad": disponibilidad
             }
 
             if (agent) {

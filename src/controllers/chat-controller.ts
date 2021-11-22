@@ -215,6 +215,9 @@ export class ChatController {
             let idAgenteNuevo = req.body.idNuevo;
             let idChat = req.body.idChat;
 
+            let copiaGlobalArraySockets = globalArraySockets;
+            let sentNotification = 0;
+
             const anteriorPromise = getRepository(CatUsers)
             .createQueryBuilder("agent")
             .where("agent.ID = :id", { id : idAgenteAnterior})
@@ -262,6 +265,17 @@ export class ChatController {
                 platformIdentifier : chat.platformIdentifier,
                 clientPlatformIdentifier : chat.clientPlatformIdentifier 
             }
+
+            copiaGlobalArraySockets.array.forEach(element => {
+                console.log("Comprobando " +element.remotePort +" y " +agenteNuevo.activeIp);
+                if (element.remotePort == agenteNuevo.activeIp && sentNotification < 1) {
+                    console.log("Enviando notificacion a "+ agenteNuevo.activeIp);
+                    let notificationString = JSON.stringify(objeto);
+                    element.write(notificationString);
+
+                    sentNotification ++;
+                }
+            });
 
             console.log("\nAgente anterior afectado:"+ agenteAnteriorAfectado + "\nAgente nuevo afectado:"+agenteNuevoAfectado + "\nChat afectado:"+chatAfectado)
 
