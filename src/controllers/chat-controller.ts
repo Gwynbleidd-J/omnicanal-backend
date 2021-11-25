@@ -7,6 +7,7 @@ import { CatUsers } from '../models/user';
 import { Console } from "console";
 import { MessengerController } from "./messenger-controller";
 import { UserController } from "./user-controller";
+import { Socket } from './../services/socket';
 
 export class ChatController {
     public async closeChat(req: Request, res: Response): Promise<void> {
@@ -56,6 +57,26 @@ export class ChatController {
         } catch (error) {
             console.log("Error[getChatById]chat-controller:" + error);
         }
+    }
+
+    public async getChatByIdRequest(req: Request, res: Response){
+        try {
+            let chatId = req.body.chatId;
+            const chat = await getRepository(OpeChats)
+            .createQueryBuilder("chat")
+            .where("chat.id = :id",{ id: chatId })
+            .getOne();
+
+            if (chat) {
+                new Resolver().success(res, "Se consulto el chat correctamente", chat)
+            }else{
+                new Resolver().exception(res,"A ocurrido un error inesperado");
+            }
+
+        } catch (error) {
+            console.log("[getChatByIdRequest]Ha ocurrido un error:"+error)
+        }
+
     }
 
     public async subtractActiveChat(req: Request, res: Response): Promise<void> {
@@ -208,80 +229,99 @@ export class ChatController {
         }
     }
 
+    public BarridoSockets(idSocket, objetoEnvio){
+
+        try {
+            let sentNotification = 0;
+            let copiaGlobalArraySockets = global.globalArraySockets;
+            copiaGlobalArraySockets.forEach(element => {
+                console.log("Comprobando "+element.remotePort+ " y "+ idSocket)
+                if (element.remotePort == idSocket && sentNotification < 1) {
+                    console.log("Enviando notificacion a "+idSocket);
+                    let notificationString = JSON.stringify(objetoEnvio);
+                    console.log("Data enviada al socket:" +notificationString);
+                    element.write(notificationString);
+                    sentNotification ++
+                }
+            });
+        } catch (error) {
+            console.log("Ha ocurrido un error inesperado:" +error);
+        }
+    }
+
     public async transferChat(req: Request, res: Response) {
 
         try {
             let idAgenteAnterior = req.body.idAntiguo;
             let idAgenteNuevo = req.body.idNuevo;
             let idChat = req.body.idChat;
+            let idSupervisor = req.body.idSupervisor;
 
-            let copiaGlobalArraySockets = globalArraySockets;
-            let sentNotification = 0;
-
-            const anteriorPromise = getRepository(CatUsers)
+            const agenteAnterior = await getRepository(CatUsers)
             .createQueryBuilder("agent")
             .where("agent.ID = :id", { id : idAgenteAnterior})
             .getOne();
 
-            const nuevoPromise = getRepository(CatUsers)
-            .createQueryBuilder("agent")
-            .where("agent.ID = :id ",{ id: idAgenteNuevo})
+            const agenteNuevo = await getRepository(CatUsers)
+            .createQueryBuilder("NewAgent")
+            .where("NewAgent.ID = :id",{ id : idAgenteNuevo})
             .getOne();
 
-            let agenteAnterior = await anteriorPromise;
-            let agenteNuevo = await nuevoPromise;
+            const Supervisor = await getRepository(CatUsers)
+            .createQueryBuilder("supervisor")
+            .where("supervisor.ID = :id", { id: idSupervisor})
+            .getOne();
+
+            let datoActualizadoAgenteAnterior = agenteAnterior.activeChats -1;
+            let datoActualizadoAgenteNuevo = agenteNuevo.activeChats +1;
 
             const agenteAnteriorAfectado = await getRepository(CatUsers)
-            .createQueryBuilder("agent")
+            .createQueryBuilder()
             .update(CatUsers)
-            .set({ activeChats: agenteAnterior.activeChats -1})
-            .where("agent.ID = :id", {id : agenteAnterior.ID})
+            .set({ activeChats: datoActualizadoAgenteAnterior})
+            .where("ID = :id", {id : idAgenteAnterior})
             .execute();
 
             const agenteNuevoAfectado = await getRepository(CatUsers)
-            .createQueryBuilder("agent")
+            .createQueryBuilder()
             .update(CatUsers)
-            .set({activeChats: agenteNuevo.activeChats + 1})
-            .where("agent.ID = :id", {id: agenteNuevo.ID})
+            .set({activeChats: datoActualizadoAgenteNuevo})
+            .where("ID = :id", {id: idAgenteNuevo})
             .execute();
 
             const chatAfectado = await getRepository(OpeChats)
-            .createQueryBuilder("chat")
+            .createQueryBuilder()
             .update(OpeChats)
-            .set({ userId: agenteNuevo.ID})
-            .where("chat.id = :chatId", { chatId: idChat})
+            .set({ userId: idAgenteNuevo})
+            .where("id = :chatId", { chatId: idChat})
             .execute();
 
-            let chat = await this.getChatById(idChat);
+            let chat = await new ChatController().getChatById(idChat);
 
-            let objeto = {
-                id : null,
-                messagePlatformId :null,
-                time: null,
-                text: null,
-                transmitter: null,
-                statusId :null,
-                chatId : chat.id ,
-                platformIdentifier : chat.platformIdentifier,
-                clientPlatformIdentifier : chat.clientPlatformIdentifier 
+            let objetoAgenteNuevo = {
+                "chatId" : chat.id,
+                "openTransferChat": null,
             }
 
-            copiaGlobalArraySockets.array.forEach(element => {
-                console.log("Comprobando " +element.remotePort +" y " +agenteNuevo.activeIp);
-                if (element.remotePort == agenteNuevo.activeIp && sentNotification < 1) {
-                    console.log("Enviando notificacion a "+ agenteNuevo.activeIp);
-                    let notificationString = JSON.stringify(objeto);
-                    element.write(notificationString);
+            let objetoAgenteAnterior = {
+                "chatId" : chat.id,
+                "closeTransferChat" : null
+            }
 
-                    sentNotification ++;
-                }
-            });
+            let objetoPruebaSupervisor= {
+                "chatId" : chat.id,
+                "closeTransferChat": null,
+            }
 
-            console.log("\nAgente anterior afectado:"+ agenteAnteriorAfectado + "\nAgente nuevo afectado:"+agenteNuevoAfectado + "\nChat afectado:"+chatAfectado)
+            new ChatController().BarridoSockets(agenteNuevo.activeIp, objetoAgenteNuevo);
+            new ChatController().BarridoSockets(agenteAnterior.activeIp, objetoAgenteAnterior);
+            //new ChatController().BarridoSockets(Supervisor.activeIp, objetoPruebaSupervisor)
+
+            console.log("\nAgente anterior afectado:"+ JSON.stringify(agenteAnterior.name)  + "\nAgente nuevo afectado:"+ JSON.stringify(agenteNuevo.name) + "\nChat afectado:"+ JSON.stringify(chat.id))
 
             if (agenteAnteriorAfectado.affected == 1 && agenteNuevoAfectado.affected == 1 && chatAfectado.affected == 1 && chat) {
                 console.log("Se modificaron a los agentes y el chat corectamente");
-                new Resolver().success(res, "Se completo la logica de la transferencia exitosamente", objeto);
+                new Resolver().success(res, "Se completo la logica de la transferencia exitosamente");
 
             }else{
                 console.log("No se pudieron modificar a los agentes o al chat correctamente");
@@ -293,9 +333,6 @@ export class ChatController {
             console.log("Ocurrio el siguiente error:" +error);
             new Resolver().exception(res, "UnexpectedError", error);
         }
-
-
-
 
     }
 
