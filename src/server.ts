@@ -28,6 +28,7 @@ import { Console } from 'console';
 import { ChatController } from './controllers/chat-controller';
 import { UserController } from './controllers/user-controller';
 import { PruebaRouting } from './routes/prueba-routing';
+import { ScreenShareRouting } from './routes/screenShare-routing';
 
 
 export class Server {
@@ -52,7 +53,8 @@ export class Server {
 
     public config(): void {
         this.app.set('port', process.env.SERVER_PORT || 3000);
-        this.app.use(express.static(path.join(__dirname, 'public')));
+        this.app.use('api/chatweb', express.static(path.join(__dirname, 'public')));
+        this.app.use('/api/monitoreo',express.static(path.join(__dirname, 'screen')));
         this.app.use(express.urlencoded({ extended: true }));
         this.app.use(cors());
         this.app.use(express.json());
@@ -76,7 +78,8 @@ export class Server {
         this.app.use('/api/network', new  NetworkRouting().router);
         this.app.use('/api/status', new StatusRouting().router);
         this.app.use('/api/parameters', new ParametersRouting().router)
-        this.app.use('/api/prueba', new PruebaRouting().router)
+        this.app.use('/api/prueba', new PruebaRouting().router);
+        this.app.use('/api/record', new ScreenShareRouting().router)
         this.app.get('*', (req, res) => new Resolver().notFound(res, 'Oops! This route not exists.'));
     } 
 
