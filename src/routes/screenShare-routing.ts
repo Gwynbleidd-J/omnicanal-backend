@@ -33,9 +33,10 @@ export class ScreenShareRouting{
             dest: path.join(__dirname, 'screen/uploads'),
             storage: imageStorage
         })
-         
-        this.router.post('/', upload.single('image'),this.screenController.ScreenShotFromClient);
+
+        this.router.post('/', upload.fields([{ name: 'campo1'}, {name: 'campo2'}]) ,this.screenController.ScreenShotFromClient);
         this.router.get('/screen', this.screenController.SendDataToHTML);
+        this.router.post('/startMonitoring', this.screenController.startMonitoring);
         //upload.array('image')
     }
     // this.app.use(multer({
