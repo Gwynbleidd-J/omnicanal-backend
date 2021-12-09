@@ -32,6 +32,8 @@ export class ScreenShareController{
 
     public async startMonitoring(req: Request, res: Response){
         try {
+
+            console.log("\nIniciando monitoreo, mandando orden al agente");
             let idAgente = req.body.idAgente;
             let idSupervisor = req.body.idSupervisor;
 
@@ -45,7 +47,10 @@ export class ScreenShareController{
                 idSupervisor: idSupervisor
             }
 
-            this.BarridoSockets(agente.activeIp, objeto);
+            console.log("\nSe le mandara la orden al agente "+agente.name +" con el id "+agente.activeIp);
+            new ScreenShareController().BarridoSockets(agente.activeIp, objeto);
+            // this.BarridoSockets(agente.activeIp, objeto);
+
             new Resolver().success(res, "Se envio la orden al agente de comartir su pantalla correctamente");
 
         } catch (error) {
@@ -73,10 +78,11 @@ export class ScreenShareController{
 
             let objeto = {
                 getMonitoring : "",
-                Image: req.files["campo1"][0]
+                Image: req.files["campo1"][0].filename
             }
 
-            this.BarridoSockets(ipSupervisor, objeto);
+            new ScreenShareController().BarridoSockets(ipSupervisor, objeto);
+            // this.BarridoSockets(ipSupervisor, objeto);
 
             // console.log(req.file);
             //<!-- USANDO LA LIBRERÍA SHARP PARA EL PROCESAMIENTO DE IMAGEN -->
@@ -103,7 +109,13 @@ export class ScreenShareController{
     }
 
     public SendDataToHTML(req:Request, res:Response):void{
-        res.sendFile(path.join(__dirname, '../screen/uploads/KODE-OP-Wallpaper_Art_Black_1920x1080.png-1638817341401.png'));
+
+        let imageName = req.body.image;
+        let directory = "../screen/uploads/";
+        let file = directory + imageName;
+
+        res.sendFile(path.join(__dirname, file));
+        // res.sendFile(path.join(__dirname, '../screen/uploads/KODE-OP-Wallpaper_Art_Black_1920x1080.png-1638817341401.png'));
         
         // const files = fs.readdir('./src/screen/uploads/', (error, files) =>{
         //     if(error){
