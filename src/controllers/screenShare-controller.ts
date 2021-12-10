@@ -7,6 +7,7 @@ import express from 'express';
 import path from "path";
 import { getRepository } from "typeorm";
 import { CatUsers } from "../models/user";
+import { Console } from "console";
 
 export class ScreenShareController{
 
@@ -68,6 +69,9 @@ export class ScreenShareController{
                 message: 'image uploades successfully'
             });
 
+            let directory = "../screen/uploads/";
+            let temp = req.files["campo2"][0];
+
             let idSupervisor = req.files["campo2"][0].originalname;
             let Supervisor = await getRepository(CatUsers)
             .createQueryBuilder("supervisor")
@@ -110,11 +114,20 @@ export class ScreenShareController{
 
     public SendDataToHTML(req:Request, res:Response):void{
 
-        let imageName = req.body.image;
-        let directory = "../screen/uploads/";
-        let file = directory + imageName;
+        try {
+            let imageName = req.body.image;
+            let directory = "../screen/uploads/";
+            let file = directory + imageName;
+    
+            res.sendFile(path.join(__dirname, file));
+    
+            fs.unlinkSync(file);
+    
+        } catch (error) {
+            console.log("Ha ocurrido un error en el envio de imagen al supervisor:" +error);
+        }
 
-        res.sendFile(path.join(__dirname, file));
+
         // res.sendFile(path.join(__dirname, '../screen/uploads/KODE-OP-Wallpaper_Art_Black_1920x1080.png-1638817341401.png'));
         
         // const files = fs.readdir('./src/screen/uploads/', (error, files) =>{

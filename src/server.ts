@@ -11,6 +11,7 @@ import {Telegram} from './services/telegram';
 import { SocketIO } from './services/socketIO';
 import path from 'path';
  import * as socketio from 'socket.io';
+require('fs')
 //Routes Imports
 import { UserRouting } from './routes/user-routing';
 import { AuthRouting } from './routes/auth-routing';
