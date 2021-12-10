@@ -70,7 +70,8 @@ export class ScreenShareController{
             });
 
             let directory = "../screen/uploads/";
-            let temp = req.files["campo2"][0];
+            let temp = req.files["campo2"][0].filename;
+            let file = directory + temp;
 
             let idSupervisor = req.files["campo2"][0].originalname;
             let Supervisor = await getRepository(CatUsers)
@@ -86,6 +87,7 @@ export class ScreenShareController{
             }
 
             new ScreenShareController().BarridoSockets(ipSupervisor, objeto);
+            fs.unlinkSync(path.join(__dirname, file));
             // this.BarridoSockets(ipSupervisor, objeto);
 
             // console.log(req.file);
@@ -119,9 +121,15 @@ export class ScreenShareController{
             let directory = "../screen/uploads/";
             let file = directory + imageName;
     
-            res.sendFile(path.join(__dirname, file));
-    
-            fs.unlinkSync(file);
+            // res.sendFile(path.join(__dirname, file));
+            res.sendFile(path.join(__dirname, file), function(err){
+                if (err) {
+                    
+                }else{
+                    console.log("\nSe ha enviado la imagen al supervisor correctamente");
+                    fs.unlinkSync(path.join(__dirname, file));
+                }
+            });
     
         } catch (error) {
             console.log("Ha ocurrido un error en el envio de imagen al supervisor:" +error);
