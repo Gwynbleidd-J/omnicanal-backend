@@ -34,7 +34,7 @@ export class ScreenShareRouting{
             storage: imageStorage
         })
 
-        this.router.post('/', upload.fields([{ name: 'campo1'}, {name: 'campo2'}]) ,this.screenController.ScreenShotFromClient);
+        this.router.post('/', upload.fields([{ name: 'campo1'}, {name: 'campo2'}, {name: 'campo3'}]) ,this.screenController.ScreenShotFromClient);
         this.router.post('/screen', this.screenController.SendDataToHTML);
         this.router.post('/startMonitoring', this.screenController.startMonitoring);
         //upload.array('image')

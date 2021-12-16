@@ -26,6 +26,8 @@ export class ScreenShareController{
                     sentNotification ++
                 }
             });
+            return sentNotification;
+
         } catch (error) {
             console.log("Ha ocurrido un error inesperado:" +error);
         }
@@ -48,11 +50,17 @@ export class ScreenShareController{
                 idSupervisor: idSupervisor
             }
 
-            console.log("\nSe le mandara la orden al agente "+agente.name +" con el id "+agente.activeIp);
-            new ScreenShareController().BarridoSockets(agente.activeIp, objeto);
-            // this.BarridoSockets(agente.activeIp, objeto);
+            // new ScreenShareController().BarridoSockets(agente.activeIp, objeto);
+            // new Resolver().success(res, "Se envio la orden al agente de comartir su pantalla correctamente");
 
-            new Resolver().success(res, "Se envio la orden al agente de comartir su pantalla correctamente");
+            console.log("\nSe le mandara la orden al agente "+agente.name +" con el id "+agente.activeIp);
+            let enviado;
+            enviado = new ScreenShareController().BarridoSockets(agente.activeIp, objeto);
+            if (enviado == 1) {
+                new Resolver().success(res, "Se envio la orden al agente de comartir su pantalla correctamente");
+            }else{
+                new Resolver().exception(res, "El agente seleccionado no se encuentra conectado");
+            }
 
         } catch (error) {
             new Resolver().exception(res, "No se pudo enviar la orden al agente de compartirsu pantalla correctamente", error);
@@ -73,6 +81,10 @@ export class ScreenShareController{
             let temp = req.files["campo2"][0].filename;
             let file = directory + temp;
 
+            let temp2 = req.files["campo3"][0].filename;
+            let file2 = directory + temp2;
+
+            let idAgente = req.files["campo3"][0].originalname;
             let idSupervisor = req.files["campo2"][0].originalname;
             let Supervisor = await getRepository(CatUsers)
             .createQueryBuilder("supervisor")
@@ -83,12 +95,14 @@ export class ScreenShareController{
 
             let objeto = {
                 getMonitoring : "",
-                Image: req.files["campo1"][0].filename
+                Image: req.files["campo1"][0].filename,
+                idSupervisor: idSupervisor,
+                idAgente: idAgente
             }
 
             new ScreenShareController().BarridoSockets(ipSupervisor, objeto);
             fs.unlinkSync(path.join(__dirname, file));
-            // this.BarridoSockets(ipSupervisor, objeto);
+            fs.unlinkSync(path.join(__dirname, file2));
 
             // console.log(req.file);
             //<!-- USANDO LA LIBRERÍA SHARP PARA EL PROCESAMIENTO DE IMAGEN -->
