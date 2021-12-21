@@ -29,6 +29,8 @@ import { ChatController } from './controllers/chat-controller';
 import { UserController } from './controllers/user-controller';
 import { PruebaRouting } from './routes/prueba-routing';
 import { ScreenShareRouting } from './routes/screenShare-routing';
+import { CallsRouting } from './routes/calls-routing';
+import morganMiddleware from './utils/morgan';
 
 
 export class Server {
@@ -53,12 +55,13 @@ export class Server {
 
     public config(): void {
         this.app.set('port', process.env.SERVER_PORT || 3000);
-        this.app.use('api/chatweb', express.static(path.join(__dirname, 'public')));
+        this.app.use('/api/chatweb', express.static(path.join(__dirname, 'public')));
         this.app.use('/api/monitoreo',express.static(path.join(__dirname, 'screen')));
         this.app.use(express.urlencoded({ extended: true }));
         this.app.use(cors());
         this.app.use(express.json());
         this.app.use(express.urlencoded({extended: true}));
+        this.app.use(morganMiddleware);
     }
 
     public loadRoutes(): void {
@@ -79,7 +82,8 @@ export class Server {
         this.app.use('/api/status', new StatusRouting().router);
         this.app.use('/api/parameters', new ParametersRouting().router)
         this.app.use('/api/prueba', new PruebaRouting().router);
-        this.app.use('/api/record', new ScreenShareRouting().router)
+        this.app.use('/api/record', new ScreenShareRouting().router);
+        this.app.use('/api/calls', new CallsRouting().router);
         this.app.get('*', (req, res) => new Resolver().notFound(res, 'Oops! This route not exists.'));
     } 
 
@@ -105,9 +109,9 @@ export class Server {
     public InitServices():void {
         this.telegram = new Telegram();
         this.mySocket = new Socket(); 
-        this.udpSocket = new UDPSocket();
+        //this.udpSocket = new UDPSocket();
         this.mySocket.initSocketServer();
-        this.udpSocket.InitUDPServer();
+        //this.udpSocket.InitUDPServer();
     }
     
     public InitSocketIO():void{

@@ -1,5 +1,5 @@
-import { NextFunction, Request, Response } from "express";
-import { Connection, createQueryBuilder, getRepository, Repository } from "typeorm";
+import { Request, Response } from "express";
+import { getRepository } from "typeorm";
 import { Resolver } from '../services/resolver';
 import { Utils } from "../services/utils";
 import { OpeChats } from '../models/chat';

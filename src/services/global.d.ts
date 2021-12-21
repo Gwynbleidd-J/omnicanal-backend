@@ -25,4 +25,5 @@ declare global{
     var dataObject:any;
     var socketIOArraySockets:any;
     var appParameters:any;
+    var dataBuffer:any;
 }

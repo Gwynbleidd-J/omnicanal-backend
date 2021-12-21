@@ -12,19 +12,19 @@ export class OpeCalls{
     @Column({type:'date', default: () => `now()` })
     date:Date; 
     
-    @Column({type:'time', default: () => `now()` })
+    @Column({type:'time'})
     startTime:Timestamp;
     
-    @Column({type:'time'})
+    @Column({type:'time', nullable: true})
     endingTime:Timestamp; 
     
-    @Column({type:'integer'})
+    @Column({type:'integer', nullable:true})
     score:number; 
     
-    @Column({type:'varchar', length: 250})
+    @Column({type:'varchar', length: 250, nullable:true})
     comments:String; 
     
-    @Column({type:'varchar', length: 250})
+    @Column({type:'varchar', length: 250, nullable:true})
     client:String; 
     
     @Column({type:'varchar', length: 250, nullable: true})
@@ -34,13 +34,13 @@ export class OpeCalls{
     file:String; 
     
     @Column({type:'integer'})
-    userId:String; 
+    userId:Number; 
     
     @Column({type:'integer'})
-    statusId:String; 
+    statusId:Number; 
 
-    @Column({type:'integer'})
-    networkCategoryId:String;
+    @Column({type:'integer', nullable:true})
+    networkCategoryId:Number;
     
     @ManyToOne(() => CatUsers, user => user.call)
     @JoinColumn({name: 'userId'})
