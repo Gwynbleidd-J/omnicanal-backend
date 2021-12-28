@@ -12,9 +12,9 @@ export class CallController{
             .insert()
             .into(OpeCalls)
             .values({
-                startTime: new Date().toLocaleTimeString('es-MX'),
+                startTime: req.body.startTime,
                 userId: req.body.userId,
-                statusId: 1
+                statusId: 2
             })
             .execute();
             // console.log(new Date().toLocaleDateString());
@@ -29,26 +29,49 @@ export class CallController{
         catch(ex){
             new Resolver().exception(res, 'Unexpected error', ex);
         }
+    
+    
     }
-
     public async CallTypification(req: Request, res:Response): Promise<void>{
         try{
+
+            const call = await getRepository(OpeCalls).find({where:{
+                startTime: req.body.startTime
+            },
+                select:["id"]}
+            )//Terminación del metodo .find {select: ["id"]};
             const callTypification = await getRepository(OpeCalls)
             .createQueryBuilder()
             .update(OpeCalls)
             .set({
-                networkCategoryId: req.body.networkId,
-                statusId: 3
+                endingTime: req.body.endingTime,
+                networkCategoryId: req.body.networkCategoryId,
+                statusId: 3,
+                comments: req.body.comments,
+                score: req.body.score
             })
-            .where('id = :id', {id: req.body.callId})
-            .execute();
+            .where("id = :id", {id: call[0].id})
+            .execute()
 
-            if(callTypification.affected === 1){
-                console.log('Network Category Asignado Correctamente');
+
+            // .createQueryBuilder()
+            // .update(OpeCalls)
+            // .set({
+            //     endingTime: req.body.endingTime,
+            //     networkCategoryId: req.body.networkId,
+            //     statusId: 3,
+            //     comments: req.body.comments,
+            //     score: req.body.score
+            // })
+            // .where('userId = :userId', { userId: req.body.userId})
+            // .execute();
+
+            if(callTypification){
+                console.log('Network Call Category Asignado Correctamente');
                 new Resolver().success(res, 'Network Category Correctly Inserted');
             }
             else{
-                console.log('No se podo actualizar Network Category en OpeCalls');
+                console.log('No se podo actualizar Network Call Category en OpeCalls');
                 new Resolver().error(res, 'No se pudo actualizar Network Category');
             }
         }

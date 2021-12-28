@@ -12,11 +12,11 @@ export class OpeCalls{
     @Column({type:'date', default: () => `now()` })
     date:Date; 
     
-    @Column({type:'time'})
-    startTime:Timestamp;
+    @Column({type:'varchar', nullable:true }) //, default: () => `now()`, nullable:true
+    startTime:String;
     
-    @Column({type:'time', nullable: true})
-    endingTime:Timestamp; 
+    @Column({type:'varchar', nullable: true}) //, default:() => `now()`, nullable: true
+    endingTime:String; 
     
     @Column({type:'integer', nullable:true})
     score:number; 
