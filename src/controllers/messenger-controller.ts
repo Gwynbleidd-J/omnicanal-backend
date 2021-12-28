@@ -418,7 +418,7 @@ export class MessengerController {
 
                         console.log('Comprobando ' + element.remotePort +' vs '+  messageContext['agentPlatformIdentifier']);
                         if ((element.remotePort == messageContext['agentPlatformIdentifier']) && (sentNotification < 1)) {
-                            console.log('Direccionando mensaje al socket ' + element.remoteAddress);
+                            console.log('Direccionando mensaje al socket ' + element.remotePort);
                             new Socket().replyMessageForAgent(messageContext, element);
                             sentNotification++;
                         }
@@ -879,10 +879,11 @@ export class MessengerController {
             //console.log(copiaGlobalArraySockets);
             if (req.body.platformIdentifier != 'c') {
                 copiaGlobalArraySockets.forEach(element => {
-                    console.log('Comprobando ' + element.remoteAddress + ' vs ' + backNotificationContext['agentPlatformIdentifier']);
+                    console.log('Comprobando ' + element.remotePort + ' vs ' + backNotificationContext['agentPlatformIdentifier']);
                     //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
-                    if ((element.remoteAddress == '::ffff:' + backNotificationContext['agentPlatformIdentifier']) && (sentNotification < 1)) {
-                        console.log('Direccionando mensage al socket ' + element.remoteAddress);
+                    // if ((element.remoteAddress == '::ffff:' + backNotificationContext['agentPlatformIdentifier']) && (sentNotification < 1)) {
+                    if ((element.remotePort == backNotificationContext['agentPlatformIdentifier']) && (sentNotification < 1)) {
+                        console.log('Direccionando mensage al socket ' + element.remotePort);
                         new Socket().replyMessageForAgent(backNotificationContext, element);
                         sentNotification++;
                     }
@@ -903,10 +904,10 @@ export class MessengerController {
                         //Esto es para enviarle la notificacion al agente
                         let sentNotificationIO = 0;
                         copiaGlobalArraySockets.forEach(element => {
-                            console.log('Comprobando ' + element.remoteAddress + ' vs ' + backNotificationContext['agentPlatformIdentifier']);
+                            console.log('Comprobando ' + element.remotePort + ' vs ' + backNotificationContext['agentPlatformIdentifier']);
                             //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
-                            if ((element.remoteAddress == '::ffff:' + backNotificationContext['agentPlatformIdentifier']) && (sentNotificationIO < 1)) {
-                                console.log('Direccionando mensage al socket ' + element.remoteAddress);
+                            if ((element.remotePort == backNotificationContext['agentPlatformIdentifier']) && (sentNotificationIO < 1)) {
+                                console.log('Direccionando mensage al socket ' + element.remotePort);
                                 new Socket().replyMessageForAgent(backNotificationContext, element);
                                 sentNotificationIO++;
                             }
@@ -920,11 +921,12 @@ export class MessengerController {
 
             global.globalArraySockets = copiaGlobalArraySockets;
             console.log('Envío de notificación termidado.');
+            new Resolver().success(res, "Se envio el mensaje correctamente");
 
         }
         catch (ex) {
             console.log('Error[outcommingMessage]' + ex);
-            //new Resolver().exception(res, 'Unexpected error.', ex); 
+            new Resolver().exception(res, 'Unexpected error.', ex); 
         }
         //res.end(); 
         next();
@@ -1107,8 +1109,8 @@ export class MessengerController {
                 copiaGlobalArraySockets.forEach(element => {
                     // console.log('Comprobando ' + element.remoteAddress +' vs '+  messageContext['agentPlatformIdentifier']);
                     //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
-                    if ((element.remoteAddress == '::ffff:' + messageContext['agentPlatformIdentifier']) && (sentNotification < 1)) {
-                        console.log('Direccionando mensage al socket ' + element.remoteAddress);
+                    if ((element.remotePort == messageContext['agentPlatformIdentifier']) && (sentNotification < 1)) {
+                        console.log('Direccionando mensage al socket ' + element.remotePort);
                         new Socket().replyMessageForAgent(messageContext, element);
                         sentNotification++;
                     }

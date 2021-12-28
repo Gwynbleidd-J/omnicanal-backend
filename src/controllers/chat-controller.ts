@@ -28,7 +28,8 @@ export class ChatController {
 
                 //let chatO = await (this.getChatAgent.bind(this)(req.body.chatId));
 
-                let chat = await this.getChatById(req.body.chatId)
+                // let chat = await this.getChatById(req.body.chatId)
+                let chat = await new ChatController().getChatById(req.body.chatId);
                 new MessengerController().NotificateLeader("FC", chat.userId, chat, null);
 
                 console.log('Chat cerrado correctamente'); //updateResult = true;
@@ -41,6 +42,7 @@ export class ChatController {
         }
         catch (ex) {
             new Resolver().exception(res, 'Unexpected error.', ex);
+            console.log("Ocurrio el siguiente error:" +ex);
         }
     }
 
