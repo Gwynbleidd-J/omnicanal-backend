@@ -32,6 +32,7 @@ export class ChatController {
                 let chat = await new ChatController().getChatById(req.body.chatId);
                 new MessengerController().NotificateLeader("FC", chat.userId, chat, null);
 
+                new ChatController().assignFirstOnHoldChat(chat.userId);
                 console.log('Chat cerrado correctamente'); //updateResult = true;
                 new Resolver().success(res, 'Chat correctly finished');
             }
@@ -79,6 +80,76 @@ export class ChatController {
             console.log("[getChatByIdRequest]Ha ocurrido un error:"+error)
         }
 
+    }
+
+    public async assignFirstOnHoldChat(userId){
+        try {
+            
+            let messageContext;
+            let onHoldChatsList = await getRepository(OpeChats)
+            .createQueryBuilder("chats")
+            .where("chats.statusId = :statusId", {statusId : 1})
+            .getMany();
+
+            let chatList = [];
+            let firstChat;
+
+            onHoldChatsList.forEach(element => {
+                
+                let year = Number.parseInt(element.date.toString().split('-')[0]);
+                let month = Number.parseInt(element.date.toString().split('-')[1]) - 1;
+                let day = Number.parseInt(element.date.toString().split('-')[2]);
+
+                let hour = Number.parseInt(element.startTime.toString().split(':')[0]);
+                let minute = Number.parseInt(element.startTime.toString().split(':')[1]);
+                let second = Number.parseInt(element.startTime.toString().split(':')[2]);
+                let miliseconds = Number.parseInt(element.startTime.toString().split('.')[1]);
+
+                let date = new Date(year,month,day,hour,minute,second,miliseconds);
+
+                let chat = {
+                    fecha: date,
+                    id: element.id,
+                    platformIdentifier: element.platformIdentifier,
+                    clientPlatformIdentifier: element.clientPlatformIdentifier
+                }
+
+                chatList.push(chat);
+
+            });
+
+            if (chatList.length > 0) {
+                firstChat = chatList[0];
+
+                chatList.forEach(chat => {
+                    if (chat.fecha < firstChat.fecha) {
+                        firstChat = chat;
+                    }
+                })
+
+                messageContext = {
+                    id: firstChat.id
+                }
+
+                const assignedChat = await new MessengerController().assignChatAgent(userId, messageContext);
+                let agent = await new UserController().getAgentById(userId);
+                console.log('Agente disponible: ' + agent.ID + ' con identificador: ' + agent.activeIp);
+    
+    
+                if (assignedChat) {    //Enviar el mensaje al agente asignado 
+                    
+                    let notificationString = '{"chatId": "'+ firstChat.id+'", "platformIdentifier": "'+firstChat.platformIdentifier+'", "clientPlatformIdentifier": "'+firstChat.clientPlatformIdentifier+'"}';
+                    new ChatController().BarridoSockets(agent.activeIp, notificationString);
+    
+                    //De momento se usará este método para cubrir la funcionalidad del Trigger desde BD
+                    new MessengerController().provisionalTriggerForActiveChats(firstChat.userId);
+                }
+
+            }
+
+        } catch (error) {
+            console.log("Ha ocurrido el siguiene error inesperado:" +error);
+        }
     }
 
     public async subtractActiveChat(req: Request, res: Response): Promise<void> {
