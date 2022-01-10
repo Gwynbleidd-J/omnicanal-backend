@@ -43,8 +43,65 @@ export class ChatController {
         }
         catch (ex) {
             new Resolver().exception(res, 'Unexpected error.', ex);
-            console.log("Ocurrio el siguiente error:" +ex);
+            console.log("Ocurrio el siguiente error:" + ex);
         }
+    }
+
+    public async getLastChatByIdUser(req: Request, res: Response) {
+
+        try {
+
+            console.log("\n*******Empezando proceso de obtencion de ultimo chat");
+            let userId = req.body.userId;
+
+            const chats = await getRepository(OpeChats)
+                .createQueryBuilder("chats")
+                .where("chats.userId = :userId ", { userId: userId })
+                .getMany();
+
+            let fechasChats = [];
+            let ultimoChat = "";
+
+            chats.forEach(chat => {
+
+                let startTime = chat.startTime;
+                let startDate = chat.date;
+
+                let year = Number.parseInt(startDate.toString().split('-')[0]);
+                let month = Number.parseInt(startDate.toString().split('-')[1]) - 1;
+                let day = Number.parseInt(startDate.toString().split('-')[2]);
+
+                let hour = Number.parseInt(startTime.toString().split(':')[0]);
+                let minute = Number.parseInt(startTime.toString().split(':')[1]);
+                let second = Number.parseInt(startTime.toString().split(':')[2]);
+
+                let date = new Date(year, month, day, hour, minute, second);
+                let returnDate = date.toLocaleDateString() + " " + date.toLocaleTimeString()
+
+                // let objChats = {
+                //     chatId: chat.id,
+                //     startTime: returnDate
+                // }
+                fechasChats.push(returnDate);
+
+            });
+
+            if (fechasChats.length > 0) {
+                ultimoChat = fechasChats[0];
+                fechasChats.forEach(fechat => {
+                    if (fechat > ultimoChat) {
+                        ultimoChat = fechat
+                    }
+                });
+            }
+
+            new Resolver().success(res, "Se consulto el ultimo chat correctamente", ultimoChat)
+
+        } catch (error) {
+            console.log("Ocurrio el siguiente error" + error);
+        }
+
+
     }
 
     public async getChatById(chatId: any) {
@@ -62,22 +119,22 @@ export class ChatController {
         }
     }
 
-    public async getChatByIdRequest(req: Request, res: Response){
+    public async getChatByIdRequest(req: Request, res: Response) {
         try {
             let chatId = req.body.chatId;
             const chat = await getRepository(OpeChats)
-            .createQueryBuilder("chat")
-            .where("chat.id = :id",{ id: chatId })
-            .getOne();
+                .createQueryBuilder("chat")
+                .where("chat.id = :id", { id: chatId })
+                .getOne();
 
             if (chat) {
                 new Resolver().success(res, "Se consulto el chat correctamente", chat)
-            }else{
-                new Resolver().exception(res,"A ocurrido un error inesperado");
+            } else {
+                new Resolver().exception(res, "A ocurrido un error inesperado");
             }
 
         } catch (error) {
-            console.log("[getChatByIdRequest]Ha ocurrido un error:"+error)
+            console.log("[getChatByIdRequest]Ha ocurrido un error:" + error)
         }
 
     }
@@ -234,16 +291,18 @@ export class ChatController {
         }
     }
 
+
+
     public async getActiveChats(req: Request, res: Response) {
         try {
             console.log("Obteniendo chats activos");
-            const chats = await getRepository(OpeChats)
+            const chats = getRepository(OpeChats)
                 .createQueryBuilder("chats")
                 .innerJoinAndSelect("chats.user", "user")
                 .where("chats.statusId =:statusId", { statusId: 2 })
                 .getMany();
             let cids = [];
-            chats.forEach(chat => {
+            (await chats).forEach(chat => {
 
                 let platform;
                 let startTime = chat.startTime;
@@ -302,23 +361,23 @@ export class ChatController {
         }
     }
 
-    public BarridoSockets(idSocket, objetoEnvio){
+    public BarridoSockets(idSocket, objetoEnvio) {
 
         try {
             let sentNotification = 0;
             let copiaGlobalArraySockets = global.globalArraySockets;
             copiaGlobalArraySockets.forEach(element => {
-                console.log("Comprobando "+element.remotePort+ " y "+ idSocket)
+                console.log("Comprobando " + element.remotePort + " y " + idSocket)
                 if (element.remotePort == idSocket && sentNotification < 1) {
-                    console.log("Enviando notificacion a "+idSocket);
+                    console.log("Enviando notificacion a " + idSocket);
                     let notificationString = JSON.stringify(objetoEnvio);
-                    console.log("Data enviada al socket:" +notificationString);
+                    console.log("Data enviada al socket:" + notificationString);
                     element.write(notificationString);
-                    sentNotification ++
+                    sentNotification++
                 }
             });
         } catch (error) {
-            console.log("Ha ocurrido un error inesperado:" +error);
+            console.log("Ha ocurrido un error inesperado:" + error);
         }
     }
 
@@ -331,58 +390,58 @@ export class ChatController {
             let idSupervisor = req.body.idSupervisor;
 
             const agenteAnterior = await getRepository(CatUsers)
-            .createQueryBuilder("agent")
-            .where("agent.ID = :id", { id : idAgenteAnterior})
-            .getOne();
+                .createQueryBuilder("agent")
+                .where("agent.ID = :id", { id: idAgenteAnterior })
+                .getOne();
 
             const agenteNuevo = await getRepository(CatUsers)
-            .createQueryBuilder("NewAgent")
-            .where("NewAgent.ID = :id",{ id : idAgenteNuevo})
-            .getOne();
+                .createQueryBuilder("NewAgent")
+                .where("NewAgent.ID = :id", { id: idAgenteNuevo })
+                .getOne();
 
             const Supervisor = await getRepository(CatUsers)
-            .createQueryBuilder("supervisor")
-            .where("supervisor.ID = :id", { id: idSupervisor})
-            .getOne();
+                .createQueryBuilder("supervisor")
+                .where("supervisor.ID = :id", { id: idSupervisor })
+                .getOne();
 
-            let datoActualizadoAgenteAnterior = agenteAnterior.activeChats -1;
-            let datoActualizadoAgenteNuevo = agenteNuevo.activeChats +1;
+            let datoActualizadoAgenteAnterior = agenteAnterior.activeChats - 1;
+            let datoActualizadoAgenteNuevo = agenteNuevo.activeChats + 1;
 
             const agenteAnteriorAfectado = await getRepository(CatUsers)
-            .createQueryBuilder()
-            .update(CatUsers)
-            .set({ activeChats: datoActualizadoAgenteAnterior})
-            .where("ID = :id", {id : idAgenteAnterior})
-            .execute();
+                .createQueryBuilder()
+                .update(CatUsers)
+                .set({ activeChats: datoActualizadoAgenteAnterior })
+                .where("ID = :id", { id: idAgenteAnterior })
+                .execute();
 
             const agenteNuevoAfectado = await getRepository(CatUsers)
-            .createQueryBuilder()
-            .update(CatUsers)
-            .set({activeChats: datoActualizadoAgenteNuevo})
-            .where("ID = :id", {id: idAgenteNuevo})
-            .execute();
+                .createQueryBuilder()
+                .update(CatUsers)
+                .set({ activeChats: datoActualizadoAgenteNuevo })
+                .where("ID = :id", { id: idAgenteNuevo })
+                .execute();
 
             const chatAfectado = await getRepository(OpeChats)
-            .createQueryBuilder()
-            .update(OpeChats)
-            .set({ userId: idAgenteNuevo})
-            .where("id = :chatId", { chatId: idChat})
-            .execute();
+                .createQueryBuilder()
+                .update(OpeChats)
+                .set({ userId: idAgenteNuevo })
+                .where("id = :chatId", { chatId: idChat })
+                .execute();
 
             let chat = await new ChatController().getChatById(idChat);
 
             let objetoAgenteNuevo = {
-                "chatId" : chat.id,
+                "chatId": chat.id,
                 "openTransferChat": null,
             }
 
             let objetoAgenteAnterior = {
-                "chatId" : chat.id,
-                "closeTransferChat" : null
+                "chatId": chat.id,
+                "closeTransferChat": null
             }
 
-            let objetoPruebaSupervisor= {
-                "chatId" : chat.id,
+            let objetoPruebaSupervisor = {
+                "chatId": chat.id,
                 "closeTransferChat": null,
             }
 
@@ -390,20 +449,20 @@ export class ChatController {
             new ChatController().BarridoSockets(agenteAnterior.activeIp, objetoAgenteAnterior);
             //new ChatController().BarridoSockets(Supervisor.activeIp, objetoPruebaSupervisor)
 
-            console.log("\nAgente anterior afectado:"+ JSON.stringify(agenteAnterior.name)  + "\nAgente nuevo afectado:"+ JSON.stringify(agenteNuevo.name) + "\nChat afectado:"+ JSON.stringify(chat.id))
+            console.log("\nAgente anterior afectado:" + JSON.stringify(agenteAnterior.name) + "\nAgente nuevo afectado:" + JSON.stringify(agenteNuevo.name) + "\nChat afectado:" + JSON.stringify(chat.id))
 
             if (agenteAnteriorAfectado.affected == 1 && agenteNuevoAfectado.affected == 1 && chatAfectado.affected == 1 && chat) {
                 console.log("Se modificaron a los agentes y el chat corectamente");
                 new Resolver().success(res, "Se completo la logica de la transferencia exitosamente");
 
-            }else{
+            } else {
                 console.log("No se pudieron modificar a los agentes o al chat correctamente");
                 new Resolver().exception(res, "Ocurrio un error durante la logica de la transferencia");
             }
 
 
         } catch (error) {
-            console.log("Ocurrio el siguiente error:" +error);
+            console.log("Ocurrio el siguiente error:" + error);
             new Resolver().exception(res, "UnexpectedError", error);
         }
 

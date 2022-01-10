@@ -3,6 +3,7 @@ node_modules/
 
 #copiled file
 build/
+logs/
 
 #config files
 ormconfig.json
