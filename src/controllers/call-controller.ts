@@ -96,4 +96,41 @@ export class CallController{
             new Resolver().exception(res, 'Unexpected error', ex);
         }
     }
+
+    public async getTotalCalls(req: Request, res: Response){
+        try {
+            
+            var userId = req.body.userId;
+
+            const calls = await getRepository(OpeCalls)
+            .createQueryBuilder("calls")
+            .where("calls.userId = :userId", {userId: userId})
+            .getMany()
+
+            var today = new Date();
+            var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+            var llamadas = [];
+
+            calls.forEach(element => {
+
+                let startDate = element.date;
+
+                var object = {
+                    id: element.id,
+                    tipoLlamada: element.tipoLlamada
+                }
+
+                if (startDate.toString() == date) {
+                    llamadas.push(object);   
+                }
+            });            
+
+            console.log("\nSe obtuvieron "+llamadas.length + " llamadas");
+            new Resolver().success(res, "Se obtuvieron las llamadas correctamente", llamadas)
+
+        } catch (error) {
+            console.log("Error[getTotalCalls]:" +error);
+        }
+    }
+
 }
