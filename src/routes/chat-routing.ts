@@ -21,6 +21,8 @@ export class ChatRouting {
         this.router.post('/transferChat', this.chatController.transferChat);
         this.router.post('/getChatByIdRequest', this.chatController.getChatByIdRequest);
         this.router.get('/getLastChatByUserId', this.chatController.getLastChatByIdUser);
+        this.router.post('/getUserChats', this.chatController.getUserChats);
+        this.router.post('/obtenerDatosChatDiarios', this.chatController.obtenerDatosChatDiarios)
 
     }
 }

@@ -291,6 +291,87 @@ export class ChatController {
         }
     }
 
+    public async obtenerDatosChatDiarios(req: Request, res: Response){
+        try {
+            
+            var userId = req.body.userId;
+            
+            const chats = await getRepository(OpeChats)
+            .createQueryBuilder("chats")
+            .where("chats.userId = :userId", { userId: userId})
+            .getMany();
+
+            var today = new Date();
+            var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+            
+            var chatsHoy = [];
+            var chatsCerradosHoy = [];
+            var chatsActivosHoy = [];
+
+            chats.forEach(chat => {
+
+                let startDate = chat.date;
+
+                console.log("\n**********\nComparando "+startDate +" y " +date);
+                if (startDate.toString() == date) {
+                    chatsHoy.push(chat);
+                }
+            });
+
+            chatsHoy.forEach(chatH => {
+                if (chatH.statusId == 2) {
+                    chatsActivosHoy.push(chatH);
+                }else if(chatH.statusId == 3){
+                    chatsCerradosHoy.push(chatH);
+                }
+            });
+
+            var object = {
+                chatsCerrados: chatsCerradosHoy.length,
+                chatsActivos: chatsActivosHoy.length
+            }
+
+            new Resolver().success(res, "Se obtuvieron los datos correctamente", object);
+
+        } catch (error) {
+            console.log("Error[obtenerDatosChatDiarios]:" +error);
+        }  
+    }
+
+    public async getUserChats(req: Request, res: Response){
+        try {
+            
+            var chatsHoy = [];
+            var userId = req.body.userId;
+
+            const chats = await getRepository(OpeChats)
+            .createQueryBuilder("chats")
+            .where("chats.userId = :userId", {userId: userId})
+            .getMany();
+
+            var today = new Date();
+            var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+            
+
+            chats.forEach(chat => {
+
+                let startDate = chat.date;
+
+                console.log("\n**********\nComparando "+startDate +" y " +date);
+                // if (startDate.toString() == date) {
+                //     chatsHoy.push(chat);
+                // }
+                chatsHoy.push(chat);7
+
+            });
+
+            new Resolver().success(res, "Se encontraron chats diarios correctamente", chatsHoy)
+
+        } catch (error) {
+            console.log("Ocurrio un error[getUserChats]: "+error);
+        }
+    } 
+
 
 
     public async getActiveChats(req: Request, res: Response) {
