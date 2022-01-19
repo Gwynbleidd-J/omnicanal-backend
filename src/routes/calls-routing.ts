@@ -15,5 +15,6 @@ export class CallsRouting{
         this.router.post('/', this.callsController.RegistryIncomingCall);
         this.router.post('/updateNetworkCall', this.callsController.CallTypification);
         this.router.post('/getIdCall', this.callsController.getIdCall);
+        this.router.post('/getTotalCalls', this.callsController.getTotalCalls)
     }
 }
