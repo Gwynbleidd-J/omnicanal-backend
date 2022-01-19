@@ -39,6 +39,9 @@ export class OpeCalls{
     @Column({type:'integer'})
     statusId:Number; 
 
+    @Column({type: 'varchar', nullable: true})
+    tipoLlamada: String
+
     @Column({type:'integer', nullable:true})
     networkCategoryId:Number;
     

@@ -838,7 +838,7 @@ export class MessengerController {
         }
     }
 
-    public async outcommingMessage(req: Request, res: Response, next: NextFunction): Promise<void> {
+    public async outcommingMessage(req: Request, res: Response){
         let telegraf:Telegraf = new Telegraf(process.env.BOT_TOKEN);
         let copiaGlobalArraySockets = global.globalArraySockets;
         let backNotificationContext;
@@ -881,7 +881,6 @@ export class MessengerController {
                 copiaGlobalArraySockets.forEach(element => {
                     console.log('Comprobando ' + element.remotePort + ' vs ' + backNotificationContext['agentPlatformIdentifier']);
                     //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
-                    // if ((element.remoteAddress == '::ffff:' + backNotificationContext['agentPlatformIdentifier']) && (sentNotification < 1)) {
                     if ((element.remotePort == backNotificationContext['agentPlatformIdentifier']) && (sentNotification < 1)) {
                         console.log('Direccionando mensage al socket ' + element.remotePort);
                         new Socket().replyMessageForAgent(backNotificationContext, element);
@@ -918,18 +917,16 @@ export class MessengerController {
                 });
             }
 
-
             global.globalArraySockets = copiaGlobalArraySockets;
             console.log('Envío de notificación termidado.');
-            new Resolver().success(res, "Se envio el mensaje correctamente");
 
+            new Resolver().success(res,"Se enviara la notificacion correctamente");
         }
         catch (ex) {
             console.log('Error[outcommingMessage]' + ex);
-            new Resolver().exception(res, 'Unexpected error.', ex); 
+            //new Resolver().exception(res, 'Unexpected error.', ex); 
         }
         //res.end(); 
-        next();
     }
 
     /* public async outcommingWebMessage(req:Request, res:Response, next:NextFunction): Promise<void>{        

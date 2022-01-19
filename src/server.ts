@@ -11,7 +11,6 @@ import {Telegram} from './services/telegram';
 import { SocketIO } from './services/socketIO';
 import path from 'path';
  import * as socketio from 'socket.io';
-require('fs')
 //Routes Imports
 import { UserRouting } from './routes/user-routing';
 import { AuthRouting } from './routes/auth-routing';
@@ -25,13 +24,9 @@ import { StatusRouting } from './routes/status-routing';
 import { ParametersRouting } from './routes/applicationParameters-routing';
 import { getRepository } from "typeorm";
 import { CatAppParameters } from './models/appParameters';
-import { Console } from 'console';
-import { ChatController } from './controllers/chat-controller';
-import { UserController } from './controllers/user-controller';
 import { PruebaRouting } from './routes/prueba-routing';
 import { ScreenShareRouting } from './routes/screenShare-routing';
 import { CallsRouting } from './routes/calls-routing';
-import morganMiddleware from './utils/morgan';
 
 
 export class Server {
@@ -56,13 +51,11 @@ export class Server {
 
     public config(): void {
         this.app.set('port', process.env.SERVER_PORT || 3000);
-        this.app.use('/api/chatweb', express.static(path.join(__dirname, 'public')));
-        this.app.use('/api/monitoreo',express.static(path.join(__dirname, 'screen')));
+        this.app.use('/api/chatweb',express.static(path.join(__dirname, 'public')));
         this.app.use(express.urlencoded({ extended: true }));
         this.app.use(cors());
         this.app.use(express.json());
         this.app.use(express.urlencoded({extended: true}));
-        this.app.use(morganMiddleware);
     }
 
     public loadRoutes(): void {
@@ -136,15 +129,6 @@ export class Server {
                 console.log(`A client has disconnect: ${socket.handshake.address}:${socket.id}`);
                 global.socketIOArraySockets.pop(socket.id);
                 //console.log(`Array: ${global.socketIOArraySockets}`);
-
-                //Deteccion de cliente desconectado
-                // let chat = await new ChatController().getChatBySocket(socket.id);
-                // let agent = await new UserController().getAgentById(chat.userId);
-
-
-                let notificationString = '{"SocketInterrumpido": "' + socket.handshake.address + '"}';
-                console.log('Notificacion del lider: ' + notificationString);
-                socket.write(notificationString);
             });
 
         });

@@ -14,7 +14,8 @@ export class CallController{
             .values({
                 startTime: req.body.startTime,
                 userId: req.body.userId,
-                statusId: 2
+                statusId: 2,
+                tipoLlamada: req.body.tipoLlamada
             })
             .execute();
             // console.log(new Date().toLocaleDateString());
@@ -76,6 +77,22 @@ export class CallController{
             }
         }
         catch(ex){
+            new Resolver().exception(res, 'Unexpected error', ex);
+        }
+    }
+
+    public async getIdCall(req:Request, res:Response): Promise<void> {
+        try{
+            const call = await getRepository(OpeCalls).find({where:{
+                startTime: req.body.startTime
+            },
+                select:["id"]})
+
+                let temp = call[0].id;
+                console.log(temp);
+
+                new Resolver().success(res, 'El id de la llamada es:', temp)
+        }catch(ex){
             new Resolver().exception(res, 'Unexpected error', ex);
         }
     }
