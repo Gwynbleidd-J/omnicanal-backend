@@ -359,10 +359,10 @@ export class ChatController {
                 let startDate = chat.date;
 
                 console.log("\n**********\nComparando "+startDate +" y " +date);
-                // if (startDate.toString() == date) {
-                //     chatsHoy.push(chat);
-                // }
-                chatsHoy.push(chat);7
+                if (startDate.toString() == date) {
+                    chatsHoy.push(chat);
+                }
+                // chatsHoy.push(chat);
 
             });
 

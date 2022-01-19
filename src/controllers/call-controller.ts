@@ -117,12 +117,15 @@ export class CallController{
 
                 var object = {
                     id: element.id,
-                    tipoLlamada: element.tipoLlamada
+                    tipoLlamada: element.tipoLlamada,
+                    statusId: element.statusId
                 }
 
                 if (startDate.toString() == date) {
                     llamadas.push(object);   
                 }
+                // llamadas.push(object);   
+
             });            
 
             console.log("\nSe obtuvieron "+llamadas.length + " llamadas");
