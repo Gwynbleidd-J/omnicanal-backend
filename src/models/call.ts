@@ -39,7 +39,7 @@ export class OpeCalls{
     @Column({type:'integer'})
     statusId:Number; 
 
-    @Column({type: 'varchar', nullable: true})
+    @Column({type: 'varchar', default : "0"})
     tipoLlamada: String
 
     @Column({type:'integer', nullable:true})
