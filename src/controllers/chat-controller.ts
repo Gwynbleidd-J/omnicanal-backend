@@ -312,9 +312,10 @@ export class ChatController {
 
                 let startDate = chat.date;
 
-                console.log("\n**********\nComparando "+startDate +" y " +date);
+                //console.log("\n**********\nComparando "+startDate +" y " +date);
                 if (startDate.toString() == date) {
                     chatsHoy.push(chat);
+                    console.log("Validado chat de hoy:" +chat.id)
                 }
             });
 

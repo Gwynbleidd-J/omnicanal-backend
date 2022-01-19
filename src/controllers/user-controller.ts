@@ -65,7 +65,6 @@ export class UserController {
                 .orderBy("users.name", "ASC")
                 .getMany();
 
-            let payload;
             let asu = [];
 
 
@@ -79,10 +78,7 @@ export class UserController {
             });
 
             if (users) {
-                // payload = {
-                //     users: users
-                // };
-                console.log("Usuarios obtenidos:" + JSON.stringify(payload));
+                console.log("Usuarios obtenidos:" + JSON.stringify(asu));
                 new Resolver().success(res, 'Agentes consultados', asu);
             }
             else
