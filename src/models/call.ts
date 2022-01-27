@@ -40,7 +40,13 @@ export class OpeCalls{
     statusId:Number; 
 
     @Column({type: 'varchar', default : "0"})
-    tipoLlamada: String
+    tipoLlamada: String;
+
+    @Column({type: 'varchar', default: "0" })
+    llamadaTransferida: String;
+    
+    @Column({type: 'varchar', nullable: true})
+    folioLlamada: String;
 
     @Column({type:'integer', nullable:true})
     networkCategoryId:Number;

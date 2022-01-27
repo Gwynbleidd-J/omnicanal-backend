@@ -37,6 +37,9 @@ export class CatUsers {
     @Column({type:'varchar', length:15, nullable: true})
     activeIp:String;
 
+    @Column({type:'varchar', length: 10, nullable: true})
+    siglasUser:String;
+
     @Column({ nullable: true })
     rolID:number;
 

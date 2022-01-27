@@ -48,7 +48,7 @@ export class Socket {
             let raddr = socket.remoteAddress;
             let rfamily = socket.remoteFamily;
           
-            console.log('REMOTE Socket is listening at port' + rport);
+            console.log('REMOTE Socket is listening at port:' + rport);
             console.log('REMOTE Socket ip :' + raddr);
             console.log('REMOTE Socket is IP4/IP6 : ' + rfamily);
           
@@ -68,7 +68,7 @@ export class Socket {
             socket.setEncoding('utf-8');
             socket.setTimeout(800000, () =>{
                 console.log('socket timed out');
-            })
+            });
             
             //Proceso handshake con el agente
             var Hello = '{"socketPort": "'+socket.remotePort+'"}';
@@ -84,7 +84,7 @@ export class Socket {
                 console.log('Data sent to server : ' + data);
 
                 //TODO:Borrar luego
-                console.log("Entrando a al recibimiento de data en el server")
+                console.log("Entrando al recibimiento de data en el server")
                 try {
                     console.log("Asi se ve la data recibida: " +data);
                     let rawData = data.toString();
@@ -162,9 +162,10 @@ export class Socket {
                 let index = global.globalArraySockets.findIndex((o) =>{
                     return o.remoteAddress === socket.remoteAddress && o.remotePort === socket.remotePort;
                 });
-                if(index !== 1){
-                    global.globalArraySockets.splice(index, 1);
-                }
+                
+                // if(index !== 1){
+                //     global.globalArraySockets.splice(index, 1);
+                // }
                 global.globalArraySockets.forEach((sock)=>{
                     sock.write(`${this.clientAddress} disconnected`);
                     sock.destroy();
@@ -176,11 +177,11 @@ export class Socket {
                 // new MessengerController().NotificateLeader("FS", (agent).ID , null, null);
             });
 
-            setTimeout(() => {
-                let isDestroyed = socket.destroyed;
-                console.log('Socket destroyed: ' + isDestroyed);
-                socket.destroy();
-            }, 1200000);
+            // setTimeout(() => {
+            //     let isDestroyed = socket.destroyed;
+            //     console.log('Socket destroyed: ' + isDestroyed);
+            //     socket.destroy();
+            // }, 1200000);
         });
 
         this.netServer.on('error', (error) =>{
