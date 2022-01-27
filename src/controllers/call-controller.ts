@@ -89,7 +89,7 @@ export class CallController {
             .execute();
             // .createQueryBuilder()
             // .update(OpeCalls)
-            // .set({
+            // .set({a
             //     endingTime: req.body.endingTime,
             //     networkCategoryId: req.body.networkId,
             //     statusId: 3,
@@ -145,17 +145,21 @@ export class CallController {
                 var object = {
                     id: element.id,
                     tipoLlamada: element.tipoLlamada,
-                };
-                
+                    statusId: element.statusId
+                }
+
                 if (startDate.toString() == date) {
                     llamadas.push(object);
                 }
-            });
-            console.log("\nSe obtuvieron " + llamadas.length + " llamadas");
-            new Resolver().success(res,"Se obtuvieron las llamadas correctamente",llamadas);
-        }
-        catch (error) {
-            console.log("Error[getTotalCalls]:" + error);
+                // llamadas.push(object);   
+
+            });            
+
+            console.log("\nSe obtuvieron "+llamadas.length + " llamadas");
+            new Resolver().success(res, "Se obtuvieron las llamadas correctamente", llamadas)
+
+        } catch (error) {
+            console.log("Error[getTotalCalls]:" +error);
         }
     }
 }
