@@ -42,13 +42,14 @@ export class CallController {
                 select: ["siglasUser"],
             });
             let fecha = callDate[0].date.toLocaleString().toString().replace(/-/g, '')
-            console.log(fecha);
+            //console.log(fecha);
             // console.log(new Date().toLocaleDateString());
             // console.log(new Date().toLocaleString());
             // console.log(new Date().toLocaleTimeString('es-MX'));
             
             if (incomingCall) {
                 let folio = `${siglasUser[0].siglasUser}_${fecha}_${callId[0].id}`
+                console.log(folio);
                 const folioLlamada = await getRepository(OpeCalls)
                 .createQueryBuilder()
                 .update(OpeCalls)
@@ -57,14 +58,15 @@ export class CallController {
                 })
                 .where("id = :id", { id: callId[0].id })
                 .execute()
-                new Resolver().success(res, "Call correctly stored",folioLlamada);
+                new Resolver().success(res, "Call correctly stored",folio);
             }else{
-                new Resolver().exception(res, "Call dont correctly stored");
+                new Resolver().exception(res, "Call dont stored");
             }
         }catch (ex) {
             new Resolver().exception(res, "Unexpected error", ex);
         }
     }
+
     public async CallTypification(req: Request, res: Response): Promise<void> {
         try {
             const call = await getRepository(OpeCalls).find({
