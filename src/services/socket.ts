@@ -3,12 +3,10 @@ import * as net from 'net';
 import * as globalArraySockets from './global';
 import { SocketIO } from './socketIO';
 import { UserController } from '../controllers/user-controller';
-import { error } from 'winston';
 
 export class Socket {
     private mensajeBienvenida:String;
     public netServer:net.Server;
-    public connection: net.Server;
     public sockets:any;
     public port:Number;
     public clientAddress:any;
@@ -23,7 +21,9 @@ export class Socket {
     public initSocketServer(): void{
         this.port = 8000;
         let clientAddress:any;
-        this.netServer = net.createServer();        
+        this.netServer = net.createServer();
+        
+        
         /*Checar cual metodo para crear un array de sockets es el mejor el que se 
         creo en el codigo comentado o el que actualmente se está utilizando en la
         clase*/
@@ -33,58 +33,41 @@ export class Socket {
         //global.globalArraySockets.push(socket);      
         //})
 
-        this.netServer.on('close', ()=>{
-            console.log('Server closed!');
+        this.netServer.listen(this.port,() =>{
+            console.log(`TCP server is running on port: ${this.port}`);
         });
 
         this.netServer.on('connection', socket =>{
-            console.log('Buffer size:' +  socket.writableLength);
-            console.log('---------server details -----------------');
-            let server = this.netServer.address();
-            console.log(server),
-
-            console.log('------------remote client info --------------');
-            let rport = socket.remotePort;
-            let raddr = socket.remoteAddress;
-            let rfamily = socket.remoteFamily;
-          
-            console.log('REMOTE Socket is listening at port:' + rport);
-            console.log('REMOTE Socket ip :' + raddr);
-            console.log('REMOTE Socket is IP4/IP6 : ' + rfamily);
-          
-            console.log('--------------------------------------------')
-
-            this.netServer.getConnections((error, count)=>{
-                if(error){
-                    console.log(`${error}`)
-                }
-                console.log(`Active Clients ${count}`)
-            });
-
             this.clientAddress = `${socket.remoteAddress}: ${socket.remotePort}`;
             console.log(`client connected: ${this.clientAddress}`);
+
+            socket.setKeepAlive(true,0);
             global.globalArraySockets.push(socket);
 
-            socket.setEncoding('utf-8');
-            socket.setTimeout(800000, () =>{
-                console.log('socket timed out');
+            var temp = [];
+            global.globalArraySockets.forEach(readSocketC => {
+                temp.push(readSocketC.remotePort);
             });
-            
+
+            console.log("Se hizo un push al arreglo con este socket:" + JSON.stringify(socket.remotePort))
+            console.log("\nEl arreglo de sockets ahora se ve asi: \n"+ JSON.stringify(temp));
+
             //Proceso handshake con el agente
             var Hello = '{"socketPort": "'+socket.remotePort+'"}';
             console.log("\nSe le mandara al agente lo siguiente:"+Hello);
             socket.write(Hello)
 
+            this.netServer.getConnections((error, count)=>{
+                if(error){
+                    console.log(`Ocurrio el siguiente error al recuperar los sockets conectados:\n ${error}`)
+                }
+                console.log(`Active Clients ${count}`);
+            });
+
              socket.on('data', (data) =>{
                 let sentNotification = 0; 
-                let bread = socket.bytesRead;
-                let bwrite = socket.bytesWritten;
-                console.log('Bytes read : ' + bread);
-                console.log('Bytes written : ' + bwrite);
-                console.log('Data sent to server : ' + data);
-
                 //TODO:Borrar luego
-                console.log("Entrando al recibimiento de data en el server")
+                console.log("Entrando a al recibimiento de data en el server")
                 try {
                     console.log("Asi se ve la data recibida: " +data);
                     let rawData = data.toString();
@@ -123,74 +106,54 @@ export class Socket {
                 
             });
 
-            socket.on('drain', () =>{
-                console.log('write buffer is empty now .. u can resume the writable stream');
-                socket.resume();
-            });
+            socket.on('close', ()=>{
 
-            socket.on('error', err=>{
-                let mensaje = 'te desconectaste del servidor, reconectate'
-                console.log(`Error occurred in ${this.clientAddress}: ${err.message}`);
-                if(err.message ==='read ECONNRESET' || err.message ==='write ECONNRESET'){
-                    console.log(`se envio un mensaje de error al cliente: ${socket.remoteAddress}:${socket.remotePort}`);
-                    console.log(`se le envio este mensaje a:${socket.remoteAddress}: ${socket.remotePort}: ${mensaje} `);
-                    socket.write(mensaje);
-                }
-            });
+                console.log("*********************\nSe cerrara una conexion de socket");
 
-            socket.on('timeout', () =>{
-                console.log('Socket timed out');
-                socket.end('Timed out');
-            });
-
-            socket.on('end', (data) =>{
-                console.log('Socket ended ');
-                console.log('End data : ' + data); 
-                socket.destroy()
-                if(socket.destroyed){
-                    console.log(`${socket.remotePort} has been destroyed`);
-                }
-                else{
-
-                }
-            })
-
-            socket.on('close', (error)=>{
-                if(error){
-                    console.log('Socket was closed because of transmission error: '+ error);
-                }
                 let index = global.globalArraySockets.findIndex((o) =>{
                     return o.remoteAddress === socket.remoteAddress && o.remotePort === socket.remotePort;
                 });
-                
-                // if(index !== 1){
-                //     global.globalArraySockets.splice(index, 1);
-                // }
-                global.globalArraySockets.forEach((sock)=>{
-                    sock.write(`${this.clientAddress} disconnected`);
-                    sock.destroy();
+
+                var tempClose = [];
+                global.globalArraySockets.forEach(socketClose => {
+                    tempClose.push(socketClose.remotePort);
                 });
+
+                console.log("El indice del socket a eliminar es:" +index);
+                console.log("Antes de borrar el socket se ve asi el arreglo: \n" +JSON.stringify(tempClose))
+
+                if(index !== 1){
+                    global.globalArraySockets.splice(index, 1);
+                }
+
+                tempClose = [];
+                global.globalArraySockets.forEach(socketClose => {
+                    tempClose.push(socketClose.remotePort);
+                });
+                console.log("Despues de borrar el socket asi se ve el arreglo: \n" +JSON.stringify(tempClose))
+
+                // global.globalArraySockets.forEach((sock)=>{
+                //     console.log("Se mandara al socket " +sock +" lo siguiente: "+this.clientAddress);
+                //     sock.write(`${this.clientAddress} disconnected`)
+                // });
+                
                 console.log(`connection closed: ${this.clientAddress}`);
                 let activeIP = this.clientAddress.split(": ")[1];
                 console.log("Su direccion es:" +activeIP);
-                let agent = new UserController().NotificateSessionClose(activeIP);
+
+                //let agent = new UserController().NotificateSessionClose(activeIP);
                 // new MessengerController().NotificateLeader("FS", (agent).ID , null, null);
             });
-
-            // setTimeout(() => {
-            //     let isDestroyed = socket.destroyed;
-            //     console.log('Socket destroyed: ' + isDestroyed);
-            //     socket.destroy();
-            // }, 1200000);
+            socket.on('error', err=>{
+                
+                console.log(`Error occurred in ${this.clientAddress}: ${err.message}`);
+                console.log("Supuestamente, despues de aqui se deberia llamar a todo lo del evento close")
+            });
         });
 
-        this.netServer.on('error', (error) =>{
-            console.log('An error was accurred at server'+ error);
+        this.netServer.on('close', ()=>{
+            console.log('Server closed!');
         });
-
-        this.netServer.listen(this.port,() =>{
-            console.log(`TCP server is running on port: ${this.port}`);
-        })
     }
 
     public replyMessageForAgent(messageContext:JSON, agentSocket:net.Socket): void{
