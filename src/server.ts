@@ -8,7 +8,7 @@ import { createConnection, Connection } from 'typeorm';
 import  cors from 'cors';
 import { Resolver } from "./services/resolver"; 
 import {Telegram} from './services/telegram';
-import { SocketIO } from './services/socketIO';
+import { SoscketIOServer } from './services/SocketIOServer';
 import path from 'path';
  import * as socketio from 'socket.io';
 //Routes Imports
@@ -27,6 +27,7 @@ import { CatAppParameters } from './models/appParameters';
 import { PruebaRouting } from './routes/prueba-routing';
 import { ScreenShareRouting } from './routes/screenShare-routing';
 import { CallsRouting } from './routes/calls-routing';
+import { MessengerController } from './controllers/messenger-controller';
 
 
 export class Server {
@@ -34,7 +35,7 @@ export class Server {
     public mySocket:Socket;
     public udpSocket:UDPSocket;
     public telegram:Telegram;
-    public socketio:SocketIO;
+    public socketio:SoscketIOServer;
     public io:socketio.Server;
     public server:any;
     public dataObject:any;
@@ -110,20 +111,29 @@ export class Server {
     
     public InitSocketIO():void{
         global.socketIOArraySockets = [];
-        this.io = new socketio.Server(this.server, {
-            cors:{
-                origin: '*',
-                methods:["GET", "POST"]
-            },
-        })
+        global.io = new socketio.Server(this.server, {
+                cors:{
+                    origin: '*',
+                    methods:["GET", "POST"]
+                }
+            })
+        // this.io = new socketio.Server(this.server, {
+        //     cors:{
+        //         origin: '*',
+        //         methods:["GET", "POST"]
+        //     },
+        // })
 
-        this.io.on('connection', (socket)=>{
-            console.log(`New Connection: ${socket.handshake.address}:${socket.id}`);
-            global.socketIOArraySockets.push(socket)
-            //console.log(`Array: ${global.socketIOArraySockets}`);
+        //new SoscketIOServer(this.io);
+        global.io.on('connection', (socket)=>{
+            console.log(`New Connection with global variable: ${socket.handshake.address}:${socket.id}`);
+            global.socketIOArraySockets.push(socket);
+
             
-            new SocketIO().IOEventOn('client-message', socket);
-            //new SocketIO().IOEventOn('no-client', socket);
+            socket.emit('port',{
+                socketPort: socket.id   
+            });
+            //console.log(`Array: ${global.socketIOArraySockets}`);
 
             socket.on('disconnect', ()=>{
                 console.log(`A client has disconnect: ${socket.handshake.address}:${socket.id}`);

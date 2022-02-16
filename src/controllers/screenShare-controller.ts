@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import sharp from 'sharp';
 import fs from 'fs';
 import { Resolver } from '../services/resolver';
-import { SocketIO } from '../services/socketIO';
+import { SoscketIOServer } from '../services/SocketIOServer';
 import express from 'express';
 import path from "path";
 import { getRepository } from "typeorm";

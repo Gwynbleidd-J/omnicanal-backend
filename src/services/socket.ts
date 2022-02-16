@@ -1,7 +1,7 @@
 import { MessengerController } from './../controllers/messenger-controller';
 import * as net from 'net';
 import * as globalArraySockets from './global';
-import { SocketIO } from './socketIO';
+import { SoscketIOServer } from './SocketIOServer';
 import { UserController } from '../controllers/user-controller';
 
 export class Socket {
@@ -156,14 +156,15 @@ export class Socket {
         });
     }
 
-    public replyMessageForAgent(messageContext:JSON, agentSocket:net.Socket): void{
+    public replyMessageForAgent(messageContext:JSON, agentSocket:any): void{ //nada más se ocupa este método
+        //messageIn se va a referenciar este metedo en la clase MessengerController
         try{
             //OUTCOMMING
             if(messageContext['platformIdentifier'] == 'c' && messageContext['transmitter'] == 'a' ){
                 let notificationString = '{"agentPlatformIdentifier": "'+messageContext['agentPlatformIdentifier']+'", "text": "'+messageContext['text']+'", "platformIdentifier": "'+messageContext['platformIdentifier']+'", "transmitter": "'+messageContext['transmitter']+'"}';
                 console.log('Cuerpo original de la notificación: ' + notificationString); 
                 //agentSocket.write(notificationString);
-                new SocketIO().IOEventEmit('server-message', notificationString);
+                //new SocketIO().IOEventEmit('server-message', notificationString);
                 console.log('Notificación enviada a ' +  messageContext['clientPlatformIdentifier']);   
             }
             else{
@@ -181,7 +182,7 @@ export class Socket {
         }
     }
 
-    public replyMessageForClient(agentSocket:String,messageString:String){
+    public replyMessageForClient(agentSocket:String,messageString:String){ //ver si se ocupa este metodo
         try{  
             console.log('replyMessageForClient: Iniciando envío de mensaje desde el agente ' + agentSocket +' a cliente.');
             new MessengerController().standardizeOutcommingMessage(agentSocket,messageString);

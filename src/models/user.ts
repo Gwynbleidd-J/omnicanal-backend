@@ -34,7 +34,7 @@ export class CatUsers {
     @Column({ default: 0 })
     activeChats:number;
 
-    @Column({type:'varchar', length:15, nullable: true})
+    @Column({type:'varchar', length:70, nullable: true})
     activeIp:String;
 
     @Column({type:'varchar', length: 10, nullable: true})

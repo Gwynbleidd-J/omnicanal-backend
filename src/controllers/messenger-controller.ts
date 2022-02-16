@@ -7,9 +7,11 @@ import { OpeChats } from './../models/chat';
 import { getRepository, SimpleConsoleLogger, UpdateResult } from "typeorm";
 import { Resolver } from "../services/resolver";
 import { Telegraf } from 'telegraf';
-import { SocketIO } from '../services/socketIO';
+import { SoscketIOServer } from '../services/SocketIOServer';
 import { CatAppParameters } from '../models/appParameters';
 import { Utils } from '../services/utils';
+import * as socketIO from 'socket.io';
+import { measureMemory } from 'vm';
 
 //CÓDIGO QUE ESTA EN LA CARPETA DEL PROYECTO.
 //CODIGO QUE ESTA EN MI COPIA DEL REPOSITORIO CODIGO QUE ESTÁ EN MI COPIA DEL PROYECTO.
@@ -20,9 +22,12 @@ export class MessengerController {
     private telegraf: Telegraf;
     private contextoGenerico: any;
     public dataObject: any;
+    public socketHandler: SoscketIOServer;
 
-    constructor(telegraf?: Telegraf) {
+    constructor(telegraf?: Telegraf, socket?: SoscketIOServer) {
         this.telegraf = new Telegraf(process.env.BOT_TOKEN);
+
+        this.socketHandler = socket;
         //this.telegraf = new Telegraf(new Utils().token);
         //new Utils().getBotToken();
         this.dataObject = [];
@@ -43,6 +48,7 @@ export class MessengerController {
     /* #endregion */
     public async whatsappIncommingMessage(req: Request, res: Response): Promise<void> {
         try {
+            // console.log('se entró en whatsappIncommingMessage antes que naiden')
             MessengerController.prototype.standardizeIncommingMessage(req.body, 'w');
         }
         catch (ex) {
@@ -92,6 +98,7 @@ export class MessengerController {
                     if (assignedChat) {    //Enviar el mensaje al agente asignado 
                         messageContext['userId'] = jsonDisponibleAgent.userId;
                         messageContext['agentPlatformIdentifier'] = jsonDisponibleAgent.agentPlatformIdentifier;
+                        console.log(messageContext['agentPlatformIdentifier']);
                         this.replyMessageForAgent(messageContext);
 
                         //De momento se usará este método para cubrir la funcionalidad del Trigger desde BD
@@ -397,10 +404,11 @@ export class MessengerController {
             (async () => {
                 const meta = await this.registryIndividualMessage(messageContext)
                 insertedChatHistoricId = meta;
-                //console.log(`insertado con id: ${insertedChatHistoricId}`);
+                console.log(`insertado con id: ${insertedChatHistoricId}`);
+                console.log(`Información:${meta}`);
                 var sentNotification = 0;
 
-                let copiaGlobalArraySockets = global.globalArraySockets;
+                let copiaGlobalArraySockets = global.socketIOArraySockets;
 
                 if (insertedChatHistoricId) {
                     // console.log('Estado del Array Interno'); console.log(copiaGlobalArraySockets);
@@ -416,16 +424,24 @@ export class MessengerController {
                         //     sentNotification++;
                         // }
 
-                        console.log('Comprobando ' + element.remotePort +' vs '+  messageContext['agentPlatformIdentifier']);
-                        if ((element.remotePort == messageContext['agentPlatformIdentifier']) && (sentNotification < 1)) {
-                            console.log('Direccionando mensaje al socket ' + element.remotePort);
-                            new Socket().replyMessageForAgent(messageContext, element);
+                        console.log('Comprobando ' + element.id +' vs '+  messageContext['agentPlatformIdentifier']);
+                        console.log('messageContext antes de enviar al cliente :v:');
+                        console.log(messageContext);
+                        if (element.id == messageContext['agentPlatformIdentifier']){
+                        //if ((element.id == messageContext['agentPlatformIdentifier']) && (sentNotification < 1)) {
+                            console.log('Direccionando mensaje al socket ' + element.id);
+                            //new SoscketIOServer(element).replyMessage(element, messageContext);
+                            this.replyMessageForAgentSocketIO(messageContext, element.id);
+                            // global.io.to(element.id).emit('serverNotification', messageContext)
+                            //new SoscketIOServer(new SoscketIOServer().socketHandler).socketHandler.to(element).emit('message', messageContext);
+                            //new SoscketIOServer(this.socketHandler.).socketHandler.to(messageContext['agentPlatformIdentifier']).emit('message', messageContext);
+                            //new Socket().replyMessageForAgent(messageContext, element);
                             sentNotification++;
                         }
 
 
                     });
-                    global.globalArraySockets = copiaGlobalArraySockets;
+                    global.globalArraySockets = socketIOArraySockets;
                 }
             })();
             //console.log('Mensaje enviado, estoy de vuelta en replyMessageForAgent');
@@ -586,6 +602,7 @@ export class MessengerController {
                 .leftJoinAndSelect("user.status", 'status')
                 .where(" user.activeChats < user.maxActiveChats")
                 .andWhere(" user.statusID = :statusID", { statusID: 7 }) //Contemplar después añadir el filtro para el estatus del usuario
+                //.andWhere(" user.rolID = :rolID", { rolID: 1 })
                 .orderBy(" user.activeChats", "ASC")
                 .getOne();
 
@@ -838,9 +855,9 @@ export class MessengerController {
         }
     }
 
-    public async outcommingMessage(req: Request, res: Response){
+    public async outcommingMessage(req: Request, res: Response){ //Metodo para enviarle mensajes a los clientes (telefonos)
         let telegraf:Telegraf = new Telegraf(process.env.BOT_TOKEN);
-        let copiaGlobalArraySockets = global.globalArraySockets;
+        let copiaGlobalArraySockets = global.socketIOArraySockets;
         let backNotificationContext;
         var sentNotification = 0;
         try {
@@ -876,17 +893,25 @@ export class MessengerController {
             console.log(backNotificationContext);
 
             console.log('Iniciando barrido del arreglo de sockets...');
-            //console.log(copiaGlobalArraySockets);
             if (req.body.platformIdentifier != 'c') {
-                copiaGlobalArraySockets.forEach(element => {
-                    console.log('Comprobando ' + element.remotePort + ' vs ' + backNotificationContext['agentPlatformIdentifier']);
-                    //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
-                    if ((element.remotePort == backNotificationContext['agentPlatformIdentifier']) && (sentNotification < 1)) {
-                        console.log('Direccionando mensage al socket ' + element.remotePort);
-                        new Socket().replyMessageForAgent(backNotificationContext, element);
-                        sentNotification++;
+
+                socketIOArraySockets.forEach(element => {
+                    console.log('Comprobando ' + element.id + ' vs ' + backNotificationContext['agentPlatformIdentifier']);
+                    if(element.id == backNotificationContext['agentPlatformIdentifier']){
+                        console.log(`Direccionando mensaje al socket: ${element.id}`);
+                        new MessengerController().replyMessageForAgentSocketIO(backNotificationContext, element.id);
                     }
                 });
+                //new SoscketIOServer(this.socketHandler.socketHandler).socketHandler.to(backNotificationContext['agentPlatformIdentifier']).emit('message', backNotificationContext);
+                // copiaGlobalArraySockets.forEach(element => {
+                //     console.log('Comprobando ' + element.remotePort + ' vs ' + backNotificationContext['agentPlatformIdentifier']);
+                //     //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
+                //     if ((element.remotePort == backNotificationContext['agentPlatformIdentifier']) && (sentNotification < 1)) {
+                //         console.log('Direccionando mensage al socket ' + element.remotePort);
+                //         new Socket().replyMessageForAgent(backNotificationContext, element);
+                //         sentNotification++;
+                //     }
+                // });
             } else {
                 socketIOArraySockets.forEach(element => {
                     console.log('Comprobando ' + element.id + ' vs ' + backNotificationContext['clientPlatformIdentifier']);
@@ -895,7 +920,7 @@ export class MessengerController {
                         console.log('Direccionando mensage al socket ' + element.id);
                         let notificationString = '{"agentPlatformIdentifier": "' + backNotificationContext['agentPlatformIdentifier'] + '", "text": "' + backNotificationContext['message'] + '", "platformIdentifier": "' + backNotificationContext['platformIdentifier'] + '", "transmitter": "' + 'a' + '"}';
 
-                        new SocketIO().IOEventEmit('server-message', element, notificationString);
+                        //new SocketIO().IOEventEmit('server-message', element, notificationString);
 
                         //new Socket().replyMessageForAgent(backNotificationContext, element);           
                         sentNotification++;
@@ -911,12 +936,9 @@ export class MessengerController {
                                 sentNotificationIO++;
                             }
                         });
-
-
                     }
                 });
             }
-
             global.globalArraySockets = copiaGlobalArraySockets;
             console.log('Envío de notificación termidado.');
 
@@ -1098,7 +1120,7 @@ export class MessengerController {
 
             //---Aquí no le muevas-------
             var sentNotification = 0;
-            let copiaGlobalArraySockets = global.globalArraySockets;
+            let copiaGlobalArraySockets = global.socketIOArraySockets;
             if (req.body.agentPlatformIdentifier) {
                 // console.log('Estado del Array Interno'); console.log(copiaGlobalArraySockets);
                 // console.log('Estado del Array global'); console.log(global.globalArraySockets);
@@ -1107,7 +1129,7 @@ export class MessengerController {
                     // console.log('Comprobando ' + element.remoteAddress +' vs '+  messageContext['agentPlatformIdentifier']);
                     //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
                     if ((element.remotePort == messageContext['agentPlatformIdentifier']) && (sentNotification < 1)) {
-                        console.log('Direccionando mensage al socket ' + element.remotePort);
+                        console.log('Direccionando mensage al socket ' + element.id);
                         new Socket().replyMessageForAgent(messageContext, element);
                         sentNotification++;
                     }
@@ -1119,6 +1141,38 @@ export class MessengerController {
         catch (ex) {
             console.log(ex)
             new Resolver().exception(res, 'Unexpected error', ex);
+        }
+    }
+
+    public replyMessageForAgentSocketIO(messageContext:JSON, socketPort:any): void{ //nada más se ocupa este método
+        //messageIn se va a referenciar este metedo en la clase MessengerController
+        try{
+            //OUTCOMMING
+            //MANDA EL MENSAJE HACIA EL CHAT WEB
+            if(messageContext['platformIdentifier'] == 'c' && messageContext['transmitter'] == 'a' ){
+                let notificationString = '{"agentPlatformIdentifier": "'+messageContext['agentPlatformIdentifier']+'", "text": "'+messageContext['text']+'", "platformIdentifier": "'+messageContext['platformIdentifier']+'", "transmitter": "'+messageContext['transmitter']+'"}';
+                console.log('Cuerpo original de la notificación: ' + notificationString); 
+                //agentSocket.write(notificationString);
+                //new SocketIO().IOEventEmit('server-message', notificationString);
+                console.log('Notificación enviada a ' +  messageContext['clientPlatformIdentifier']);   
+            }
+            else{
+                let notificationString = '{"chatId": "'+messageContext['id']+'", "platformIdentifier": "'+messageContext['platformIdentifier']+'", "clientPlatformIdentifier": "'+messageContext['clientPlatformIdentifier']+'"}'; //, "numberToSend": "'+messageContext['NumberToSend']+'", "notificacionType": "'+messageContext['notificationType']+'"
+                console.log('Cuerpo original de la notificación: ' + notificationString); 
+               global.io.to(socketPort).emit('serverNotification', {
+                    chatId: messageContext['id'],
+                    platformIdentifier: messageContext['platformIdentifier'],
+                    clientPlatformIdentifier: messageContext['clientPlatformIdentifier']
+                });
+                //agentSocket.write(notificationString);
+
+                /////------Linea de codigo para mandar un mesaje cuando se cierre una página-----//////
+                console.log('Notificación enviada a ' +  messageContext['agentPlatformIdentifier']);
+            }
+  
+        }
+        catch(ex){
+            console.log('Error[socket][replyMessageForAgent]: ' + ex);
         }
     }
 }
