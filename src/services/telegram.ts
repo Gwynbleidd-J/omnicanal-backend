@@ -7,6 +7,7 @@ import { TelegramController } from '../controllers/telegram-controller';
 import { Server } from '../server';
 import { CatAppParameters } from '../models/appParameters';
 import { getRepository } from 'typeorm';
+import { createTextChangeRange } from 'typescript';
 const TelegrafInlineMenu = require('telegraf-inline-menu')
 
 
@@ -42,6 +43,23 @@ export class Telegram{
           this.telegramController.standardizeIncommingMessage(ctx, 't');
       });
 
+      this.telegraf.on('photo', async ctx =>{
+          let data = ctx.update.message.photo[3].file_id;
+          const link = this.getLink(data);
+          this.telegramController.standardizeIncommingMessage(ctx, 't', await link);
+      });
+
+      this.telegraf.on('voice', async ctx =>{
+          let data = ctx.update.message.voice.file_id;
+          const link = this.getLink(data);
+          this.telegramController.standardizeIncommingMessage(ctx, 't', await link);
+      })
+
+      this.telegraf.on('document', async ctx =>{
+          let data = ctx.update.message.document.file_id;
+          const link = this.getLink(data);
+          this.telegramController.standardizeIncommingMessage(ctx, 't', await link);
+      })
         // this.telegraf.telegram.setMyCommands([
         //     {command: 'elektra', description: "Ingresar al menu de ayuda de Elektra"},
         //     {command: 'marti', description: "Ingresar al menu de ayuda de Marti"},
@@ -127,6 +145,18 @@ export class Telegram{
         // });
     }
     
+    
+    public async getLink(data:string):Promise<string>{
+        try{
+            let link:string;
+            await this.telegraf.telegram.getFileLink(data).then((response) =>{
+                link = response.href;
+            });
+            return link
+        }catch(e){
+            console.log(e);
+        }
+    }
     /* public initListeners(): void {
         this.telegraf.start(ctx => {
             ctx.reply("Hola. Gracias por escribir al Telegram de PromoEspacio. En un momento le enlazamos con un agente.");   

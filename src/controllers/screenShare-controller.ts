@@ -15,17 +15,24 @@ export class ScreenShareController{
 
         try {
             let sentNotification = 0;
-            let copiaGlobalArraySockets = global.globalArraySockets;
+            let copiaGlobalArraySockets = global.socketIOArraySockets;
             copiaGlobalArraySockets.forEach(element => {
-                console.log("Comprobando "+element.remotePort+ " y "+ idSocket)
-                if (element.remotePort == idSocket && sentNotification < 1) {
+                console.log("Comprobando "+element.id+ " y "+ idSocket)
+                // if (element.id == idSocket && sentNotification < 1)
+                if (element.id == idSocket) {
                     console.log("Enviando notificacion a "+idSocket);
                     let notificationString = JSON.stringify(objetoEnvio);
                     console.log("Data enviada al socket:" +notificationString);
+                    global.io.to(element.id).emit('serverNotification',{
+                        notificationString
+                    });
                     element.write(notificationString);
                     sentNotification ++
                 }
             });
+
+            /*
+             */
             return sentNotification;
 
         } catch (error) {

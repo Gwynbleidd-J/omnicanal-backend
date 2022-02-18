@@ -515,7 +515,7 @@ export class MessengerController {
     */
     /* #endregion */
     //public standardizeMessageContext(Ctx:any, platformIdentifier:String){ 
-    public standardizeIncommingMessage(ctx, platformIdentifier: String): void {
+    public standardizeIncommingMessage(ctx, platformIdentifier: String, urlDocument?:string): void {
         try {
             //console.log('Probando contexto de mensaje de ' + platformIdentifier);
             // console.log(ctx);
@@ -535,6 +535,7 @@ export class MessengerController {
                     , "agentPlatformIdentifier": ''
                     , "messagePlatformId": ctx.message.message_id
                     , "transmitter": 'c'
+                    , "mediaUrl": urlDocument
                 }
                 messageContext = Context;
             }
@@ -904,6 +905,7 @@ export class MessengerController {
                         new MessengerController().replyMessageForAgentSocketIO(backNotificationContext, element.id);
                     }
                 });
+                /*
                 //new SoscketIOServer(this.socketHandler.socketHandler).socketHandler.to(backNotificationContext['agentPlatformIdentifier']).emit('message', backNotificationContext);
                 // copiaGlobalArraySockets.forEach(element => {
                 //     console.log('Comprobando ' + element.remotePort + ' vs ' + backNotificationContext['agentPlatformIdentifier']);
@@ -914,23 +916,19 @@ export class MessengerController {
                 //         sentNotification++;
                 //     }
                 // });
+                 */
+
             } else {
                 socketIOArraySockets.forEach(element => {
-                    console.log('Comprobando ' + element.id + ' vs ' + backNotificationContext['clientPlatformIdentifier']);
+                    console.log('Comprobando ' + element.id + ' vs ' + backNotificationContext['agentPlatformIdentifier']);
                     //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
                     // if ((element.id == backNotificationContext['clientPlatformIdentifier']) && (sentNotification < 1))
-                    if (element.id == backNotificationContext['clientPlatformIdentifier']) {
+                    if (element.id == backNotificationContext['agentPlatformIdentifier']) {
                         console.log('Direccionando mensage al socket ' + element.id);
                         let notificationString = '{"agentPlatformIdentifier": "' + backNotificationContext['agentPlatformIdentifier'] + '", "text": "' + backNotificationContext['message'] + '", "platformIdentifier": "' + backNotificationContext['platformIdentifier'] + '", "transmitter": "' + 'a' + '"}';
-
-                        //new SocketIO().IOEventEmit('server-message', element, notificationString);
-
-                        
-                        
-                        //new Socket().replyMessageForAgent(backNotificationContext, element);           
+           
                         sentNotification++;
 
-                        //Esto es para enviarle la notificacion al agente
                         let sentNotificationIO = 0;
                         copiaGlobalArraySockets.forEach(element => {
                             console.log('Comprobando ' + element.id + ' vs ' + backNotificationContext['agentPlatformIdentifier']);
@@ -938,12 +936,14 @@ export class MessengerController {
                             // if ((element.id == backNotificationContext['agentPlatformIdentifier']) && (sentNotificationIO < 1)) {
                             if (element.id == backNotificationContext['agentPlatformIdentifier']) {
                                 console.log('Direccionando mensage al socket ' + element.id);
-                                new Socket().replyMessageForAgent(backNotificationContext, element);
+                                // new Socket().replyMessageForAgent(backNotificationContext, element);
+                                 new MessengerController().replyMessageForAgentSocketIO(backNotificationContext, element.id);
                                 sentNotificationIO++;
                             }
                         });
                     }
                 });
+                
             }
             global.globalArraySockets = copiaGlobalArraySockets;
             console.log('Envío de notificación termidado.');
@@ -1152,7 +1152,7 @@ export class MessengerController {
             new Resolver().exception(res, 'Unexpected error', ex);
         }
     }
-    
+
     public replyMessageForAgentSocketIO(messageContext:JSON, socketPort:any): void{ //nada más se ocupa este método
         //messageIn se va a referenciar este metedo en la clase MessengerController
         try{
@@ -1163,6 +1163,13 @@ export class MessengerController {
                 console.log('Cuerpo original de la notificación: ' + notificationString); 
                 //agentSocket.write(notificationString);
                 //new SocketIO().IOEventEmit('server-message', notificationString);
+                global.io.to(socketPort).emit('server-message',{
+                    agentPlatformIdentifier: messageContext['agentPlatformIdentifier'],
+                    text: messageContext['text'],
+                    platformIdentifier: messageContext['platformIdentifier'],
+                    transmitter: messageContext['transmitter']
+
+                })
                 console.log('Notificación enviada a ' +  messageContext['clientPlatformIdentifier']);   
             }
             else{
