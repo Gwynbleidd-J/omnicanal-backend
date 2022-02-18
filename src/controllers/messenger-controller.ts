@@ -550,6 +550,8 @@ export class MessengerController {
                     , "userId": ''
                     , "agentPlatformIdentifier": ''
                     , "messagePlatformId": ctx.SmsMessageSid
+                    , "mediaContentType": ctx.MediaContentType0
+                    , "mediaUrl": ctx.MediaUrl0
                     , "transmitter": 'c'
                 }
 
@@ -810,7 +812,7 @@ export class MessengerController {
                 .insert()
                 .into(OpeChatHistoric)
                 .values([
-                    { messagePlatformId: messageContext['messagePlatformId'], text: messageContext['comments'], chatId: messageContext['id'], transmitter: messageContext['transmitter'], statusId: 1 }
+                    { messagePlatformId: messageContext['messagePlatformId'], text: messageContext['comments'], chatId: messageContext['id'], transmitter: messageContext['transmitter'], statusId: 1, messageType: messageContext['mediaContentType'], mediaUrl: messageContext['mediaUrl']}
                 ])
                 .execute();
             // console.log(insertedOpeChatHistoric);
@@ -916,22 +918,26 @@ export class MessengerController {
                 socketIOArraySockets.forEach(element => {
                     console.log('Comprobando ' + element.id + ' vs ' + backNotificationContext['clientPlatformIdentifier']);
                     //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
-                    if ((element.id == backNotificationContext['clientPlatformIdentifier']) && (sentNotification < 1)) {
+                    // if ((element.id == backNotificationContext['clientPlatformIdentifier']) && (sentNotification < 1))
+                    if (element.id == backNotificationContext['clientPlatformIdentifier']) {
                         console.log('Direccionando mensage al socket ' + element.id);
                         let notificationString = '{"agentPlatformIdentifier": "' + backNotificationContext['agentPlatformIdentifier'] + '", "text": "' + backNotificationContext['message'] + '", "platformIdentifier": "' + backNotificationContext['platformIdentifier'] + '", "transmitter": "' + 'a' + '"}';
 
                         //new SocketIO().IOEventEmit('server-message', element, notificationString);
 
+                        
+                        
                         //new Socket().replyMessageForAgent(backNotificationContext, element);           
                         sentNotification++;
 
                         //Esto es para enviarle la notificacion al agente
                         let sentNotificationIO = 0;
                         copiaGlobalArraySockets.forEach(element => {
-                            console.log('Comprobando ' + element.remotePort + ' vs ' + backNotificationContext['agentPlatformIdentifier']);
+                            console.log('Comprobando ' + element.id + ' vs ' + backNotificationContext['agentPlatformIdentifier']);
                             //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
-                            if ((element.remotePort == backNotificationContext['agentPlatformIdentifier']) && (sentNotificationIO < 1)) {
-                                console.log('Direccionando mensage al socket ' + element.remotePort);
+                            // if ((element.id == backNotificationContext['agentPlatformIdentifier']) && (sentNotificationIO < 1)) {
+                            if (element.id == backNotificationContext['agentPlatformIdentifier']) {
+                                console.log('Direccionando mensage al socket ' + element.id);
                                 new Socket().replyMessageForAgent(backNotificationContext, element);
                                 sentNotificationIO++;
                             }
@@ -950,6 +956,7 @@ export class MessengerController {
         }
         //res.end(); 
     }
+
 
     /* public async outcommingWebMessage(req:Request, res:Response, next:NextFunction): Promise<void>{        
         let copiaGlobalArraySockets = global.globalArraySockets;
@@ -1128,9 +1135,11 @@ export class MessengerController {
                 copiaGlobalArraySockets.forEach(element => {
                     // console.log('Comprobando ' + element.remoteAddress +' vs '+  messageContext['agentPlatformIdentifier']);
                     //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
-                    if ((element.remotePort == messageContext['agentPlatformIdentifier']) && (sentNotification < 1)) {
+                    // if ((element.id == messageContext['agentPlatformIdentifier']) && (sentNotification < 1))
+                    if (element.id == messageContext['agentPlatformIdentifier']) {
                         console.log('Direccionando mensage al socket ' + element.id);
-                        new Socket().replyMessageForAgent(messageContext, element);
+                        new MessengerController().replyMessageForAgentSocketIO(messageContext, element.id)
+                        //new Socket().replyMessageForAgent(messageContext, element);
                         sentNotification++;
                     }
                 });
@@ -1143,7 +1152,7 @@ export class MessengerController {
             new Resolver().exception(res, 'Unexpected error', ex);
         }
     }
-
+    
     public replyMessageForAgentSocketIO(messageContext:JSON, socketPort:any): void{ //nada más se ocupa este método
         //messageIn se va a referenciar este metedo en la clase MessengerController
         try{

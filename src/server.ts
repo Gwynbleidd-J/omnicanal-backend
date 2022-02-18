@@ -133,6 +133,11 @@ export class Server {
             socket.emit('port',{
                 socketPort: socket.id   
             });
+
+            socket.on('client-message', data =>{
+                new MessengerController().standardizeIncommingMessage(data, 'c');
+            })
+
             //console.log(`Array: ${global.socketIOArraySockets}`);
 
             socket.on('disconnect', ()=>{

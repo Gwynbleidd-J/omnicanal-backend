@@ -25,6 +25,12 @@ export class OpeChatHistoric{
     @Column({type:'integer', nullable: true})
     chatId:number;
 
+    @Column({type: 'varchar', nullable:true})
+    messageType:String
+    
+    @Column({type: 'varchar', nullable:true})
+    mediaUrl:String
+
     @ManyToOne(() => CatComunicationStatuses, status => status.historic)
     @JoinColumn({name: 'statusId'})
     status:CatComunicationStatuses;
