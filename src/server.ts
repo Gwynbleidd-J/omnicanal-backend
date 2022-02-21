@@ -115,7 +115,8 @@ export class Server {
                 cors:{
                     origin: '*',
                     methods:["GET", "POST"]
-                }
+                },
+                
             })
         // this.io = new socketio.Server(this.server, {
         //     cors:{
@@ -128,8 +129,8 @@ export class Server {
         global.io.on('connection', (socket)=>{
             console.log(`New Connection with global variable: ${socket.handshake.address}:${socket.id}`);
             global.socketIOArraySockets.push(socket);
+            console.log(socket.connected);
 
-            
             socket.emit('port',{
                 socketPort: socket.id   
             });
@@ -138,12 +139,40 @@ export class Server {
                 new MessengerController().standardizeIncommingMessage(data, 'c');
             })
 
+            socket.on('agent-data', data => {
+                console.log('datos desde agente', data);
+                socket.emit('data-agent', data);
+            });
+                //    Console.WriteLine("Socket_OnConnected");
+                //    var socket = sender as SocketIO;
+                //    Console.WriteLine($"SocketId: {socket.Id}");
+                //    //await treatNotificationAsync(socket);
+                //    await socket.EmitAsync("hi", DateTime.Now.ToString());
+                //    await socket.EmitAsync("agent-data", new Models.Message
+                //    {
+                //        messagePlatformId = GlobalSocket.message.messagePlatformId,
+                //        text = GlobalSocket.message.text,
+                //        transmitter = GlobalSocket.message.transmitter,
+                //        statusId = GlobalSocket.message.statusId,
+                //        chatId = GlobalSocket.message.chatId,
+                //        clientPlatformIdentifier = GlobalSocket.message.clientPlatformIdentifier,
+                //        platformIdentifier = GlobalSocket.message.agentPlatformIdentifier,
+                //        agentPlatformIdentifier = GlobalSocket.message.agentPlatformIdentifier
+                //    });
+
             //console.log(`Array: ${global.socketIOArraySockets}`);
 
-            socket.on('disconnect', ()=>{
+            socket.on('error', error =>{
+                if(error && error.message === "unauthorized event" ){
+                    socket
+                }
+            });
+
+            socket.on('disconnect', (close)=>{
                 console.log(`A client has disconnect: ${socket.handshake.address}:${socket.id}`);
                 global.socketIOArraySockets.pop(socket.id);
-                //console.log(`Array: ${global.socketIOArraySockets}`);
+                socket.disconnect(close);
+                console.log(`Socket disconnect: ${close}`);
             });
 
         });

@@ -24,9 +24,43 @@ export class ScreenShareController{
                     let notificationString = JSON.stringify(objetoEnvio);
                     console.log("Data enviada al socket:" +notificationString);
                     global.io.to(element.id).emit('serverNotification',{
-                        notificationString
+                        startMonitoring: "",
+                        idSupervisor: objetoEnvio.idSupervisor
                     });
-                    element.write(notificationString);
+                    // element.write(notificationString);
+                    sentNotification ++
+                }
+            });
+
+            /*
+             */
+            return sentNotification;
+
+        } catch (error) {
+            console.log("Ha ocurrido un error inesperado:" +error);
+        }
+    }
+
+
+    public BarridoSocketsObt(idSocket, objetoEnvio){
+
+        try {
+            let sentNotification = 0;
+            let copiaGlobalArraySockets = global.socketIOArraySockets;
+            copiaGlobalArraySockets.forEach(element => {
+                console.log("Comprobando "+element.id+ " y "+ idSocket)
+                // if (element.id == idSocket && sentNotification < 1)
+                if (element.id == idSocket) {
+                    console.log("Enviando notificacion a "+idSocket);
+                    let notificationString = JSON.stringify(objetoEnvio);
+                    console.log("Data enviada al socket:" +notificationString);
+                    global.io.to(element.id).emit('serverNotification',{
+                        getMonitoring : "",
+                        Image: objetoEnvio.Image,
+                        idSupervisor: objetoEnvio.idSupervisor,
+                        idAgente: objetoEnvio.idAgente
+                    });
+                    // element.write(notificationString);
                     sentNotification ++
                 }
             });
@@ -107,7 +141,7 @@ export class ScreenShareController{
                 idAgente: idAgente
             }
 
-            new ScreenShareController().BarridoSockets(ipSupervisor, objeto);
+            new ScreenShareController().BarridoSocketsObt(ipSupervisor, objeto);
             fs.unlinkSync(path.join(__dirname, file));
             fs.unlinkSync(path.join(__dirname, file2));
 
@@ -147,11 +181,10 @@ export class ScreenShareController{
                 if (err) {
                     
                 }else{
-                    console.log("\nSe ha enviado la imagen al supervisor correctamente");
                     fs.unlinkSync(path.join(__dirname, file));
+                    console.log("\nSe ha enviado la imagen al supervisor correctamente");
                 }
             });
-    
         } catch (error) {
             console.log("Ha ocurrido un error en el envio de imagen al supervisor:" +error);
         }

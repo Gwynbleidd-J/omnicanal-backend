@@ -158,7 +158,7 @@ export class MessengerController {
 
     public async NotificateLeader(notificationType, agent, contextC, contextS) {
 
-        let copiaGlobalArraySockets = globalArraySockets;
+        let copiaGlobalArraySockets = global.socketIOArraySockets;
         let sentNotification = 0;
         let agentId = agent;
 
@@ -213,13 +213,18 @@ export class MessengerController {
 
         console.log("Recorrido de sockets en busca del supervisor");
         copiaGlobalArraySockets.forEach(element => {
-            console.log('Comprobando ' + element.remotePort + ' vs ' + leader['agentPlatformIdentifier']);
-            if (element.remotePort == leader['agentPlatformIdentifier'] && (sentNotification < 1)) {
-                console.log('Enviando notificacion a: ' + element.remotePort);
+            console.log('Comprobando ' + element.id + ' vs ' + leader['agentPlatformIdentifier']);
+            // if (element.id == leader['agentPlatformIdentifier'] && (sentNotification < 1))
+            if (element.id == leader['agentPlatformIdentifier']) {
+                console.log('Enviando notificacion a: ' + element.id);
 
                 let notificationString = '{"Agent": "' + leader.agent + ' ", "message": "' + message + '"}';
                 console.log('Notificacion del lider: ' + notificationString);
-                element.write(notificationString);
+                // element.write(notificationString);
+                global.io.to(element.id).emit('serverNotification',{
+                    Agent: leader.agent , 
+                    message: message
+                })
 
                 console.log('Notificación enviada a ' + leader['agentPlatformIdentifier']);
                 sentNotification++;
@@ -605,7 +610,7 @@ export class MessengerController {
                 .leftJoinAndSelect("user.status", 'status')
                 .where(" user.activeChats < user.maxActiveChats")
                 .andWhere(" user.statusID = :statusID", { statusID: 7 }) //Contemplar después añadir el filtro para el estatus del usuario
-                //.andWhere(" user.rolID = :rolID", { rolID: 1 })
+                .andWhere(" user.rolID = :rolID", { rolID: 1 })
                 .orderBy(" user.activeChats", "ASC")
                 .getOne();
 
@@ -919,6 +924,10 @@ export class MessengerController {
                  */
 
             } else {
+                // global.io.emit('message', {
+                //     data: 'holis',
+                //     message: 'ya se llego al cliente web'
+                // })
                 socketIOArraySockets.forEach(element => {
                     console.log('Comprobando ' + element.id + ' vs ' + backNotificationContext['agentPlatformIdentifier']);
                     //Por alguna razón está encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificación
@@ -937,6 +946,10 @@ export class MessengerController {
                             if (element.id == backNotificationContext['agentPlatformIdentifier']) {
                                 console.log('Direccionando mensage al socket ' + element.id);
                                 // new Socket().replyMessageForAgent(backNotificationContext, element);
+                                global.io.emit('message', backNotificationContext)
+
+                                //por si las moscas para mandarle la informacion al chat web
+                                //let notificationString = '{"agentPlatformIdentifier": "'+messageContext['agentPlatformIdentifier']+'", "text": "'+messageContext['text']+'", "platformIdentifier": "'+messageContext['platformIdentifier']+'", "transmitter": "'+messageContext['transmitter']+'"}';
                                  new MessengerController().replyMessageForAgentSocketIO(backNotificationContext, element.id);
                                 sentNotificationIO++;
                             }

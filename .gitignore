@@ -8,3 +8,6 @@ logs/
 #config files
 ormconfig.json
 .env
+
+#images remote view
+src/screen/uploads

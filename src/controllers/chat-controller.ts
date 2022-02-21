@@ -447,14 +447,45 @@ export class ChatController {
 
         try {
             let sentNotification = 0;
-            let copiaGlobalArraySockets = global.globalArraySockets;
+            let copiaGlobalArraySockets = global.socketIOArraySockets;
             copiaGlobalArraySockets.forEach(element => {
-                console.log("Comprobando " + element.remotePort + " y " + idSocket)
-                if (element.remotePort == idSocket && sentNotification < 1) {
+                console.log("Comprobando " + element.id + " y " + idSocket)
+                // if (element.id == idSocket && sentNotification < 1)
+                if (element.id == idSocket) {
                     console.log("Enviando notificacion a " + idSocket);
                     let notificationString = JSON.stringify(objetoEnvio);
                     console.log("Data enviada al socket:" + notificationString);
                     element.write(notificationString);
+                    global.io.to(element.id).emit('serverNotification', { 
+                        "chatId": objetoEnvio.chat.id,
+                        "openTransferChat": null,
+                    })
+                    sentNotification++
+                }
+            });
+        } catch (error) {
+            console.log("Ha ocurrido un error inesperado:" + error);
+        }
+    }
+
+
+    public BarridoSockets2(idSocket, objetoEnvio) {
+
+        try {
+            let sentNotification = 0;
+            let copiaGlobalArraySockets = global.socketIOArraySockets;
+            copiaGlobalArraySockets.forEach(element => {
+                console.log("Comprobando " + element.id + " y " + idSocket)
+                // if (element.id == idSocket && sentNotification < 1)
+                if (element.id == idSocket) {
+                    console.log("Enviando notificacion a " + idSocket);
+                    let notificationString = JSON.stringify(objetoEnvio);
+                    console.log("Data enviada al socket:" + notificationString);
+                    element.write(notificationString);
+                    global.io.to(element.id).emit('serverNotification', { 
+                        "chatId": objetoEnvio.chat.id,
+                        "closeTransferChat": null
+                    })
                     sentNotification++
                 }
             });
@@ -528,7 +559,7 @@ export class ChatController {
             }
 
             new ChatController().BarridoSockets(agenteNuevo.activeIp, objetoAgenteNuevo);
-            new ChatController().BarridoSockets(agenteAnterior.activeIp, objetoAgenteAnterior);
+            new ChatController().BarridoSockets2(agenteAnterior.activeIp, objetoAgenteAnterior);
             //new ChatController().BarridoSockets(Supervisor.activeIp, objetoPruebaSupervisor)
 
             console.log("\nAgente anterior afectado:" + JSON.stringify(agenteAnterior.name) + "\nAgente nuevo afectado:" + JSON.stringify(agenteNuevo.name) + "\nChat afectado:" + JSON.stringify(chat.id))
