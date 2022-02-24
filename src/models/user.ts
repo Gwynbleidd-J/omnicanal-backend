@@ -4,6 +4,7 @@ import { CatSoftphoneParameters } from './softphoneParameters';
 import { OpeChats } from './chat';
 import { OpeCalls } from './call';
 import{CatRols} from './rol'; 
+import { OpeStatusTime } from "./statusTime";
 
 @Entity()
 export class CatUsers {
@@ -68,7 +69,10 @@ export class CatUsers {
     chat:OpeChats;
     
     @OneToMany(()=>OpeCalls, call =>call.user)
-    call:OpeChats; 
+    call:OpeChats;
+
+    @OneToMany(() => OpeStatusTime, statusTime => statusTime.user)
+    statusTime: OpeStatusTime[];
 
     @Column({ default: 2 })
     maxActiveChats:number;

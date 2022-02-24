@@ -457,7 +457,7 @@ export class ChatController {
                     console.log("Data enviada al socket:" + notificationString);
                     element.write(notificationString);
                     global.io.to(element.id).emit('serverNotification', { 
-                        "chatId": objetoEnvio.chat.id,
+                        "chatId": objetoEnvio.chatId,
                         "openTransferChat": null,
                     })
                     sentNotification++
@@ -483,7 +483,7 @@ export class ChatController {
                     console.log("Data enviada al socket:" + notificationString);
                     element.write(notificationString);
                     global.io.to(element.id).emit('serverNotification', { 
-                        "chatId": objetoEnvio.chat.id,
+                        "chatId": objetoEnvio.chatId,
                         "closeTransferChat": null
                     })
                     sentNotification++
