@@ -9,6 +9,7 @@ import { Resolver } from '../services/resolver';
 import { Utils } from "../services/utils";
 import { Message } from 'twilio/lib/twiml/MessagingResponse';
 import { userInfo } from 'os';
+import { MessengerController } from './messenger-controller';
 
 export class AuthController {
 
@@ -36,6 +37,7 @@ export class AuthController {
             
              if(user) {
                  payload['token'] = jwt.sign(payload, process.env.JWT_KEY, { expiresIn: 60 * 60 });
+                 new MessengerController().ReAsignQueuedChat();
                  new Resolver().success(res, 'User authorized', payload);
                  //Una vez que se logró consultar la info del usuario, consultamos la info de su rol
 

@@ -6,15 +6,16 @@ import { MessengerController  } from '../controllers/messenger-controller';
 import { TelegramController } from '../controllers/telegram-controller';
 import { Server } from '../server';
 import { CatAppParameters } from '../models/appParameters';
-import { getRepository } from 'typeorm';
+import { CannotDetermineEntityError, getRepository } from 'typeorm';
 import { createTextChangeRange } from 'typescript';
+import { ChatController } from '../controllers/chat-controller';
 const TelegrafInlineMenu = require('telegraf-inline-menu')
 
 
 export class Telegram{
     public telegraf:Telegraf;
     private telegramController:MessengerController;
-    private telegrafController:TelegramController;
+    private ChatController:ChatController;
     private telegramToken:any;
 
 
@@ -24,7 +25,7 @@ export class Telegram{
         this.initListeners();
         this.telegraf.launch();
         this.telegramController = new MessengerController(this.telegraf);
-        this.telegrafController = new TelegramController(this.telegraf);
+        this.ChatController = new ChatController(this.telegraf);
     }
     
     public initListeners(): void {
@@ -40,7 +41,7 @@ export class Telegram{
         });
 
         this.telegraf.on('text', ctx =>{
-          this.telegramController.standardizeIncommingMessage(ctx, 't');
+            this.telegramController.standardizeIncommingMessage(ctx, 't');
       });
 
       this.telegraf.on('photo', async ctx =>{
@@ -144,8 +145,6 @@ export class Telegram{
         //     this.telegramController.standardizeIncommingMessage(ctx, 't');
         // });
     }
-    
-    
     public async getLink(data:string):Promise<string>{
         try{
             let link:string;

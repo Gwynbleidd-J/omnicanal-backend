@@ -38,9 +38,10 @@ export class MenuController {
             if(menus){
                 new Resolver().success(res, 'Menus correctly consulted', menus);
             }
-            else 
+            else{
                 new Resolver().exception(res, 'Invalid menus info.');
-
+            } 
+                
             
         }
         catch(ex){

@@ -139,7 +139,14 @@ export class CallController {
             .getMany();
             
             var today = new Date();
-            var date = today.getFullYear() + "-" + (today.getMonth() + 1) + "-" + today.getDate();
+            var Month = (today.getMonth() + 1);
+            var MonthS = Month.toString();
+            if (Month < 10) {
+                MonthS = "0"+MonthS
+            }
+
+            
+            var date = today.getFullYear() + "-" + MonthS + "-" + today.getDate();
             var llamadas = [];
             
             calls.forEach((element) => {

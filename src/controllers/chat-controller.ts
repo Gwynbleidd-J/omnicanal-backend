@@ -7,13 +7,19 @@ import { CatUsers } from '../models/user';
 import { Console } from "console";
 import { MessengerController } from "./messenger-controller";
 import { UserController } from "./user-controller";
-import { Socket } from './../services/socket';
+import { Whatsapp } from '../services/whatsapp';
+import { Telegram } from '../services/telegram';
+import { Telegraf, Markup } from 'telegraf';
 
 export class ChatController {
+    private telegraf: Telegraf;
+    constructor(telegraf?: Telegraf){
+        this.telegraf = new Telegraf(process.env.BOT_TOKEN);
+    }
+
     public async closeChat(req: Request, res: Response): Promise<void> {
         try {
             console.log(`Cerrando chat con id: ${req.body.chatId}`);
-
             const updatedActiveChats = await getRepository(OpeChats)
                 .createQueryBuilder()
                 .update(OpeChats)
@@ -25,16 +31,12 @@ export class ChatController {
 
             if (updatedActiveChats.affected === 1) {
 
-
-                //let chatO = await (this.getChatAgent.bind(this)(req.body.chatId));
-
-                // let chat = await this.getChatById(req.body.chatId)
                 let chat = await new ChatController().getChatById(req.body.chatId);
                 new MessengerController().NotificateLeader("FC", chat.userId, chat, null);
 
-                new ChatController().assignFirstOnHoldChat(chat.userId);
                 console.log('Chat cerrado correctamente'); //updateResult = true;
                 new Resolver().success(res, 'Chat correctly finished');
+
             }
             else {
                 console.log('No se pudo cerrar correctamente el chat'); //updateResult =false; 
@@ -139,76 +141,6 @@ export class ChatController {
 
     }
 
-    public async assignFirstOnHoldChat(userId){
-        try {
-            
-            let messageContext;
-            let onHoldChatsList = await getRepository(OpeChats)
-            .createQueryBuilder("chats")
-            .where("chats.statusId = :statusId", {statusId : 1})
-            .getMany();
-
-            let chatList = [];
-            let firstChat;
-
-            onHoldChatsList.forEach(element => {
-                
-                let year = Number.parseInt(element.date.toString().split('-')[0]);
-                let month = Number.parseInt(element.date.toString().split('-')[1]) - 1;
-                let day = Number.parseInt(element.date.toString().split('-')[2]);
-
-                let hour = Number.parseInt(element.startTime.toString().split(':')[0]);
-                let minute = Number.parseInt(element.startTime.toString().split(':')[1]);
-                let second = Number.parseInt(element.startTime.toString().split(':')[2]);
-                let miliseconds = Number.parseInt(element.startTime.toString().split('.')[1]);
-
-                let date = new Date(year,month,day,hour,minute,second,miliseconds);
-
-                let chat = {
-                    fecha: date,
-                    id: element.id,
-                    platformIdentifier: element.platformIdentifier,
-                    clientPlatformIdentifier: element.clientPlatformIdentifier
-                }
-
-                chatList.push(chat);
-
-            });
-
-            if (chatList.length > 0) {
-                firstChat = chatList[0];
-
-                chatList.forEach(chat => {
-                    if (chat.fecha < firstChat.fecha) {
-                        firstChat = chat;
-                    }
-                })
-
-                messageContext = {
-                    id: firstChat.id
-                }
-
-                const assignedChat = await new MessengerController().assignChatAgent(userId, messageContext);
-                let agent = await new UserController().getAgentById(userId);
-                console.log('Agente disponible: ' + agent.ID + ' con identificador: ' + agent.activeIp);
-    
-    
-                if (assignedChat) {    //Enviar el mensaje al agente asignado 
-                    
-                    let notificationString = '{"chatId": "'+ firstChat.id+'", "platformIdentifier": "'+firstChat.platformIdentifier+'", "clientPlatformIdentifier": "'+firstChat.clientPlatformIdentifier+'"}';
-                    new ChatController().BarridoSockets(agent.activeIp, notificationString);
-    
-                    //De momento se usará este método para cubrir la funcionalidad del Trigger desde BD
-                    new MessengerController().provisionalTriggerForActiveChats(firstChat.userId);
-                }
-
-            }
-
-        } catch (error) {
-            console.log("Ha ocurrido el siguiene error inesperado:" +error);
-        }
-    }
-
     public async subtractActiveChat(req: Request, res: Response): Promise<void> {
         try {
             const actualActiveChats = await getRepository(CatUsers)
@@ -234,6 +166,7 @@ export class ChatController {
 
                 if (subtractActiveChats.affected === 1) {
                     //console.log('Campo activeChats modificado correctamente')
+                    new MessengerController().ReAsignQueuedChat();
                     new Resolver().success(res, 'ActiveChat correctly modified');
                 }
                 else {
@@ -260,9 +193,18 @@ export class ChatController {
                 .set({ networkCategoryId: req.body.networkId })
                 .where("id = :id", { id: req.body.chatId })
                 .execute();
-
             if (updateNetworkCategory.affected === 1) {
                 console.log('Network Category Asignado Correctamente');
+
+                new ChatController().sendMessageOnClose(req);
+                // if(req.body.platformIdentifier == 'w'){
+                //     new Whatsapp().replyMessageOnClose(req.body.clientPlatformIdentifier);
+                // }
+                // else if(req.body.platformIdentifier == 't'){
+                //     console.log('entro en el else if de telegram')
+                //     this.telegraf.telegram.sendMessage(req.body.clientPlatformIdentifier, "chat terminado");
+                // }
+
                 new Resolver().success(res, 'Network Category correctly inserted');
             }
             else {
@@ -272,6 +214,23 @@ export class ChatController {
         }
         catch (ex) {
             new Resolver().exception(res, 'Unexpected error', ex);
+        }
+    }
+
+    public sendMessageOnClose(request: Request): void {
+        try {
+            console.log(request.body)
+            if (request.body.platformIdentifier == 'w')
+                new Whatsapp().replyMessageOnClose(request.body.clientPlatformIdentifier);
+            else if (request.body.platformIdentifier == 't')
+                this.telegraf.telegram.sendMessage(request.body.clientPlatformIdentifier, 'Tu coversación con el analista acabo, ¡Que tengas un buen día!');
+            /* else if(messageContext['platformIdentifier'] == 'c') 
+                global.globalArraySockets.write('Hola, bienvenido al chat de omnicanal, en un momento le atenderemos') */
+            //sock.write('mensaje desde la API de la aplicacion');
+
+        }
+        catch (ex) {
+            console.log('Error[sendWelcomeMessage]:' + ex);
         }
     }
 

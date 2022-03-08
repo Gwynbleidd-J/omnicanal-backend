@@ -116,7 +116,8 @@ export class Server {
                     origin: '*',
                     methods:["GET", "POST"]
                 },
-                
+                pingInterval: 3500,
+                pingTimeout: 3000,
             })
         // this.io = new socketio.Server(this.server, {
         //     cors:{
