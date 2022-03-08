@@ -132,12 +132,8 @@ export class CallController {
     }
     public async getTotalCalls(req: Request, res: Response) {
         try {
-            var userId = req.body.userId;
-            const calls = await getRepository(OpeCalls)
-            .createQueryBuilder("calls")
-            .where("calls.userId = :userId", { userId: userId })
-            .getMany();
-            
+
+
             var today = new Date();
             var Month = (today.getMonth() + 1);
             var MonthS = Month.toString();
@@ -145,8 +141,23 @@ export class CallController {
                 MonthS = "0"+MonthS
             }
 
+            var day = (today.getDate());
+            var dayS = day.toString();
+            if (day < 10) {
+                dayS = "0"+dayS
+            }
+
+            var date = today.getFullYear() + "-" + MonthS + "-" + dayS
+            //var date = today.getFullYear() + "-" + MonthS + "-" + "01"
+
+
+            var userId = req.body.userId;
+            const calls = await getRepository(OpeCalls)
+            .createQueryBuilder("calls")
+            .where("calls.userId = :userId", { userId: userId })
+            .andWhere("calls.date = :today", { today: date})
+            .getMany();
             
-            var date = today.getFullYear() + "-" + MonthS + "-" + today.getDate();
             var llamadas = [];
             
             calls.forEach((element) => {
@@ -160,7 +171,6 @@ export class CallController {
                 if (startDate.toString() == date) {
                     llamadas.push(object);
                 }
-                // llamadas.push(object);   
 
             });            
 

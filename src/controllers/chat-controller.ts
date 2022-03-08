@@ -304,14 +304,27 @@ export class ChatController {
             var chatsHoy = [];
             var userId = req.body.userId;
 
+            var today = new Date();
+            var Month = (today.getMonth() + 1);
+            var MonthS = Month.toString();
+            if (Month < 10) {
+                MonthS = "0"+MonthS
+            }
+
+            var day = (today.getDate());
+            var dayS = day.toString();
+            if (day < 10) {
+                dayS = "0"+dayS
+            }
+
+            var date = today.getFullYear()+'-'+MonthS+'-'+dayS;
+            //var date = today.getFullYear()+'-'+MonthS+'-'+"01";
+
             const chats = await getRepository(OpeChats)
             .createQueryBuilder("chats")
             .where("chats.userId = :userId", {userId: userId})
+            .andWhere("chats.date = :today",{ today: date})
             .getMany();
-
-            var today = new Date();
-            var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
-            
 
             chats.forEach(chat => {
 
@@ -321,7 +334,6 @@ export class ChatController {
                 if (startDate.toString() == date) {
                     chatsHoy.push(chat);
                 }
-                // chatsHoy.push(chat);
 
             });
 
@@ -331,8 +343,6 @@ export class ChatController {
             console.log("Ocurrio un error[getUserChats]: "+error);
         }
     } 
-
-
 
     public async getActiveChats(req: Request, res: Response) {
         try {

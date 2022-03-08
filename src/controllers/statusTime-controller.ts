@@ -145,14 +145,28 @@ export class StatusTimeController {
         try {
             console.log('se entró en GetUserStates')
             let id = req.body.id;
+
             let date = new Date();
-            let today = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds()
+
+            var Month = (date.getMonth() + 1);
+            var MonthS = Month.toString();
+            if (Month < 10) {
+                MonthS = "0"+MonthS
+            }
+
+            var day = (date.getDate());
+            var dayS = day.toString();
+            if (day < 10) {
+                dayS = "0"+dayS
+            }
+
+            let today = date.getFullYear() + "-" + MonthS + "-" + dayS
             // console.log("La fecha actual es:" + today)
 
             const states = await getRepository(OpeStatusTime)
                 .createQueryBuilder("states")
-                // .where("states.user =:id", { id: id})
-                // .andWhere("states.startingTime >:today", { today:today})
+                .where("states.user =:id", { id: id})
+                .andWhere("states.date =:today", { today:today})
                 .getMany();
 
             let Disponible = 0;
@@ -226,7 +240,7 @@ export class StatusTimeController {
 
             });
 
-            console.log("Diferencias encontradas" + JSON.stringify(Diferencias));
+            // console.log("Diferencias encontradas" + JSON.stringify(Diferencias));
             console.log(
                    "Disponible:" +Disponible+ 
                    	"\nNo Disponible:" +NoDisponible+
@@ -261,6 +275,4 @@ export class StatusTimeController {
             console.log("[Error]GetUserStates:" + error);
         }
     }
-
-
 }
