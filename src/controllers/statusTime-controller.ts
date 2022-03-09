@@ -105,41 +105,41 @@ export class StatusTimeController {
         }
     }
 
-    public async TotalTime(req: Request, res: Response): Promise<void> {
-        try {
-            const findId = await getRepository(OpeStatusTime).find({
-                where: {
-                    statusId: req.body.statusId,
-                    userId: req.body.userId
-                }, select: ['id']
-            })
+    // public async TotalTime(req: Request, res: Response): Promise<void> {
+    //     try {
+    //         const findId = await getRepository(OpeStatusTime).find({
+    //             where: {
+    //                 statusId: req.body.statusId,
+    //                 userId: req.body.userId
+    //             }, select: ['id']
+    //         })
 
-            const total = await getRepository(OpeStatusTime)
-                .createQueryBuilder("status")
-                .where("status.id = :id", { id: findId[0].id })
-                .getMany();
-            // const SUM = await getRepository(OpeStatusTime)
-            // .createQueryBuilder("time")
-            // .select("SUM(time.endingTime) - SUM(time.startingTime)", "time")
-            // .where("time.id = :id", {id: findId[0].id})
-            // .execute();
+    //         const total = await getRepository(OpeStatusTime)
+    //             .createQueryBuilder("status")
+    //             .where("status.id = :id", { id: findId[0].id })
+    //             .getMany();
+    //         // const SUM = await getRepository(OpeStatusTime)
+    //         // .createQueryBuilder("time")
+    //         // .select("SUM(time.endingTime) - SUM(time.startingTime)", "time")
+    //         // .where("time.id = :id", {id: findId[0].id})
+    //         // .execute();
 
-            if (total) {
-                console.log("Se asigno correctamente el tiempo total");
-                new Resolver().success(res, "Total time set successfully");
+    //         if (total) {
+    //             console.log("Se asigno correctamente el tiempo total");
+    //             new Resolver().success(res, "Total time set successfully");
 
-            }
-            else {
-                new Resolver().error(res, 'Sum successfully');
-            }
-
-
+    //         }
+    //         else {
+    //             new Resolver().error(res, 'Sum successfully');
+    //         }
 
 
-        } catch (error) {
 
-        }
-    }
+
+    //     } catch (error) {
+
+    //     }
+    // }
 
     public async GetUserStates(req: Request, res: Response): Promise<void> {
         try {
