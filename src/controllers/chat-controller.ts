@@ -261,7 +261,20 @@ export class ChatController {
             .getMany();
 
             var today = new Date();
-            var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+
+            var Month = (today.getMonth() + 1);
+            var MonthS = Month.toString();
+            if (Month < 10) {
+                MonthS = "0"+MonthS
+            }
+
+            var day = (today.getDate());
+            var dayS = day.toString();
+            if (day < 10) {
+                dayS = "0"+dayS
+            }
+
+            var date = today.getFullYear()+'-'+MonthS+'-'+dayS;
             
             var chatsHoy = [];
             var chatsCerradosHoy = [];
