@@ -275,4 +275,143 @@ export class StatusTimeController {
             console.log("[Error]GetUserStates:" + error);
         }
     }
+
+
+
+    public async GetUserStatesSupervisor(req: Request, res: Response): Promise<void> {
+        try {
+            console.log('se entró en GetUserStates')
+            let id = req.body.id;
+
+            let date = new Date();
+
+            var Month = (date.getMonth() + 1);
+            var MonthS = Month.toString();
+            if (Month < 10) {
+                MonthS = "0"+MonthS
+            }
+
+            var day = (date.getDate());
+            var dayS = day.toString();
+            if (day < 10) {
+                dayS = "0"+dayS
+            }
+
+            let today = date.getFullYear() + "-" + MonthS + "-" + dayS
+            // console.log("La fecha actual es:" + today)
+
+            const states = await getRepository(OpeStatusTime)
+                .createQueryBuilder("states")
+                .where("states.user =:id", { id: id})
+                .andWhere("states.date =:today", { today:today})
+                .getMany();
+
+            let Disponible = 0;
+            let NoDisponible = 0;
+            let ACW = 0;
+            let Capacitacion = 0;
+            let Calidad = 0;
+            let Sanitario = 0;
+            let Comida = 0;
+            let Break = 0;
+
+            let Diferencias = [];
+
+            states.forEach(element => {
+
+                let tempStartDate = element.date;
+
+                if (element.endingTime != null) {
+
+                    let startStringDate = tempStartDate.toString();
+                    let startStringTime = element.startingTime.toString();
+
+                    let tempEndTime = element.endingTime;
+                    let EndStringTime = tempEndTime.toString();
+
+                    let DateStart = new Date(Number.parseInt(startStringDate.split('-')[0]), Number.parseInt(startStringDate.split('-')[1]), Number.parseInt(startStringDate.split('-')[2]),
+                        Number.parseInt(startStringTime.split(':')[0]), Number.parseInt(startStringTime.split(':')[1]), Number.parseInt(startStringTime.split(':')[2]));
+
+                    let DateEnd = new Date(Number.parseInt(startStringDate.split('-')[0]), Number.parseInt(startStringDate.split('-')[1]), Number.parseInt(startStringDate.split('-')[2]),
+                        Number.parseInt(EndStringTime.split(':')[0]), Number.parseInt(EndStringTime.split(':')[1]), Number.parseInt(EndStringTime.split(':')[2]));
+
+                    let starMiliseconds = DateStart.getTime();
+                    let endMilliseconds = DateEnd.getTime();
+
+                    let diff = Math.abs(endMilliseconds - starMiliseconds);
+                    let difference = (diff / 1000);
+
+                    let statusElement = Number.parseInt(element.statusId.toString());
+                    switch (statusElement) {
+                        case 7:
+                            Disponible += difference
+                            break;
+                        case 8:
+                            NoDisponible += difference
+                            break;
+                        case 9:
+                            ACW += difference
+                            break;
+                        case 10:
+                            Capacitacion += difference
+                            break;
+                        case 1:
+                            Calidad += difference
+                            break;
+                        case 2:
+                            Sanitario += difference
+                            break;
+                        case 3:
+                            Comida += difference
+                            break;
+                        case 4:
+                            Break += difference
+                            break;
+
+                    }
+
+                    // console.log("La diferencia entre: " + DateEnd + " y \n" + DateStart + "\nEs:" + difference);
+                    Diferencias.push("Minutos:" + difference+"\nEstatus:"+element.statusId);
+                }
+
+
+            });
+
+            // console.log("Diferencias encontradas" + JSON.stringify(Diferencias));
+            console.log(
+                   "Disponible:" +Disponible+ 
+                   	"\nNo Disponible:" +NoDisponible+
+                   	"\nACW:" +ACW+
+                   	"\nCapacitacion:" +Capacitacion+
+                    "\nCalidad:" +Calidad+
+                    "\nSanitario:" +Sanitario+
+                    "\nComida:" +Comida+
+                    "\nBreak:"+Break
+            )
+
+            let object={
+                Disponible,
+                NoDisponible,
+                ACW,
+                Capacitacion,Calidad,
+                Sanitario,
+                Comida,
+                Break
+            }
+
+            // console.log("Registros conseguidos:" + JSON.stringify(states));
+
+            if (states) {
+                new Resolver().success(res, 'Estados consultados correctamente', object);
+            }
+            else {
+                new Resolver().exception(res, 'Algo salio mal con la informacion de los estados.');
+            }
+
+        } catch (error) {
+            console.log("[Error]GetUserStates:" + error);
+        }
+    }
+
+
 }

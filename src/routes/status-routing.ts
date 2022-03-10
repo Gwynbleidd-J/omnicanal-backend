@@ -22,6 +22,8 @@ export class StatusRouting{
         this.router.post('/updateOnClosing', this.statusTimeController.UpdateAfterClose);
         // this.router.post('/totalTime', this.statusTimeController.TotalTime);
         this.router.post('/GetUserStates', this.statusTimeController.GetUserStates)
+        this.router.post('/GetUserStatesSupervisor', this.statusTimeController.GetUserStatesSupervisor)
+
         //te falta la ruta par que te de todos los status
         //mera formalidad
     }

@@ -42,6 +42,10 @@ export class StatusUserController{
                 let status = await new StatusUserController().getAgentStatus(req.body.status);
                 new MessengerController().NotificateLeader("CS", req.body.id, null, status);
 
+                if( req.body.status == 7){
+                    new MessengerController().ReAsignQueuedChat();
+                }
+
                 console.log('User Status Asignado Correctamente');
                 new Resolver().success(res, 'User Status correctly inserted');
             }
