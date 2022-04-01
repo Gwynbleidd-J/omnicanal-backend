@@ -27,4 +27,5 @@ declare global{
     var appParameters:any;
     var dataBuffer:any;
     var io:any;
+    var arregloChatsEnEspera: any;
 }

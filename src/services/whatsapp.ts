@@ -20,8 +20,8 @@ export class Whatsapp {
     public async sendWelcomeMessage(whatsappClientAccount:String){
         try{
             +14155238886
-            // this.whatsappAcount = 'whatsapp:+5215592251986';
-            this.whatsappAcount = 'whatsapp:+14155238886';
+            this.whatsappAcount = 'whatsapp:+5215592251986';
+            //this.whatsappAcount = 'whatsapp:+14155238886';
 
             await this.client.messages.create({
                 to:   whatsappClientAccount,
@@ -39,8 +39,8 @@ export class Whatsapp {
     public async replyMessageWaitingForAgent(whatsappClientAccount:String){
         try{
             
-            // this.whatsappAcount = 'whatsapp:+5215592251986';
-            this.whatsappAcount = 'whatsapp:+14155238886';
+            this.whatsappAcount = 'whatsapp:+5215592251986';
+            //this.whatsappAcount = 'whatsapp:+14155238886';
             this.client.messages.create({
                 to:   whatsappClientAccount,
                 body: 'Seguimos conectando con un analista disponible, agradecemos tu paciencia.',
@@ -54,13 +54,49 @@ export class Whatsapp {
         }
     }
 
+    public async replyMessageWaitingForAgentDesesperado(whatsappClientAccount:String){
+        try{
+            
+            this.whatsappAcount = 'whatsapp:+5215592251986';
+            //this.whatsappAcount = 'whatsapp:+14155238886';
+            this.client.messages.create({
+                to:   whatsappClientAccount,
+                body: 'Seguimos conectando con un analista disponible, agradecemos tu paciencia, le recordamos que tambien puede contactarnos via telefonica.',
+                from: this.whatsappAcount
+                })
+                .then(message => console.log('replyMessageWaitingForAgent', message));   
+                console.log('Correctly MessageWaitingForAgent sent to ' + whatsappClientAccount);  
+        }
+        catch(err){
+            console.log('Error[replyMessageWaitingForAgent]: ' + err);
+        }
+    }
+
+    public async replyMessageWaitingForAgentFueraDeHorario(whatsappClientAccount:String){
+        try{
+            
+            this.whatsappAcount = 'whatsapp:+5215592251986';
+            //this.whatsappAcount = 'whatsapp:+14155238886';
+            this.client.messages.create({
+                to:   whatsappClientAccount,
+                body: 'Nuestro horario de atencion es de 9 a.m. a 9 p.m. Favor de contactarnos en horas habiles.',
+                from: this.whatsappAcount
+                })
+                .then(message => console.log('replyMessageWaitingForAgent', message));   
+                console.log('Correctly MessageWaitingForAgent sent to ' + whatsappClientAccount);  
+        }
+        catch(err){
+            console.log('Error[replyMessageWaitingForAgent]: ' + err);
+        }
+    }
+
     public async replyMessageOnClose(whatsappClientAccount:String){
         try{
             // this.whatsappAcount = 'whatsapp:+5215592251986';
-            this.whatsappAcount = 'whatsapp:+14155238886';
+            this.whatsappAcount = 'whatsapp:+5215592251986';
             this.client.messages.create({
                 to: whatsappClientAccount,
-                body: 'Tu coversación con el analista acabo, ¡Que tengas un buen día! ',
+                body: 'Tu conversación con el analista acabó, ¡Que tengas un buen día! ',
                 from: this.whatsappAcount
             })
             .then(message => console.log('replyMessageOnClose', message));
@@ -74,7 +110,7 @@ export class Whatsapp {
         try{
             
             // this.whatsappAcount = 'whatsapp:+14155238886';
-            this.whatsappAcount = 'whatsapp:+14155238886';
+            this.whatsappAcount = 'whatsapp:+5215592251986';
             this.client.messages.create({
                 to:   whatsappAgentAccount,
                 body: profileName +' dice: ' + message,
@@ -92,7 +128,7 @@ export class Whatsapp {
         try{
             // whatsappClientAccount = 'whatsapp:+5215551438864';
             // this.whatsappAcount = 'whatsapp:+5215592251986';
-            this.whatsappAcount = 'whatsapp:+14155238886';
+            this.whatsappAcount = 'whatsapp:+5215592251986';
             this.client.messages.create({
                 to:   whatsappClientAccount,
                 body: message,

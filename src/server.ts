@@ -116,8 +116,8 @@ export class Server {
                     origin: '*',
                     methods:["GET", "POST"]
                 },
-                pingInterval: 3500,
-                pingTimeout: 3000,
+                pingInterval: 25000,
+                pingTimeout: 20000,
             })
         // this.io = new socketio.Server(this.server, {
         //     cors:{
@@ -164,16 +164,31 @@ export class Server {
             //console.log(`Array: ${global.socketIOArraySockets}`);
 
             socket.on('error', error =>{
+                console.log("Error en el socket:" +error);
                 if(error && error.message === "unauthorized event" ){
                     socket
                 }
             });
 
             socket.on('disconnect', (close)=>{
+
+                console.log("\n\n*******************\nAntes de borrar el arreglo se ve asi: ");
+                global.socketIOArraySockets.forEach(element => {
+                    console.log("Socket:"+ element.id);
+                });
+                console.log("Cantidad de sockets: "+global.socketIOArraySockets.length);
+
                 console.log(`A client has disconnect: ${socket.handshake.address}:${socket.id}`);
                 global.socketIOArraySockets.pop(socket.id);
                 socket.disconnect(close);
-                console.log(`Socket disconnect: ${close}`);
+                // console.log(`Socket disconnect: ${close}`);
+
+                console.log("Despues de borrar se ve asi: ");
+                global.socketIOArraySockets.forEach(element => {
+                    console.log("Socket:"+ element.id);
+                });
+                console.log("Cantidad de sockets: "+global.socketIOArraySockets.length);
+
             });
 
         });

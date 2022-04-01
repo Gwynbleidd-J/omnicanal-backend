@@ -8,7 +8,7 @@ import { CatUsers } from '../models/user';
 export class CallController {
     public async RegistryIncomingCall(req: Request, res: Response): Promise<void> {
         try {
-            
+            console.log('entró RegistryIncomingCall');
             const incomingCall = await getRepository(OpeCalls)
             .createQueryBuilder()
             .insert()
@@ -21,6 +21,14 @@ export class CallController {
                 llamadaTransferida: req.body.llamadaTransferida,
             })      
             .execute();
+
+            // const tempCalls = await getRepository(OpeCalls)
+            // .createQueryBuilder("calls")
+            // .where("startTime = :startTime",{ startTime: req.body.startTime})
+            // .getOne();
+
+            // const callId = tempCalls.id;
+            // const callDate = tempCalls.date;
 
             const callId = await getRepository(OpeCalls).find({
                 where: {
@@ -42,6 +50,7 @@ export class CallController {
                 select: ["siglasUser"],
             });
             let fecha = callDate[0].date.toLocaleString().toString().replace(/-/g, '')
+            console.log(fecha);
             //console.log(fecha);
             // console.log(new Date().toLocaleDateString());
             // console.log(new Date().toLocaleString());

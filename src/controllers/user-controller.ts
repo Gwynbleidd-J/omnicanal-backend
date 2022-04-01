@@ -98,6 +98,7 @@ export class UserController {
             //console.log(req.body.leaderId);
             const users = await getRepository(CatUsers)
                 .createQueryBuilder("users")
+                .innerJoinAndSelect("users.status", "state")
                 .where("users.rolID = :rolId", {rolId: 1}) //El rolId 1  hace refrerencia al rol de Agente[Después habría que diferenciar cada rol en la petición] 
                 .orderBy("users.name", "ASC")
                 .getMany();
@@ -108,6 +109,7 @@ export class UserController {
                 let object = {
                     ID: element.ID,
                     name: element.name + " "+element.paternalSurname + " "+ element.maternalSurname,
+                    status: element.status.status,
                     activeChats: element.activeChats,
                     maxActiveChats: element.maxActiveChats,
                     email: element.email

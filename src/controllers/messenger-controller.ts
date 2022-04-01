@@ -12,6 +12,16 @@ import { CatAppParameters } from '../models/appParameters';
 import { Utils } from '../services/utils';
 import * as socketIO from 'socket.io';
 
+export interface chatEspera {
+    chatId: number;
+    awaitingMessages: number
+}
+
+let tempchatEspera: chatEspera = {
+    awaitingMessages: 0,
+    chatId: 0
+}
+
 //CÓDIGO QUE ESTA EN LA CARPETA DEL PROYECTO.
 //CODIGO QUE ESTA EN MI COPIA DEL REPOSITORIO CODIGO QUE ESTÁ EN MI COPIA DEL PROYECTO.
 
@@ -22,15 +32,18 @@ export class MessengerController {
     private contextoGenerico: any;
     public dataObject: any;
     public socketHandler: SoscketIOServer;
+    public arregloChatsEnEspera: [any];
+
 
     constructor(telegraf?: Telegraf, socket?: SoscketIOServer) {
         this.telegraf = new Telegraf(process.env.BOT_TOKEN);
-
         this.socketHandler = socket;
         //this.telegraf = new Telegraf(new Utils().token);
         //new Utils().getBotToken();
         this.dataObject = [];
         global.dataObject = this.dataObject;
+        global.arregloChatsEnEspera = [];
+        // this.arregloChatsEnEspera.push(tempchatEspera);
     }
 
     /* #region Comments */
@@ -73,81 +86,102 @@ export class MessengerController {
     */
     public async messageIn(messageContext: JSON) {
         try {
-            //Pasos para el mensaje entrante:
-            console.log('Procesando mensaje entrante de: ' + messageContext['clientPlatformIdentifier']);
-            const existingChat = await this.chatAlreadyExist(messageContext['clientPlatformIdentifier'], messageContext['platformIdentifier']);
-            //Verificar existencia del mismo 
-            const jsonExistingChat = await existingChat;
-            console.log('Chat con estatus: ' + jsonExistingChat.statusId);
 
-            if (jsonExistingChat.statusId == 0) {
-                console.log('Chat sin registro previo, generando registro inicial en BD...');
-                const insertedChatId = await this.registryInitialChat(messageContext);
-                const jsonInsertedChat = await insertedChatId;
-                messageContext['id'] = insertedChatId;
-                this.sendWelcomeMessage(messageContext);
-                const disponibleAgent = await this.getDisponibleAgent(messageContext['platformIdentifier']);
-                const jsonDisponibleAgent = await disponibleAgent;
-                //validar el id del agente disponible devuelto[si es 0, entonces mandar mensaje de espera y no actualizar el estatus del Chat]
-                console.log('jsonDisponibleAgent: ' + jsonDisponibleAgent.userId);
-                if (jsonDisponibleAgent.userId != '0') {
-                    console.log('Agente disponible: ' + jsonDisponibleAgent.userId + ' con ip[' + jsonDisponibleAgent.agentPlatformIdentifier + ']');
-                    const assignedChat = await this.assignChatAgent(jsonDisponibleAgent.userId, messageContext);
+            let date = new Date();
+            let time = new Date(0, 0, 0, date.getHours(), date.getMinutes(), date.getSeconds());
+            console.log("La hora actual es: " + time);
 
-                    if (assignedChat) {    //Enviar el mensaje al agente asignado 
-                        messageContext['userId'] = jsonDisponibleAgent.userId;
-                        messageContext['agentPlatformIdentifier'] = jsonDisponibleAgent.agentPlatformIdentifier;
-                        console.log(messageContext['agentPlatformIdentifier']);
-                        this.replyMessageForAgent(messageContext);
+            let minTime = new Date(0,0,0);     
+            minTime.setHours(9, 0, 0);
 
-                        //De momento se usará este método para cubrir la funcionalidad del Trigger desde BD
-                        this.provisionalTriggerForActiveChats(messageContext['userId']);
-                        this.NotificateLeader('NC', jsonDisponibleAgent.userId, messageContext, null);
+            let maxTime = new Date(0,0,0)
+            maxTime.setHours(21, 0, 0);
+
+            if (time >= minTime && time <= maxTime) {
+
+                //Pasos para el mensaje entrante:
+                console.log('Procesando mensaje entrante de: ' + messageContext['clientPlatformIdentifier']);
+                const existingChat = await this.chatAlreadyExist(messageContext['clientPlatformIdentifier'], messageContext['platformIdentifier']);
+                //Verificar existencia del mismo 
+                const jsonExistingChat = await existingChat;
+                console.log('Chat con estatus: ' + jsonExistingChat.statusId);
+
+                if (jsonExistingChat.statusId == 0) {
+                    console.log('Chat sin registro previo, generando registro inicial en BD...');
+                    const insertedChatId = await this.registryInitialChat(messageContext);
+                    const jsonInsertedChat = await insertedChatId;
+                    messageContext['id'] = insertedChatId;
+                    this.sendWelcomeMessage(messageContext);
+                    const disponibleAgent = await this.getDisponibleAgent(messageContext['platformIdentifier']);
+                    const jsonDisponibleAgent = await disponibleAgent;
+                    //validar el id del agente disponible devuelto[si es 0, entonces mandar mensaje de espera y no actualizar el estatus del Chat]
+                    console.log('jsonDisponibleAgent: ' + jsonDisponibleAgent.userId);
+                    if (jsonDisponibleAgent.userId != '0') {
+                        console.log('Agente disponible: ' + jsonDisponibleAgent.userId + ' con ip[' + jsonDisponibleAgent.agentPlatformIdentifier + ']');
+                        const assignedChat = await this.assignChatAgent(jsonDisponibleAgent.userId, messageContext);
+
+                        if (assignedChat) {    //Enviar el mensaje al agente asignado 
+                            messageContext['userId'] = jsonDisponibleAgent.userId;
+                            messageContext['agentPlatformIdentifier'] = jsonDisponibleAgent.agentPlatformIdentifier;
+                            console.log(messageContext['agentPlatformIdentifier']);
+                            this.replyMessageForAgent(messageContext);
+
+                            //De momento se usará este método para cubrir la funcionalidad del Trigger desde BD
+                            this.provisionalTriggerForActiveChats(messageContext['userId']);
+                            this.NotificateLeader('NC', jsonDisponibleAgent.userId, messageContext, null);
+                        }
+                    }
+                    else {
+                        console.log('No se pudo asignar a ningún agente por el momento');
+                        this.replyMessageWaitingForAgent(messageContext);
                     }
                 }
-                else {
-                    console.log('No se pudo asignar a ningún agente por el momento');
-                    this.replyMessageWaitingForAgent(messageContext);
-                }
-            }
-            else if (jsonExistingChat.statusId == 1) {
-                console.log('Chat previo sin agente, volviendo a canalizar...');
-                messageContext['id'] = jsonExistingChat.id;
-                const disponibleAgent = await this.getDisponibleAgent(messageContext['platformIdentifier']);
-                const jsonDisponibleAgent = await disponibleAgent;
+                else if (jsonExistingChat.statusId == 1) {
+                    console.log('Chat previo sin agente, volviendo a canalizar...');
+                    messageContext['id'] = jsonExistingChat.id;
+                    const disponibleAgent = await this.getDisponibleAgent(messageContext['platformIdentifier']);
+                    const jsonDisponibleAgent = await disponibleAgent;
 
-                if (jsonDisponibleAgent.userId != '0') {
-                    console.log('Agente disponible: ' + jsonDisponibleAgent.userId + ' con identificador: ' + jsonDisponibleAgent.agentPlatformIdentifier);
-                    const assignedChat = await this.assignChatAgent(jsonDisponibleAgent.userId, messageContext);
+                    if (jsonDisponibleAgent.userId != '0') {
+                        console.log('Agente disponible: ' + jsonDisponibleAgent.userId + ' con identificador: ' + jsonDisponibleAgent.agentPlatformIdentifier);
+                        const assignedChat = await this.assignChatAgent(jsonDisponibleAgent.userId, messageContext);
 
-                    if (assignedChat) {    //Enviar el mensaje al agente asignado 
-                        messageContext['userId'] = jsonDisponibleAgent.userId;
-                        messageContext['agentPlatformIdentifier'] = jsonDisponibleAgent.agentPlatformIdentifier;
-                        this.replyMessageForAgent(messageContext);
+                        if (assignedChat) {    //Enviar el mensaje al agente asignado 
+                            messageContext['userId'] = jsonDisponibleAgent.userId;
+                            messageContext['agentPlatformIdentifier'] = jsonDisponibleAgent.agentPlatformIdentifier;
+                            this.replyMessageForAgent(messageContext);
 
-                        //De momento se usará este método para cubrir la funcionalidad del Trigger desde BD
-                        this.provisionalTriggerForActiveChats(messageContext['userId']);
+                            //De momento se usará este método para cubrir la funcionalidad del Trigger desde BD
+                            this.provisionalTriggerForActiveChats(messageContext['userId']);
+                        }
+                    }
+                    else {
+                        console.log('No se pudo asignar a ningún agente por el momento');
+                        this.replyMessageWaitingForAgent(messageContext);
                     }
                 }
-                else {
-                    console.log('No se pudo asignar a ningún agente por el momento');
-                    this.replyMessageWaitingForAgent(messageContext);
-                }
-            }
-            else if (jsonExistingChat.statusId == 2) {
-                // console.log('Chat activo, dirigiendo el mensaje a su agente en turno...');  
-                messageContext['id'] = jsonExistingChat.id;
-                const agentPlatformIdentifier = await this.getAgentPlatformIdentifierForMessageContext(jsonExistingChat.userId, messageContext['platformIdentifier']);
-                const jsonAgentPlatformIdentifier = await agentPlatformIdentifier;
-                console.log('Ip del agente:' + jsonAgentPlatformIdentifier.agentPlatformIdentifier);
-                // console.log(messageContext);
-                messageContext['agentPlatformIdentifier'] = jsonAgentPlatformIdentifier.agentPlatformIdentifier;
-                // console.log(messageContext);
+                else if (jsonExistingChat.statusId == 2) {
+                    // console.log('Chat activo, dirigiendo el mensaje a su agente en turno...');  
+                    messageContext['id'] = jsonExistingChat.id;
+                    const agentPlatformIdentifier = await this.getAgentPlatformIdentifierForMessageContext(jsonExistingChat.userId, messageContext['platformIdentifier']);
+                    const jsonAgentPlatformIdentifier = await agentPlatformIdentifier;
+                    console.log('Ip del agente:' + jsonAgentPlatformIdentifier.agentPlatformIdentifier);
+                    // console.log(messageContext);
+                    messageContext['agentPlatformIdentifier'] = jsonAgentPlatformIdentifier.agentPlatformIdentifier;
+                    // console.log(messageContext);
 
-                if (messageContext['agentPlatformIdentifier'])
-                    this.replyMessageForAgent(messageContext);
-                else
-                    console.log('Algo salió mal al obtener el contacto del agente');
+                    if (messageContext['agentPlatformIdentifier'])
+                        this.replyMessageForAgent(messageContext);
+                    else
+                        console.log('Algo salió mal al obtener el contacto del agente');
+                }
+            } else {
+
+                if (messageContext['platformIdentifier'] == 'w')
+                    new Whatsapp().replyMessageWaitingForAgentFueraDeHorario(messageContext['clientPlatformIdentifier']);
+                else if (messageContext['platformIdentifier'] == 't')
+                    this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'], 'Nuestro horario de atencion es de 9 a.m. a 9 p.m. Favor de contactarnos en horas habiles.');
+
             }
         }
         catch (ex) {
@@ -409,12 +443,54 @@ export class MessengerController {
             //Nuevo proceso: registrar los mgs entrantes aunque no tenga un agente[para conservar el histórico]
             console.log(messageContext)
             const insertedChatHistoricId = this.registryIndividualMessage(messageContext);
-            if (insertedChatHistoricId) {
+
+            //Proceso para mandar un mensaje diferente al encolarse 10 chats o mas
+            //#region Mensaje a desesperados
+            let chatId = messageContext['id'];
+            let Existe = false;
+            let Desesperado = false;
+
+
+            if (global.arregloChatsEnEspera != null) {
+                global.arregloChatsEnEspera.forEach(element => {
+                    if (element.chatId == chatId) {
+                        element.awaitingMessages++;
+                        Existe = true;
+                        console.log("El cliente del chat" + chatId + "ya mando " + element.awaitingMessages);
+                        if (element.awaitingMessages >= 10) {
+                            Desesperado = true;
+                        }
+                    }
+                });
+            }
+
+
+            if (!Existe) {
+                let temp = {
+                    chatId: chatId,
+                    awaitingMessages: 1
+                }
+                global.arregloChatsEnEspera.push(temp);
+            }
+
+
+
+            if (Desesperado) {
+                if (messageContext['platformIdentifier'] == 'w')
+                    new Whatsapp().replyMessageWaitingForAgentDesesperado(messageContext['clientPlatformIdentifier']);
+                else if (messageContext['platformIdentifier'] == 't')
+                    this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'], 'Seguimos conectando con un agente disponible, agradecemos tu paciencia, se le recuerda que tambien puede contactarnos via telefonica.');
+                console.log("El cliente del chat " + chatId + "  ya llego o supero los 10 chats ");
+            }
+            //#endregion
+
+            if (insertedChatHistoricId && !Desesperado) {
                 if (messageContext['platformIdentifier'] == 'w')
                     new Whatsapp().replyMessageWaitingForAgent(messageContext['clientPlatformIdentifier']);
                 else if (messageContext['platformIdentifier'] == 't')
                     this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'], 'Seguimos conectando con un agente disponible, agradecemos tu paciencia.');
             }
+
         }
         catch (ex) {
             console.log('Error[replyMessageWaitingForAgent]:' + ex);
@@ -491,6 +567,17 @@ export class MessengerController {
 
     public replyMessageForAgent(messageContext: JSON): void {
         try {
+
+            let chatId = messageContext["id"];
+            global.arregloChatsEnEspera.forEach(element => {
+                if (element.chatId = chatId) {
+                    let index = global.arregloChatsEnEspera.indexOf(element);
+                    global.arregloChatsEnEspera.splice(index, 1)
+                    console.log("El cliente con el chat " + chatId + " ya ha sido atendido");
+                }
+            });
+
+
             console.log('Entrando en replyMessageForAgent');
             console.log(messageContext);
             console.log('Entrando en replyMessageForAgent[messenger-controller]');

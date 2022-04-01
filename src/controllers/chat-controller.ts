@@ -216,14 +216,14 @@ export class ChatController {
             new Resolver().exception(res, 'Unexpected error', ex);
         }
     }
-
+    
     public sendMessageOnClose(request: Request): void {
         try {
             console.log(request.body)
             if (request.body.platformIdentifier == 'w')
                 new Whatsapp().replyMessageOnClose(request.body.clientPlatformIdentifier);
             else if (request.body.platformIdentifier == 't')
-                this.telegraf.telegram.sendMessage(request.body.clientPlatformIdentifier, 'Tu coversación con el analista acabo, ¡Que tengas un buen día!');
+                this.telegraf.telegram.sendMessage(request.body.clientPlatformIdentifier, 'Tu conversación con el analista acabó, ¡Que tengas un buen día!');
             /* else if(messageContext['platformIdentifier'] == 'c') 
                 global.globalArraySockets.write('Hola, bienvenido al chat de omnicanal, en un momento le atenderemos') */
             //sock.write('mensaje desde la API de la aplicacion');
