@@ -28,4 +28,5 @@ declare global{
     var dataBuffer:any;
     var io:any;
     var arregloChatsEnEspera: any;
+    var idLlamada:any;
 }

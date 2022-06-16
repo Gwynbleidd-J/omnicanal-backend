@@ -1,10 +1,30 @@
 {
+    // Use IntelliSense para saber los atributos posibles.
+    // Mantenga el puntero para ver las descripciones de los existentes atributos.
+    // Para más información, visite: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch Program",
-            "program": "${workspaceFolder}/app.js",
+            "type": "node-terminal",
+            "name": "Run Script: test",
             "request": "launch",
+            "command": "npm run test",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "command": "npm start",
+            "name": "Run npm start",
+            "request": "launch",
+            "type": "node-terminal"
+        },
+        {
+            "name": "Launch via NPM",
+            "request": "launch",
+            "runtimeArgs": [
+                "run-script",
+                "debug"
+            ],
+            "runtimeExecutable": "npm",
             "skipFiles": [
                 "<node_internals>/**"
             ],
@@ -17,32 +37,11 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}\\src\\services\\socket.ts",
+            "program": "${workspaceFolder}\\src\\controllers\\statusTime-controller.ts",
             "preLaunchTask": "tsc: build - tsconfig.json",
             "outFiles": [
                 "${workspaceFolder}/build/**/*.js"
             ]
-        },
-        {
-            "type": "node-terminal",
-            "name": "Run Script: start",
-            "request": "launch",
-            "command": "npm run start",
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "node-terminal",
-            "name": "Run Script: test",
-            "request": "launch",
-            "command": "npm run test",
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "node-terminal",
-            "name": "Run Script: test",
-            "request": "launch",
-            "command": "npm run test",
-            "cwd": "${workspaceFolder}"
         }
     ]
 }

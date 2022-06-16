@@ -50,6 +50,9 @@ export class CatUsers {
     @Column({ nullable: true })
     statusID:number;
 
+    @Column({nullable:true, default: 0})
+    activo:number;
+
 /*     @Column({ nullable: true })
     credentialsId:number; */
 
@@ -69,7 +72,7 @@ export class CatUsers {
     chat:OpeChats;
     
     @OneToMany(()=>OpeCalls, call =>call.user)
-    call:OpeChats;
+    call:OpeCalls;
 
     @OneToMany(() => OpeStatusTime, statusTime => statusTime.user)
     statusTime: OpeStatusTime[];

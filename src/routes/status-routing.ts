@@ -23,7 +23,8 @@ export class StatusRouting{
         // this.router.post('/totalTime', this.statusTimeController.TotalTime);
         this.router.post('/GetUserStates', this.statusTimeController.GetUserStates)
         this.router.post('/GetUserStatesSupervisor', this.statusTimeController.GetUserStatesSupervisor)
-
+        this.router.post('/updateColmnActiveOnClose', this.statusCotroller.UpdateColmnActiveOnClose);
+        this.router.get('/timer', this.statusTimeController.GetTimeCurrentStatus);
         //te falta la ruta par que te de todos los status
         //mera formalidad
     }

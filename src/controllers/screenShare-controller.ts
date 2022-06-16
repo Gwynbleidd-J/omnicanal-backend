@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import sharp from 'sharp';
 import fs from 'fs';
 import { Resolver } from '../services/resolver';
 import { SoscketIOServer } from '../services/SocketIOServer';

@@ -29,4 +29,7 @@ export class OpeStatusTime{
 
     @Column({type:'time', nullable:true})
     endingTime:String;
+
+    @Column({type: 'varchar', nullable:true})
+    startingDate:string
 }

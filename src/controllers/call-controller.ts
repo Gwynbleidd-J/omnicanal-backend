@@ -3,10 +3,12 @@ import { getRepository } from "typeorm";
 import { Resolver } from "../services/resolver";
 import { OpeCalls } from "../models/call";
 import { CatUsers } from '../models/user';
+import { Logger } from "../services/logger";
 
 
 export class CallController {
     public async RegistryIncomingCall(req: Request, res: Response): Promise<void> {
+        let logger: Logger = new Logger('call');
         try {
             console.log('entró RegistryIncomingCall');
             const incomingCall = await getRepository(OpeCalls)
@@ -19,9 +21,10 @@ export class CallController {
                 statusId: 2,
                 tipoLlamada: req.body.tipoLlamada,
                 llamadaTransferida: req.body.llamadaTransferida,
+                startingDate: req.body.startingDate
             })      
             .execute();
-
+            let idLlamada = incomingCall.identifiers[0].id;
             // const tempCalls = await getRepository(OpeCalls)
             // .createQueryBuilder("calls")
             // .where("startTime = :startTime",{ startTime: req.body.startTime})
@@ -30,16 +33,16 @@ export class CallController {
             // const callId = tempCalls.id;
             // const callDate = tempCalls.date;
 
-            const callId = await getRepository(OpeCalls).find({
-                where: {
-                    startTime: req.body.startTime,
-                },
-                select: ["id"],
-            });
+            // const callId = await getRepository(OpeCalls).find({
+            //     where: {
+            //         id: idLlamada,
+            //     },
+            //     select: ["id"],
+            // });
 
             const callDate = await getRepository(OpeCalls).find({
                 where: {
-                    startTime: req.body.startTime,
+                    id: idLlamada,
                 },
                 select: ["date"],
             });
@@ -56,21 +59,24 @@ export class CallController {
             // console.log(new Date().toLocaleString());
             // console.log(new Date().toLocaleTimeString('es-MX'));
             
-            if (incomingCall) {
-                let folio = `${siglasUser[0].siglasUser}_${fecha}_${callId[0].id}`
-                console.log(folio);
-                const folioLlamada = await getRepository(OpeCalls)
-                .createQueryBuilder()
-                .update(OpeCalls)
-                .set({
-                    folioLlamada: folio 
-                })
-                .where("id = :id", { id: callId[0].id })
-                .execute()
-                new Resolver().success(res, "Call correctly stored",folio);
-            }else{
-                new Resolver().exception(res, "Call dont stored");
+            let folio = `${siglasUser[0].siglasUser}_${fecha}_${idLlamada}`
+            console.log(folio);
+            const folioLlamada = await getRepository(OpeCalls)
+            .createQueryBuilder()
+            .update(OpeCalls)
+            .set({
+                folioLlamada: folio 
+            })
+            .where("id = :id", { id: idLlamada })
+            .execute()
+
+            
+            let object = {
+                idLlamada,
+                folio
             }
+            
+            new Resolver().success(res, "Call correctly stored",object);
         }catch (ex) {
             new Resolver().exception(res, "Unexpected error", ex);
         }
@@ -78,71 +84,81 @@ export class CallController {
 
     public async CallTypification(req: Request, res: Response): Promise<void> {
         try {
+            console.log('Entró a CallTypification');
+            let idLlamada = req.body.idLlamada;
+            console.log(idLlamada);
             const call = await getRepository(OpeCalls).find({
                 where: {
                     startTime: req.body.startTime,
                 },
                 select: ["id"],
             }); //Terminación del metodo .find {select: ["id"]};
-
-
-            const callTypification = await getRepository(OpeCalls)
-            .createQueryBuilder()
-            .update(OpeCalls)
-            .set({
-                endingTime: req.body.endingTime,
-                networkCategoryId: req.body.networkCategoryId,
-                statusId: 3,
-                comments: req.body.comments,
-                score: req.body.score,
-            })
-            .where("id = :id", { id: call[0].id })
-            .execute();
-            // .createQueryBuilder()
-            // .update(OpeCalls)
-            // .set({a
-            //     endingTime: req.body.endingTime,
-            //     networkCategoryId: req.body.networkId,
-            //     statusId: 3,
-            //     comments: req.body.comments,
-            //     score: req.body.score
-            // })
-            // .where('userId = :userId', { userId: req.body.userId})
-            // .execute();
             
-            if (callTypification) {
-                console.log("Network Call Category Asignado Correctamente");
-                new Resolver().success(res, "Network Category Correctly Inserted");
-            } else {
-                console.log("No se podo actualizar Network Call Category en OpeCalls");
-                new Resolver().error(res, "No se pudo actualizar Network Category");
+            if(!req.body.score){
+                const callTypification = await getRepository(OpeCalls)
+                .createQueryBuilder()
+                .update(OpeCalls)
+                .set({
+                    endingTime: req.body.endingTime,
+                    networkCategoryId: req.body.networkCategoryId,
+                    statusId: 3,
+                    comments: req.body.comments,
+                    score: 0
+                })
+                .where("id = :id", { id: idLlamada })
+                .execute();
+                // .createQueryBuilder()
+                // .update(OpeCalls)
+                // .set({a
+                //     endingTime: req.body.endingTime,
+                //     networkCategoryId: req.body.networkId,
+                //     statusId: 3,
+                //     comments: req.body.comments,
+                //     score: req.body.score
+                // })
+                // .where('userId = :userId', { userId: req.body.userId})
+                // .execute();
+                if (callTypification) {
+                    console.log("Network Call Category Asignado Correctamente");
+                    new Resolver().success(res, "Network Category Correctly Inserted");
+                }
+            }
+            else{
+                const callTypification = await getRepository(OpeCalls)
+                .createQueryBuilder()
+                .update(OpeCalls)
+                .set({
+                    endingTime: req.body.endingTime,
+                    networkCategoryId: req.body.networkCategoryId,
+                    statusId: 3,
+                    comments: req.body.comments,
+                    score: req.body.score
+                })
+                .where("id = :id", { id: idLlamada })
+                .execute();
+                if (callTypification) {
+                    console.log("Network Call Category Asignado Correctamente");
+                    new Resolver().success(res, "Network Category Correctly Inserted");
+                }
             }
         } catch (ex) {
             new Resolver().exception(res, "Unexpected error", ex);
         }
     }
-    
+
     public async getIdCall(req: Request, res: Response): Promise<void> {
         try {
-            const call = await getRepository(OpeCalls).find({
-                where: {
-                    startTime: req.body.startTime,
-                },
-                select: ["id"],
-            });
+            let idLlamada = req.body.idLlamada
+            console.log(idLlamada);
             
-            let temp = call[0].id;
-            console.log(temp);
-            
-            new Resolver().success(res, "El id de la llamada es:", temp);
+            new Resolver().success(res, "El id de la llamada es:", idLlamada);
         } catch (ex) {
             new Resolver().exception(res, "Unexpected error", ex);
         }
     }
+    
     public async getTotalCalls(req: Request, res: Response) {
         try {
-
-
             var today = new Date();
             var Month = (today.getMonth() + 1);
             var MonthS = Month.toString();

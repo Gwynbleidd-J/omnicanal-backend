@@ -51,6 +51,10 @@ export class OpeCalls{
     @Column({type:'integer', nullable:true})
     networkCategoryId:Number;
     
+    @Column({type: 'varchar', nullable:true})
+    startingDate:string
+
+    
     @ManyToOne(() => CatUsers, user => user.call)
     @JoinColumn({name: 'userId'})
     user: CatUsers; 

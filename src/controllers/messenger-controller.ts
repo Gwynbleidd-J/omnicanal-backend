@@ -180,7 +180,7 @@ export class MessengerController {
                 if (messageContext['platformIdentifier'] == 'w')
                     new Whatsapp().replyMessageWaitingForAgentFueraDeHorario(messageContext['clientPlatformIdentifier']);
                 else if (messageContext['platformIdentifier'] == 't')
-                    this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'], 'Nuestro horario de atencion es de 9 a.m. a 9 p.m. Favor de contactarnos en horas habiles.');
+                    this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'], 'Le recordamos que nuestro horario de atención es de 9 de la mañana a 9 de la noche. Por favor escríbenos a: reporta@promoespacio.com.mx y atenderemos tu reporte.');
 
             }
         }
@@ -288,7 +288,7 @@ export class MessengerController {
         let agentId = agent;
 
         let leader = await this.getLeader(agentId);
-        console.log("\nLider: " + JSON.stringify(leader));
+        //console.log("\nLider: " + JSON.stringify(leader));
 
         let message = "";
 
@@ -377,7 +377,7 @@ export class MessengerController {
                 .where("user.ID = :id", { id: leaderId })
                 .getOne();
 
-            console.log("\nLider obtenido: " + JSON.stringify(leader));
+            //console.log("\nLider obtenido: " + JSON.stringify(leader));
             let payload;
 
 
@@ -427,7 +427,7 @@ export class MessengerController {
             if (messageContext['platformIdentifier'] == 'w')
                 new Whatsapp().sendWelcomeMessage(messageContext['clientPlatformIdentifier']);
             else if (messageContext['platformIdentifier'] == 't')
-                this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'], 'Hola. Gracias por escribir al Telegram de PromoEspacio. En un momento le enlazamos con un agente.');
+                this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'], 'Bienvenido a la cuenta Oficial de PROMO ESPACIO, es importante recibir tu reporte para que todo opere correctamente. \nRecuerda pedir tu folio en caso de que tu reporte no quede resuelto en el momento. \nRecomendación: Deja los equipos encendidos ya que si continuamente los apagas suelen fallar. \nUn momento, uno de nuestros ingenieros te atenderá');
             /* else if(messageContext['platformIdentifier'] == 'c') 
                 global.globalArraySockets.write('Hola, bienvenido al chat de omnicanal, en un momento le atenderemos') */
             //sock.write('mensaje desde la API de la aplicacion');
@@ -479,7 +479,7 @@ export class MessengerController {
                 if (messageContext['platformIdentifier'] == 'w')
                     new Whatsapp().replyMessageWaitingForAgentDesesperado(messageContext['clientPlatformIdentifier']);
                 else if (messageContext['platformIdentifier'] == 't')
-                    this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'], 'Seguimos conectando con un agente disponible, agradecemos tu paciencia, se le recuerda que tambien puede contactarnos via telefonica.');
+                    this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'], 'Por el momento todos nuestros ingenieros se encuentran ocupados, por favor permanezca en línea. Recuerda que también puedes hacer tu reporte a través de correo a: reporta@promoespacio.com.mx o por llamada al 55 9066 0010');
                 console.log("El cliente del chat " + chatId + "  ya llego o supero los 10 chats ");
             }
             //#endregion
@@ -488,7 +488,7 @@ export class MessengerController {
                 if (messageContext['platformIdentifier'] == 'w')
                     new Whatsapp().replyMessageWaitingForAgent(messageContext['clientPlatformIdentifier']);
                 else if (messageContext['platformIdentifier'] == 't')
-                    this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'], 'Seguimos conectando con un agente disponible, agradecemos tu paciencia.');
+                    this.telegraf.telegram.sendMessage(messageContext['clientPlatformIdentifier'], 'Por el momento todos nuestros ingenieros se encuentran ocupados, por favor permanezca en línea. Recuerda que también puedes hacer tu reporte a través de correo a: reporta@promoespacio.com.mx o por llamada al 55 9066 0010');
             }
 
         }
@@ -771,6 +771,122 @@ export class MessengerController {
         }
     }
 
+    public async ImageFromApp(req:Request, res:Response){
+        try{
+            console.log("entrando a outcommingMessage");
+            let telegraf: Telegraf = new Telegraf(process.env.BOT_TOKEN);
+            let copiaGlobalArraySockets = global.socketIOArraySockets;
+            let backNotificationContext;
+            var sentNotification = 0;
+            //let directory = path.join(__dirname, '../public/img/');
+            //INFORMACIÓN QUE MANDA LA APLICACIÓN
+            let formData = req.files;
+            let imagen = req.files[0].filename;
+            let chatId =  req.headers.chatid;
+            let clientPlatformIdentifier = req.headers.clientplatformidentifier;
+            let platformIdentifier = req.headers.platformidentifier;
+            let agentPlatformIdentifier = req.headers.agentplatformidentifier;
+            let imagePath = req.headers.imagelocation;
+
+            //console.log(req.headers);
+            console.log('imagen:', imagen);
+            console.log('chatId:', chatId);
+            console.log('clientPlatformIdentifier:',clientPlatformIdentifier);
+            console.log('platformIdentifier:',platformIdentifier);
+            console.log('agentPlatformIdentifier:',agentPlatformIdentifier);
+            console.log('imagePath', imagePath);
+
+            await getRepository(OpeChatHistoric)
+            .createQueryBuilder()
+            .insert()
+            .into(OpeChatHistoric)
+            .values([
+                {transmitter: "a", statusId: 1, chatId: Number(chatId), mediaUrl: imagePath }
+            ])
+            .execute();
+            
+            if (platformIdentifier == 'w') {
+                //* const serverImage es la dirección de la carpeta dentro del servidor
+                //* se tiene que cambiar del servidor 1 al 4
+                const serverImage = `http://201.149.34.188:3043/api/chatweb/img/${imagen}`;
+                console.log(`Imagen que se va a mandar a Twilio: ${serverImage}`);
+                new Whatsapp().replyImageMessageForClient(serverImage, clientPlatformIdentifier.toString());
+            }
+            //*
+            else if (req.body.platformIdentifier == 't') {
+                telegraf.telegram.sendMessage(req.body.clientPlatformIdentifier, req.body.text);
+            }
+
+            console.log('Construyendo el Context en JSON...');
+            //De forma provisional, se enviarÃ¡ una notificaciÃ³n de vuelta al agente para que se refresque su ventana del chat             
+            const Context: JSON = <JSON><unknown>{
+                "id": chatId,
+                "platformIdentifier": platformIdentifier,
+                "clientPlatformIdentifier": clientPlatformIdentifier,
+                "agentPlatformIdentifier": agentPlatformIdentifier
+            }
+
+            let array = Context;
+            let data = global.dataObject.push(array);
+            console.log(data);
+
+            console.log('Seteando el context al backNotificationContext...');
+            backNotificationContext = Context;
+            console.log(backNotificationContext);
+
+            console.log('Iniciando barrido del arreglo de sockets...');
+            if (platformIdentifier != 'c') {
+
+                socketIOArraySockets.forEach(element => {
+                    console.log('Comprobando ' + element.id + ' vs ' + backNotificationContext['agentPlatformIdentifier']);
+                    if (element.id == backNotificationContext['agentPlatformIdentifier']) {
+                        console.log(`Direccionando mensaje al socket: ${element.id}`);
+                        new MessengerController().replyMessageForAgentSocketIO(backNotificationContext, element.id);
+                    }
+                });
+            } else {
+                socketIOArraySockets.forEach(element => {
+                    console.log('Comprobando ' + element.id + ' vs ' + backNotificationContext['agentPlatformIdentifier']);
+                    //Por alguna razÃ³n estÃ¡ encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificaciÃ³n
+                    // if ((element.id == backNotificationContext['clientPlatformIdentifier']) && (sentNotification < 1))
+                    if (element.id == backNotificationContext['agentPlatformIdentifier']) {
+                        console.log('Direccionando mensage al socket ' + element.id);
+                        let notificationString = '{"agentPlatformIdentifier": "' + backNotificationContext['agentPlatformIdentifier'] + '", "text": "' + backNotificationContext['message'] + '", "platformIdentifier": "' + backNotificationContext['platformIdentifier'] + '", "transmitter": "' + 'a' + '"}';
+
+                        sentNotification++;
+
+                        let sentNotificationIO = 0;
+                        copiaGlobalArraySockets.forEach(element => {
+                            console.log('Comprobando ' + element.id + ' vs ' + backNotificationContext['agentPlatformIdentifier']);
+                            //Por alguna razÃ³n estÃ¡ encontrando 2 sockets iguales en el arreglo, validar de momento solo enviar una notificaciÃ³n
+                            // if ((element.id == backNotificationContext['agentPlatformIdentifier']) && (sentNotificationIO < 1)) {
+                            if (element.id == backNotificationContext['agentPlatformIdentifier']) {
+                                console.log('Direccionando mensage al socket ' + element.id);
+                                // new Socket().replyMessageForAgent(backNotificationContext, element);
+                                global.io.emit('message', backNotificationContext)
+
+                                //por si las moscas para mandarle la informacion al chat web
+                                //let notificationString = '{"agentPlatformIdentifier": "'+messageContext['agentPlatformIdentifier']+'", "text": "'+messageContext['text']+'", "platformIdentifier": "'+messageContext['platformIdentifier']+'", "transmitter": "'+messageContext['transmitter']+'"}';
+                                new MessengerController().replyMessageForAgentSocketIO(backNotificationContext, element.id);
+                                sentNotificationIO++;
+                            }
+                        });
+                    }
+                });
+
+            }
+            global.globalArraySockets = copiaGlobalArraySockets;
+            console.log('EnvÃ­o de notificaciÃ³n termidado.');
+
+            new Resolver().success(res, "Se enviara la notificacion correctamente");
+            //new Resolver().success(res, 'image', formData);
+
+        }
+        catch(ex){
+            console.log(`Error[ImageFroApp]: ${ex}`);
+            new Resolver().error(res, 'Error[ImageFroApp]', ex);
+        }
+    }
     public async getDisponibleAgent(platformIdentifier: String): Promise<any> {
         try {
             //CONSULTA DE AGENTES ACTIVOS CON UN LIMITE GENERAL DE CHATS
@@ -1196,7 +1312,7 @@ export class MessengerController {
 
     public async recoverActiveChats(req: Request, res: Response): Promise<void> {
         try {
-            console.log('Recuperando mensajes del agente: ' + req.body.userId);
+            //console.log('Recuperando mensajes del agente: ' + req.body.userId);
 
             const recoveredChats = await getRepository(OpeChats)
                 .createQueryBuilder("recoveredChats")

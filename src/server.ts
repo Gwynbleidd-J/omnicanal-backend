@@ -10,7 +10,10 @@ import { Resolver } from "./services/resolver";
 import {Telegram} from './services/telegram';
 import { SoscketIOServer } from './services/SocketIOServer';
 import path from 'path';
- import * as socketio from 'socket.io';
+import * as socketio from 'socket.io';
+import { getRepository } from "typeorm";
+import { Request, Response } from "express";
+ 
 //Routes Imports
 import { UserRouting } from './routes/user-routing';
 import { AuthRouting } from './routes/auth-routing';
@@ -22,12 +25,13 @@ import { ChatRouting } from './routes/chat-routing';
 import { NetworkRouting } from './routes/network-routing';
 import { StatusRouting } from './routes/status-routing';
 import { ParametersRouting } from './routes/applicationParameters-routing';
-import { getRepository } from "typeorm";
 import { CatAppParameters } from './models/appParameters';
 import { PruebaRouting } from './routes/prueba-routing';
 import { ScreenShareRouting } from './routes/screenShare-routing';
 import { CallsRouting } from './routes/calls-routing';
 import { MessengerController } from './controllers/messenger-controller';
+import { CatUsers } from './models/user';
+
 
 
 export class Server {
@@ -90,7 +94,7 @@ export class Server {
             console.log(`Can't connect to database: ${err}`);
         });
     }
-
+    
     public start(): void {
        this.server = this.app.listen(this.app.get('port'), () => {
             console.log(`Server listen on port: ${this.app.get('port')}`);
@@ -103,9 +107,9 @@ export class Server {
      //Metodo InitServices
     public InitServices():void {
         this.telegram = new Telegram();
-        this.mySocket = new Socket(); 
+        //this.mySocket = new Socket(); 
         //this.udpSocket = new UDPSocket();
-        this.mySocket.initSocketServer();
+        //this.mySocket.initSocketServer();
         //this.udpSocket.InitUDPServer();
     }
     
@@ -170,7 +174,7 @@ export class Server {
                 }
             });
 
-            socket.on('disconnect', (close)=>{
+            socket.on('disconnect', async (close)=>{
 
                 console.log("\n\n*******************\nAntes de borrar el arreglo se ve asi: ");
                 global.socketIOArraySockets.forEach(element => {
@@ -182,6 +186,21 @@ export class Server {
                 global.socketIOArraySockets.pop(socket.id);
                 socket.disconnect(close);
                 // console.log(`Socket disconnect: ${close}`);
+
+                //*este bloque de código es para si una vez la aplicación crashea ponga la columna de activo de
+                //* cat users en 0 que es cuando el usuario no ha iniciado sesión.
+
+                let user = await getRepository(CatUsers)
+                .createQueryBuilder()
+                .update(CatUsers)
+                .set({ activo: 0 })
+                .where("activeIp = :socketId", {socketId: socket.id})
+                .execute()
+
+        
+                if(user.affected === 1){
+                    console.log('La columna activo se modifico correctamente a valor 0')
+                }
 
                 console.log("Despues de borrar se ve asi: ");
                 global.socketIOArraySockets.forEach(element => {
@@ -208,6 +227,21 @@ export class Server {
         }
         catch(ex){
             console.log(`Unexpected error ${ex}`)
+        }
+    }
+
+    private async UpdateActiveColumnOnClose(req:Request, res:Response):Promise <void>{
+        
+        let user = await getRepository(CatUsers)
+        .createQueryBuilder()
+        .update(CatUsers)
+        .set({ activo: 0 })
+        .where("ID = :userId", {userId: req.body.userId})
+        .execute()
+
+        if(user.affected === 1){
+            console.log('La columna activo se modifico correctamente a valor 0')
+            new Resolver().success(res, 'activo column has change correctly');
         }
     }
 

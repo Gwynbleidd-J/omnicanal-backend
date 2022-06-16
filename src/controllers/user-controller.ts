@@ -100,6 +100,7 @@ export class UserController {
                 .createQueryBuilder("users")
                 .innerJoinAndSelect("users.status", "state")
                 .where("users.rolID = :rolId", {rolId: 1}) //El rolId 1  hace refrerencia al rol de Agente[Después habría que diferenciar cada rol en la petición] 
+                .andWhere("users.activo = :activo", {activo: 1})
                 .orderBy("users.name", "ASC")
                 .getMany();
 
@@ -313,14 +314,14 @@ export class UserController {
 
     public async getAgentByEmail(email: any) {
         try {
-            console.log("\nObteniendo agente iniciando sesion...");
+            //console.log("\nObteniendo agente iniciando sesion...");
             const agent = await getRepository(CatUsers)
                 .createQueryBuilder("agent")
                 .where("agent.email = :email", { email: email })
                 .getOne();
 
             //let agentId = Chat.userId;
-            console.log("Agente obtenido:" + JSON.stringify(agent));
+            //console.log("Agente obtenido:" + JSON.stringify(agent));
             return agent;
         } catch (error) {
             console.log("Error[getAgentByEmail]user-controller:" + error);
@@ -337,7 +338,7 @@ export class UserController {
 
             //let agentId = Chat.userId;
             new MessengerController().NotificateLeader("FS", agent.ID, null, null);
-            console.log("Agente obtenido:" + JSON.stringify(agent));
+            //console.log("Agente obtenido:" + JSON.stringify(agent));
             return agent;
         } catch (error) {
             console.log("Error[NotificateSessionClose]user-controller:" + error);

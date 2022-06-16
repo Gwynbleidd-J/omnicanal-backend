@@ -49,9 +49,6 @@ export class StatusUserController{
                 console.log('User Status Asignado Correctamente');
                 new Resolver().success(res, 'User Status correctly inserted');
             }
-            else{
-                console.log('No se pudo actualizar StatusId en CatUsers');
-            }
         }
         catch(ex){
             new Resolver().exception(res, 'Unexpected error', ex);
@@ -70,6 +67,25 @@ export class StatusUserController{
             return status.status;
         } catch (error) {
             console.log("Error[getAgentStatus]status-controller:" + error);
+        }
+    }
+
+    public async UpdateColmnActiveOnClose(req:Request, res:Response):Promise<void>{
+        try{
+            let user = await getRepository(CatUsers)
+            .createQueryBuilder()
+            .update(CatUsers)
+            .set({ activo:0 })
+            .where("ID = :userId", {userId: req.body.userId})
+            .execute()
+
+            if(user.affected === 1){
+                console.log('La columna activo se modifico correctamente a valor 0')
+                new Resolver().success(res, 'activo column has change correctly');
+            }
+        }catch(ex){
+            console.log('Error:[UpdateColmnActiveOnClose]', ex);
+            new Resolver().error(res, 'Error:[UpdateColmnActiveOnClose]')
         }
     }
 

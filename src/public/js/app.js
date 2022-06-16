@@ -25,10 +25,14 @@ socket.on('socket-disconnect', (data) => {
 })
 
 
+setInterval(() => {
+    let timer = new Date().getTime()
+    console.log(timer);
+}, 2000)
+
 ////////Codigo Javascript ///////////
 let form = document.getElementById('form')
 let message = document.getElementById('message_text');
-
 
 form.addEventListener('submit', e => {
     e.preventDefault();

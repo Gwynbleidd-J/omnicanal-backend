@@ -1,3 +1,5 @@
+
+
 export class Whatsapp {
     private accountSID:String;
     private authToken:String;
@@ -17,15 +19,15 @@ export class Whatsapp {
     // }
 
     //Método para el envío del mensaje automático.
+    
     public async sendWelcomeMessage(whatsappClientAccount:String){
         try{
-            +14155238886
-            this.whatsappAcount = 'whatsapp:+5215592251986';
-            //this.whatsappAcount = 'whatsapp:+14155238886';
+            // this.whatsappAcount = 'whatsapp:+5215592251986';
+            this.whatsappAcount = 'whatsapp:+14155238886';
 
             await this.client.messages.create({
                 to:   whatsappClientAccount,
-                body: 'Hola. Gracias por escribir al Whatsapp de PromoEspacio. En un momento le enlazamos.',
+                body: 'Bienvenido a la cuenta Oficial de PROMO ESPACIO, es importante recibir tu reporte para que todo opere correctamente. \nRecuerda pedir tu folio en caso de que tu reporte no quede resuelto en el momento. \nRecomendación: Deja los equipos encendidos ya que si continuamente los apagas suelen fallar. \nUn momento, uno de nuestros ingenieros te atenderá',
                 from: this.whatsappAcount
                 })
                 .then(message => console.log('sendWelcomeMessage',message));      
@@ -39,11 +41,11 @@ export class Whatsapp {
     public async replyMessageWaitingForAgent(whatsappClientAccount:String){
         try{
             
-            this.whatsappAcount = 'whatsapp:+5215592251986';
-            //this.whatsappAcount = 'whatsapp:+14155238886';
+            // this.whatsappAcount = 'whatsapp:+5215592251986';
+            this.whatsappAcount = 'whatsapp:+14155238886';
             this.client.messages.create({
                 to:   whatsappClientAccount,
-                body: 'Seguimos conectando con un analista disponible, agradecemos tu paciencia.',
+                body: 'Por el momento todos nuestros ingenieros se encuentran ocupados, por favor permanezca en línea.',
                 from: this.whatsappAcount
                 })
                 .then(message => console.log('replyMessageWaitingForAgent', message));   
@@ -57,11 +59,11 @@ export class Whatsapp {
     public async replyMessageWaitingForAgentDesesperado(whatsappClientAccount:String){
         try{
             
-            this.whatsappAcount = 'whatsapp:+5215592251986';
-            //this.whatsappAcount = 'whatsapp:+14155238886';
+            // this.whatsappAcount = 'whatsapp:+5215592251986';
+            this.whatsappAcount = 'whatsapp:+14155238886'; 
             this.client.messages.create({
                 to:   whatsappClientAccount,
-                body: 'Seguimos conectando con un analista disponible, agradecemos tu paciencia, le recordamos que tambien puede contactarnos via telefonica.',
+                body: 'Por el momento todos nuestros ingenieros se encuentran ocupados, por favor permanezca en línea. Recuerda que también puedes hacer tu reporte a través de correo a: reporta@promoespacio.com.mx o por llamada al 55 9066 0010',
                 from: this.whatsappAcount
                 })
                 .then(message => console.log('replyMessageWaitingForAgent', message));   
@@ -75,11 +77,11 @@ export class Whatsapp {
     public async replyMessageWaitingForAgentFueraDeHorario(whatsappClientAccount:String){
         try{
             
-            this.whatsappAcount = 'whatsapp:+5215592251986';
-            //this.whatsappAcount = 'whatsapp:+14155238886';
+            // this.whatsappAcount = 'whatsapp:+5215592251986';
+            this.whatsappAcount = 'whatsapp:+14155238886';
             this.client.messages.create({
                 to:   whatsappClientAccount,
-                body: 'Nuestro horario de atencion es de 9 a.m. a 9 p.m. Favor de contactarnos en horas habiles.',
+                body: 'Le recordamos que nuestro horario de atención es de 9 de la mañana a 9 de la noche. Por favor escríbenos a: reporta@promoespacio.com.mx y atenderemos tu reporte.',
                 from: this.whatsappAcount
                 })
                 .then(message => console.log('replyMessageWaitingForAgent', message));   
@@ -92,8 +94,8 @@ export class Whatsapp {
 
     public async replyMessageOnClose(whatsappClientAccount:String){
         try{
+            this.whatsappAcount = 'whatsapp:+14155238886';
             // this.whatsappAcount = 'whatsapp:+5215592251986';
-            this.whatsappAcount = 'whatsapp:+5215592251986';
             this.client.messages.create({
                 to: whatsappClientAccount,
                 body: 'Tu conversación con el analista acabó, ¡Que tengas un buen día! ',
@@ -109,8 +111,8 @@ export class Whatsapp {
     public async replyMessageForAgent(message:String, profileName:String, whatsappAgentAccount:String){
         try{
             
-            // this.whatsappAcount = 'whatsapp:+14155238886';
-            this.whatsappAcount = 'whatsapp:+5215592251986';
+            this.whatsappAcount = 'whatsapp:+14155238886';
+            // this.whatsappAcount = 'whatsapp:+5215592251986';
             this.client.messages.create({
                 to:   whatsappAgentAccount,
                 body: profileName +' dice: ' + message,
@@ -127,19 +129,31 @@ export class Whatsapp {
     public async replyMessageForClient(message:String, whatsappClientAccount:String){
         try{
             // whatsappClientAccount = 'whatsapp:+5215551438864';
+            this.whatsappAcount = 'whatsapp:+14155238886';
             // this.whatsappAcount = 'whatsapp:+5215592251986';
-            this.whatsappAcount = 'whatsapp:+5215592251986';
             this.client.messages.create({
                 to:   whatsappClientAccount,
                 body: message,
                 from: this.whatsappAcount
                 })
-                .then(message => console.log('replyMessageForClient',message)); 
+                .then(message => console.log('[replyMessageForClient]:Message sent',message.sid)); 
                 
                 console.log('Correctly MessageForClient sent to ' + whatsappClientAccount);  
         }
         catch(err){
             console.log('Error[Whatsapp][replyMessageForClient]: ' + err);
         }
+    }
+
+    public async replyImageMessageForClient(mediaUrl:any, whatsappClientAccount:string){
+        // this.whatsappAcount = 'whatsapp:+5215592251986';
+        this.whatsappAcount = 'whatsapp:+14155238886';
+        this.client.messages.create({
+            from: this.whatsappAcount,
+            mediaUrl: [mediaUrl],
+            to: whatsappClientAccount,
+        })
+        .then(message => console.log('[replyImageMessageForClient]:Message sent', message))
+        .catch(error => console.log(`[replyImageMessageForClient]:${error}`))
     }
 }

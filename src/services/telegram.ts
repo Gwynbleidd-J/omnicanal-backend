@@ -37,7 +37,7 @@ export class Telegram{
             console.log('Bot Iniciado');
             // ctx.reply('Bienvenido al Bot del centro de monitorio');
             // ctx.reply('De clic en menu para seleccionar su sucursal');
-            this.telegraf.telegram.sendMessage(ctx.chat.id, 'Hola. Gracias por escribir al Telegram de PromoEspacio. En un momento le enlazamos con un agente.');
+            this.telegraf.telegram.sendMessage(ctx.chat.id, 'Bienvenido a la cuenta Oficial de PROMO ESPACIO, es importante recibir tu reporte para que todo opere correctamente. \nRecuerda pedir tu folio en caso de que tu reporte no quede resuelto en el momento. \nRecomendación: Deja los equipos encendidos ya que si continuamente los apagas suelen fallar. \nUn momento, uno de nuestros ingenieros te atenderá');
         });
 
         this.telegraf.on('text', ctx =>{
@@ -184,7 +184,5 @@ export class Telegram{
             // // //Implementación temporal
         });
         
-    } */
-
-    
+    } */ 
 }
