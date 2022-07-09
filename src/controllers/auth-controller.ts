@@ -56,6 +56,7 @@ export class AuthController {
                     new Resolver().success(res, 'User authorized', payload);
                     //Una vez que se logró consultar la info del usuario, consultamos la info de su rol
                     //payload['']
+                    console.log(`Remote IP: ${req.ip}`);
                 }
                 else{
                     console.log('el usuario ya está logueado');

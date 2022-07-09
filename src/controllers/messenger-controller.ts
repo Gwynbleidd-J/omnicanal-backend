@@ -11,6 +11,7 @@ import { SoscketIOServer } from '../services/SocketIOServer';
 import { CatAppParameters } from '../models/appParameters';
 import { Utils } from '../services/utils';
 import * as socketIO from 'socket.io';
+import moment from 'moment';
 
 export interface chatEspera {
     chatId: number;
@@ -60,8 +61,17 @@ export class MessengerController {
     /* #endregion */
     public async whatsappIncommingMessage(req: Request, res: Response): Promise<void> {
         try {
+            let hour = moment().format('HH:mm:ss');
+            console.log(hour);
+            console.log(req.body);
+            if(hour >= '21:00:00' && hour <= '09:00:00'){
+                res.redirect('https://channels.autopilot.twilio.com/v1/AC987c18979627f7cef6261039b427b5b9/UA51dba64f27c0e7735ac507d968d539ff/twilio-messaging/whatsapp')
+            }
+            else {
+                MessengerController.prototype.standardizeIncommingMessage(req.body, 'w');
+            }
             // console.log('se entró en whatsappIncommingMessage antes que naiden')
-            MessengerController.prototype.standardizeIncommingMessage(req.body, 'w');
+            
         }
         catch (ex) {
             new Resolver().exception(res, 'Unexpected error.', ex);

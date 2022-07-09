@@ -1,4 +1,5 @@
-
+import { Resolver } from "./resolver";
+import { Request, Response } from "express";
 
 export class Whatsapp {
     private accountSID:String;
@@ -30,7 +31,7 @@ export class Whatsapp {
                 body: 'Bienvenido a la cuenta Oficial de PROMO ESPACIO, es importante recibir tu reporte para que todo opere correctamente. \nRecuerda pedir tu folio en caso de que tu reporte no quede resuelto en el momento. \nRecomendación: Deja los equipos encendidos ya que si continuamente los apagas suelen fallar. \nUn momento, uno de nuestros ingenieros te atenderá',
                 from: this.whatsappAcount
                 })
-                .then(message => console.log('sendWelcomeMessage',message));      
+                .then(message => console.log('sendWelcomeMessage',message.sid));      
                 console.log('Correctly WelcomeMessage sent to ' + whatsappClientAccount);  
         }
         catch(err){
@@ -48,7 +49,7 @@ export class Whatsapp {
                 body: 'Por el momento todos nuestros ingenieros se encuentran ocupados, por favor permanezca en línea.',
                 from: this.whatsappAcount
                 })
-                .then(message => console.log('replyMessageWaitingForAgent', message));   
+                .then(message => console.log('replyMessageWaitingForAgent', message.sid));   
                 console.log('Correctly MessageWaitingForAgent sent to ' + whatsappClientAccount);  
         }
         catch(err){
@@ -66,7 +67,7 @@ export class Whatsapp {
                 body: 'Por el momento todos nuestros ingenieros se encuentran ocupados, por favor permanezca en línea. Recuerda que también puedes hacer tu reporte a través de correo a: reporta@promoespacio.com.mx o por llamada al 55 9066 0010',
                 from: this.whatsappAcount
                 })
-                .then(message => console.log('replyMessageWaitingForAgent', message));   
+                .then(message => console.log('replyMessageWaitingForAgent', message.sid));   
                 console.log('Correctly MessageWaitingForAgent sent to ' + whatsappClientAccount);  
         }
         catch(err){
@@ -84,7 +85,7 @@ export class Whatsapp {
                 body: 'Le recordamos que nuestro horario de atención es de 9 de la mañana a 9 de la noche. Por favor escríbenos a: reporta@promoespacio.com.mx y atenderemos tu reporte.',
                 from: this.whatsappAcount
                 })
-                .then(message => console.log('replyMessageWaitingForAgent', message));   
+                .then(message => console.log('replyMessageWaitingForAgent', message.sid));   
                 console.log('Correctly MessageWaitingForAgent sent to ' + whatsappClientAccount);  
         }
         catch(err){
@@ -101,7 +102,7 @@ export class Whatsapp {
                 body: 'Tu conversación con el analista acabó, ¡Que tengas un buen día! ',
                 from: this.whatsappAcount
             })
-            .then(message => console.log('replyMessageOnClose', message));
+            .then(message => console.log('replyMessageOnClose', message.sid));
         }
         catch(err){
             console.log('Error[Whatsapp][replyMessageOnClose]: ' + err);
@@ -118,7 +119,7 @@ export class Whatsapp {
                 body: profileName +' dice: ' + message,
                 from: this.whatsappAcount
                 })                
-                .then(message => console.log('replyMessageForAgent',message)); 
+                .then(message => console.log('replyMessageForAgent',message.sid)); 
                 console.log('Correctly MessageForAgent sent to ' + whatsappAgentAccount);  
         }
         catch(err){
@@ -153,7 +154,7 @@ export class Whatsapp {
             mediaUrl: [mediaUrl],
             to: whatsappClientAccount,
         })
-        .then(message => console.log('[replyImageMessageForClient]:Message sent', message))
+        .then(message => console.log('[replyImageMessageForClient]:Message sent', message.sid))
         .catch(error => console.log(`[replyImageMessageForClient]:${error}`))
     }
 }

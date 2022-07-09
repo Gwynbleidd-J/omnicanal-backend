@@ -36,26 +36,31 @@ export class StatusTimeController {
     public async ChangeStatus(req: Request, res: Response): Promise<void> {
         try {
             let idStatus = req.body.idStatus;
+            let userId = req.body.userId
             console.log('entró en ChangeStatus');
             console.log("Id de status al cambiar:", idStatus)
+            console.log("Id de status al cambiar:", userId)
 
-            // const findNull = await getRepository(OpeStatusTime).find({
-            //     where: {
-            //         endingTime: IsNull(),
-            //         userId: req.body.userId,
-            //         id: idStatus
-            //     }, select: ['id']
-            // })
-            // if (findNull) {
-                await getRepository(OpeStatusTime)
-                .createQueryBuilder()
-                .update(OpeStatusTime)
-                .set({
-                    endingTime: req.body.endingTime
-                })
-                .where("id = :id", { id: idStatus })
-                .execute();
-            // }
+            //* CONSULTA PARA LLENAR LOS STATUS QUE NO TIENEN ENDING TIME
+            await getRepository(OpeStatusTime)
+            .createQueryBuilder()
+            .update(OpeStatusTime)
+            .set({
+                endingTime: req.body.endingTime
+            })
+            .where("userId = :userId", {userId: userId})
+            .andWhere("endingTime ISNULL")
+            .execute();
+
+            await getRepository(OpeStatusTime)
+            .createQueryBuilder()
+            .update(OpeStatusTime)
+            .set({
+                endingTime: req.body.endingTime
+            })
+            .where("id = :id", { id: idStatus })
+            .execute();
+            
             const update = await getRepository(OpeStatusTime)
             .createQueryBuilder()
             .insert()
@@ -72,11 +77,9 @@ export class StatusTimeController {
             let object = {
                 idStatus: idLlamada
             }
-            
-            // if (findNull) {
-                console.log('Se cambio correctamente al estado', req.body.statusId)
-                new Resolver().success(res, 'SetEnding stored Correcrly', object)
-            // }
+
+            console.log('Se cambio correctamente al estado', req.body.statusId)
+            new Resolver().success(res, 'SetEnding stored Correcrly', object)
         } catch (error) {
             console.log(`Error[ChangeStatus]: ${error}`)
         }
@@ -443,12 +446,14 @@ export class StatusTimeController {
 
     public async GetTimeCurrentStatus(req: Request, res:Response): Promise <void>{
         try{
+            console.log('Entro a GetTimeCurrentStatus');
             //?CHECAR EL EL METODO GETUSERSTATES YA QUE ES EL MISMO QUE JACOBO USA PARA LOS ESTADOS QUE TIENE EL USUARIO
         //? arrelgo userId diferecia, status  
         //?
         //*datos que se reciben desde la aplicación
         let now = moment();
-
+        let date = moment().format("YYYY-MM-DD");
+        
         const startDate = await createQueryBuilder(OpeStatusTime, "status")
         .innerJoinAndSelect("status.user", "c")
         .innerJoinAndSelect("status.status", "o")
@@ -456,6 +461,7 @@ export class StatusTimeController {
         .where("c.activo = :activo", {activo:1} )
         .andWhere("status.endingTime IS NULL")
         .andWhere("c.rolID = :rolId", {rolId: 1})
+        .andWhere("status.date = :date", {date: date})
         .orderBy("status.id", "DESC")
         .getMany();
 
@@ -531,7 +537,7 @@ export class StatusTimeController {
                         nombreEstatus = element.status.status;
                         break;
                     case 2:
-                        Sanitario += minutos;
+                        Sanitario += minutos; 
                         userId = element.userId;
                         nombre = element.user.name;
                         status = element.statusId;

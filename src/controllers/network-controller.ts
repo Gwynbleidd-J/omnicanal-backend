@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { Resolver } from '../services/resolver';
 import { getRepository } from 'typeorm';
 import { CatNetworks } from '../models/network';
+import moment from "moment";
 
 export class NetworkController{
     public async getNetWorks(req:Request, res:Response): Promise<void>{
@@ -30,6 +31,16 @@ export class NetworkController{
         }
         catch(ex) {
             new Resolver().exception(res, 'Unexpected error.', ex);
+        }
+    }
+
+    public async getTest(req:Request, res:Response): Promise<void>{
+        try{
+            let date = moment().format("YYYY-MM-DD");
+            console.log(`Fecha: ${date}`);
+            new Resolver().success(res, "fecha", date);
+        }catch(ex){
+            new Resolver().error(res, "Error", ex)
         }
     }
 }

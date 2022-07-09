@@ -13,5 +13,6 @@ export class NetworkRouting{
 
     private routes(): void{
         this.router.get('/networks', this.networkController.getNetWorks);
+        this.router.get('/test', this.networkController.getTest);
     }
 }

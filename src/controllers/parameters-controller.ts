@@ -6,8 +6,27 @@ import { CatAppParameters } from '../models/appParameters';
 import { CatUsers } from '../models/user';
 
 export class ParametersController{
+    public async GetUsers(req:Request, res:Response):Promise <void>{
+        try{
+            
+            const user = await getRepository(CatUsers)
+            .createQueryBuilder("users")
+            .getMany();
 
-    public async SoftphoneParameters(req:Request, res:Response ): Promise <void>{
+            let payload = {
+                users: user
+            }
+
+            if(user){
+                new Resolver().success(res, 'Users correctly consulted', payload);
+            }
+            
+        }catch(ex){
+            new Resolver().exception(res,'Unexpected error.', ex);
+        }
+    }
+
+    public async UpdateSoftphoneParameters(req:Request, res:Response ): Promise <void>{
         try{            
             console.log(`Cambiando parametros del softphone con id: ${req.body.id}`);
             const user = await getRepository(CatSoftphoneParameters)
@@ -29,89 +48,13 @@ export class ParametersController{
                 console.log(`Parametros del softphone cambiados exitosamente`);
                 new Resolver().success(res, 'softphone parameters correctly changed');
             }
-            else{
-                console.log('No se pudieron cambiar correctamente los parametros del softphone')
-                new Resolver().error(res, "Error")
-            }
         }
         catch(ex){
             new Resolver().exception(res,'Unexpected error.', ex);
         }
     }
 
-    public async AppParameters(req:Request, res:Response):Promise <void>{
-        try{
-            console.log('Cambiando los parametros de los bot de la aplicacion')
-            const appParameters = await getRepository(CatAppParameters)
-            .createQueryBuilder()
-            .update(CatAppParameters)
-            .set({
-                twilioAccountSID: req.body.twilioAccountSID,
-                twilioAuthToken: req.body.twilioAuthToken,
-                whatsappAccount: req.body.whatsappAccount,
-                botTokenTelegram: req.body.botTokenTelegram
-            })
-            .where("id = :id", { id:1 })
-            .execute();
-
-            if(appParameters.affected ===1){
-                console.log(`Parametros de los bots cambiados exitosamete`);
-                new Resolver().success(res, 'Bots parameters correctly changed');
-            }
-
-        }
-        catch(ex)
-        {
-            new Resolver().exception(res,'Unexpected error.', ex);   
-        }
-    }
-
-    public async GetAppParameters(req:Request, res:Response){
-        try{
-            const appParameters = await getRepository(CatAppParameters)
-            .find();
-
-            let payload = {
-                botParameters: appParameters
-            }
-
-            if(appParameters){
-                new Resolver().success(res, 'Bots parameters correctly consulted', payload);
-            }
-            else{
-                new Resolver().exception(res, 'Something went wrong with bot parameters info.');
-            }
-        }
-        catch(ex)
-        {
-            new Resolver().exception(res,'Unexpected error.', ex);
-        }
-    }
-
-    public async GetUsers(req:Request, res:Response){
-        try{
-            
-            const user = await getRepository(CatUsers)
-            .createQueryBuilder("users")
-            .getMany();
-
-            let payload = {
-                users: user
-            }
-
-            if(user){
-                new Resolver().success(res, 'Users correctly consulted', payload);
-            }
-            else{
-                new Resolver().exception(res, 'Something went wrong with bot parameters info.');
-            }
-            
-        }catch(ex){
-            new Resolver().exception(res,'Unexpected error.', ex);
-        }
-    }
-
-    public async GetUserCredentials(req:Request, res:Response){
+    public async GetSoftphoneUserCredentials(req:Request, res:Response): Promise <void>{
         try{
             
             const user = await getRepository(CatUsers)
@@ -127,50 +70,138 @@ export class ParametersController{
             if(user){
                 new Resolver().success(res, 'Users correctly consulted', payload);
             }
-            else{
-                new Resolver().exception(res, 'Something went wrong with bot parameters info.');
-            }
         }catch(ex){
             new Resolver().exception(res,'Unexpected error.', ex);
         }
     }
 
-    // public async GetParametersFromDataBase():Promise<void>{
-    //     try{
-    //         const botToken = await getRepository(CatAppParameters)
-    //         .createQueryBuilder("parameters")
-    //         .select(["parameters.twilioAccountSID", "parameters.twilioAuthToken", "parameters.whatsappAccount", "parameters.botTokenTelegram"])
-    //         .where("id = :id" ,{id:1})
-    //         .getOne();
-    //     }
-    //     catch(ex){
-    //         console.log(`Unexpected error ${ex}`)
-    //     }
-    // }
+    public async GetUserData(req:Request, res:Response): Promise <void>{
+        try{
+            console.log(`consultado lo datos del agente con id:${req.body.userId}`)
+            const user = await getRepository(CatUsers)
+            .createQueryBuilder("user")
+            .where("user.ID = :id", {id: req.body.userId})
+            .getOne();
+            
+            let payload = {
+                user:user
+            }
+            
+            if(user){
+                new Resolver().success(res, 'User correctly consulted', payload);
+            }
+        }
+        catch(ex){
+            new Resolver().error(res, 'Unexpected error', ex);
+        }
+    }
+
+    public async SaveNewUser(req:Request, res:Response): Promise <void>{
+        try{
+            let nombre = req.body.nombre;
+            let apPaterno = req.body.apPaterno;
+            let apMaterno = req.body.apMaterno;
+            let email = req.body.email;
+            let contrasena = req.body.contrasena;
+            let siglasUsuario = req.body.siglasUsuario;
+            let tipoUsuario = req.body.tipoUsuario;
+
+            console.log(`nombre: ${nombre}`);
+            console.log(`Apellido P: ${apPaterno}`);
+            console.log(`Apellido M: ${apMaterno}`);
+            console.log(`email: ${email}`);
+            console.log(`contraseña: ${contrasena}`);
+            console.log(`siglas: ${siglasUsuario}`);
+            console.log(`tipo Usuario: ${tipoUsuario}`);
+
+            // let object = {
+            //     nombre,
+            //     apPaterno,
+            //     apMaterno,
+            //     email,
+            //     contrasena,
+            //     siglasUsuario,
+            //     tipoUsuario
+            // }
+            const user = await getRepository(CatUsers)
+            .createQueryBuilder()
+            .insert()
+            .into(CatUsers)
+            .values({
+                name: nombre,
+                paternalSurname: apPaterno,
+                maternalSurname: apMaterno,
+                email: email,
+                password: contrasena,
+                activeChats: 0,
+                rolID: Number.parseInt(tipoUsuario),
+                statusID: 8,
+                leaderId: 13,
+                maxActiveChats: 5,
+                siglasUser: siglasUsuario,
+                activo: 0
+            })
+            .execute()
+
+            new Resolver().success(res, 'User Information',user);
+        }
+        catch(ex){
+            new Resolver().error(res, 'Unexpected error',ex);
+        }
+    }
+
+    public async UpdateUser(req:Request, res:Response): Promise <void>{
+        try{
+            console.log(`cambiando la información del usuario con id: ${req.body.userId}`);
+            let nombre = req.body.nombre;
+            let apPaterno = req.body.apPaterno;
+            let apMaterno = req.body.apMaterno;
+            let email = req.body.email;
+            let contrasena = req.body.contrasena;
+            let siglasUsuario = req.body.siglasUsuario;
+            let tipoUsuario = req.body.tipoUsuario;
+            const user = await getRepository(CatUsers)
+            .createQueryBuilder()
+            .update(CatUsers)
+            .set({
+                name: nombre,
+                paternalSurname: apPaterno,
+                maternalSurname: apMaterno,
+                email: email,
+                password: contrasena,
+                rolID: Number.parseInt(tipoUsuario),
+                siglasUser: siglasUsuario,
+            })
+            .where("ID = :userId", {userId: req.body.userId})
+            .execute();
+
+            if(user.affected === 1){
+                console.log(`Parametros del usuario cambiados exitosamente`);
+                new Resolver().success(res, 'User parameters correctly changed');
+            }
+        }
+        catch(ex){
+            new Resolver().exception(res,'Unexpected error.', ex);
+        }
+    }
+
+    public async DeleteUser(req: Request, res:Response): Promise <void>{
+        try{
+            console.log(`borrando registro del usuario con el id:${req.body.userId}`);
+            const user = await getRepository(CatUsers)
+            .createQueryBuilder()
+            .delete()
+            .from(CatUsers)
+            .where("ID = :userId", {userId: req.body.userId})
+            .execute()
+
+            if(user.affected === 1){
+                console.log(`Usuario borrado exitosamente`);
+                new Resolver().success(res, 'User correctly deleted');
+            }
+        }
+        catch(ex){
+            new Resolver().exception(res,'Unexpected error.', ex);
+        }
+    }
 }
-
-
-    // public async GetSoftphoneParameters(req:Request, res:Response):Promise <void>{
-    //     try{
-    //         //Se necesita vincular está tabla con la de usuario para poder
-    //         //buscar por userName
-    //         const getParameters = await getRepository(CatSoftphoneParameters)
-    //         .createQueryBuilder("catsoftphoneparameters")
-    //         .where("catsoftphoneparameters.userName = :name",{name: req.body.userName})
-    //         .getOne();
-
-    //         let payload = {
-    //             softphoneParameters: getParameters
-    //         }
-
-    //         if(payload){
-    //             new Resolver().success(res, 'Agent softphone parameters correctly consulted', payload);
-    //         }
-    //         else{
-    //             new Resolver().error(res, 'Something bad with softphone agent info.');
-    //         }
-    //     }
-    //     catch(ex){
-    //         new Resolver().exception(res,'Unexpected error.', ex);
-    //     }
-    // }

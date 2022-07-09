@@ -13,11 +13,13 @@ export class ParametersRouting{
     }
 
     private routes():void{
-        this.router.post('/appParameters', this.ParametersController.AppParameters);
-        this.router.post('/getCredentials', this.ParametersController.GetUserCredentials);
-        this.router.get('/getAppParameters', this.ParametersController.GetAppParameters);
-        this.router.post('/softphoneParameters', this.ParametersController.SoftphoneParameters);
+        this.router.post('/getCredentials', this.ParametersController.GetSoftphoneUserCredentials);
+        this.router.post('/softphoneParameters', this.ParametersController.UpdateSoftphoneParameters);
         this.router.get('/getUsers', this.ParametersController.GetUsers);
+        this.router.post('/getUserData',this.ParametersController.GetUserData);
+        this.router.post('/saveUser', this.ParametersController.SaveNewUser);
+        this.router.post('/updateUser', this.ParametersController.UpdateUser);
+        this.router.post('/deleteUser', this.ParametersController.DeleteUser);
         // this.router.get('/getAppParametersDB', this.ParametersController.GetParametersFromDataBase);
         //this.router.get('/getSoftphoneParameters', this.ParametersController.GetSoftphoneParameters);
     }
