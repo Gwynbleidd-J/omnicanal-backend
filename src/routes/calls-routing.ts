@@ -16,5 +16,10 @@ export class CallsRouting{
         this.router.post('/updateNetworkCall', this.callsController.CallTypification);
         this.router.post('/getIdCall', this.callsController.getIdCall);
         this.router.post('/getTotalCalls', this.callsController.getTotalCalls)
+        this.router.post('/getCallsUser', this.callsController.GetCalls);
+        this.router.post('/user', this.callsController.UserHangUp);
+        this.router.post('/vendor', this.callsController.VendorHangUp);
+        // this.router.post('/phoneVendor', this.callsController.SetVendorNumber);
+        // this.router.post('/phoneUser', this.callsController.SetUserNumber);
     }
 }

@@ -57,6 +57,7 @@ export class Server {
     public config(): void {
         this.app.set('port', process.env.SERVER_PORT || 3000);
         this.app.use('/api/chatweb',express.static(path.join(__dirname, 'public')));
+        this.app.use('/api/monitor', express.static(path.join(__dirname, 'monitor')));
         this.app.use(express.urlencoded({ extended: true }));
         this.app.use(cors());
         this.app.use(express.json());

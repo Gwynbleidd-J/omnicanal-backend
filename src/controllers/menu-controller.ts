@@ -20,8 +20,6 @@ export class MenuController {
             else {
                 new Resolver().exception(res, 'Invalid menus info.');  
             }
-
-            
         }
         catch(ex){
             new Resolver().exception(res, 'Unexpected error. ', ex);

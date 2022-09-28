@@ -4,6 +4,7 @@ import { CatSoftphoneParameters } from '../models/softphoneParameters';
 import { Resolver } from '../services/resolver';
 import { CatAppParameters } from '../models/appParameters';
 import { CatUsers } from '../models/user';
+import { Utils } from '../services/utils';
 
 export class ParametersController{
     public async GetUsers(req:Request, res:Response):Promise <void>{
@@ -82,7 +83,7 @@ export class ParametersController{
             .createQueryBuilder("user")
             .where("user.ID = :id", {id: req.body.userId})
             .getOne();
-            
+                    
             let payload = {
                 user:user
             }
@@ -96,13 +97,14 @@ export class ParametersController{
         }
     }
 
+    //*ENDPOINTS PARA GUARDAR INFORMACIÓN CORRESPONDIENTE AL
     public async SaveNewUser(req:Request, res:Response): Promise <void>{
         try{
             let nombre = req.body.nombre;
             let apPaterno = req.body.apPaterno;
             let apMaterno = req.body.apMaterno;
             let email = req.body.email;
-            let contrasena = req.body.contrasena;
+            let contrasena = await new Utils().encrypt(req.body.contrasena);
             let siglasUsuario = req.body.siglasUsuario;
             let tipoUsuario = req.body.tipoUsuario;
 
@@ -112,17 +114,8 @@ export class ParametersController{
             console.log(`email: ${email}`);
             console.log(`contraseña: ${contrasena}`);
             console.log(`siglas: ${siglasUsuario}`);
-            console.log(`tipo Usuario: ${tipoUsuario}`);
+            console.log(`tipo Usuario: ${tipoUsuario} \n`);
 
-            // let object = {
-            //     nombre,
-            //     apPaterno,
-            //     apMaterno,
-            //     email,
-            //     contrasena,
-            //     siglasUsuario,
-            //     tipoUsuario
-            // }
             const user = await getRepository(CatUsers)
             .createQueryBuilder()
             .insert()
@@ -141,57 +134,120 @@ export class ParametersController{
                 siglasUser: siglasUsuario,
                 activo: 0
             })
-            .execute()
-
-            new Resolver().success(res, 'User Information',user);
+            .execute();
+            console.log('User save successfully');
+            new Resolver().success(res, 'new user correctly saved');
         }
         catch(ex){
+            console.log('Error[parameters-controller][SaveNewUser]', ex);
             new Resolver().error(res, 'Unexpected error',ex);
         }
     }
 
     public async UpdateUser(req:Request, res:Response): Promise <void>{
         try{
-            console.log(`cambiando la información del usuario con id: ${req.body.userId}`);
+            
+            let TipoUsuario = req.body.tipoUsuario;
             let nombre = req.body.nombre;
             let apPaterno = req.body.apPaterno;
             let apMaterno = req.body.apMaterno;
             let email = req.body.email;
-            let contrasena = req.body.contrasena;
+            let contrasena = await new Utils().encrypt(req.body.contrasena);
             let siglasUsuario = req.body.siglasUsuario;
-            let tipoUsuario = req.body.tipoUsuario;
-            const user = await getRepository(CatUsers)
-            .createQueryBuilder()
-            .update(CatUsers)
-            .set({
-                name: nombre,
-                paternalSurname: apPaterno,
-                maternalSurname: apMaterno,
-                email: email,
-                password: contrasena,
-                rolID: Number.parseInt(tipoUsuario),
-                siglasUser: siglasUsuario,
-            })
-            .where("ID = :userId", {userId: req.body.userId})
-            .execute();
 
-            if(user.affected === 1){
-                console.log(`Parametros del usuario cambiados exitosamente`);
-                new Resolver().success(res, 'User parameters correctly changed');
+
+            const tipoUsuario = await getRepository(CatUsers)
+            .createQueryBuilder("user")
+            .where("user.ID = :userId", {userId: req.body.userId})
+            .getOne();
+            
+            if(TipoUsuario === '' || TipoUsuario === undefined){
+                const user = await getRepository(CatUsers)
+                .createQueryBuilder()
+                .update()
+                .set({
+                    name: nombre,
+                    paternalSurname: apPaterno,
+                    maternalSurname: apMaterno,
+                    email: email,
+                    password: contrasena,
+                    siglasUser: siglasUsuario,
+                    rolID: tipoUsuario.rolID
+                })
+                .where("ID = :userId", {userId: req.body.userId})
+                .execute();
+                
+                if(user.affected === 1){
+                    console.log(`Parametros del usuario cambiados exitosamente`);
+                    new Resolver().success(res, 'User parameters correctly changed');
+                }
             }
+            else{
+                const user = await getRepository(CatUsers)
+                .createQueryBuilder()
+                .update()
+                .set({
+                    name: nombre,
+                    paternalSurname: apPaterno,
+                    maternalSurname: apMaterno,
+                    email: email,
+                    password: contrasena,
+                    siglasUser: siglasUsuario,
+                    rolID: tipoUsuario.rolID
+                })
+                .where("ID = :userId", {userId: req.body.userId})
+                .execute();
+                
+                if(user.affected === 1){
+                    console.log(`Parametros del usuario cambiados exitosamente`);
+                    new Resolver().success(res, 'User parameters correctly changed');
+                }
+            }
+            //let password = await new Utils().encrypt(req.body.contrasena);
+
+
+            // const user = await getRepository(CatUsers)
+            // .createQueryBuilder()
+
+            // .update(CatUsers)
+            // .set({
+            //     name: req.body.nombre,
+            //     paternalSurname: req.body.apPaterno,
+            //     maternalSurname: req.body.apMaterno,
+            //     email: req.body.email,
+            //     password: password,
+            //     rolID: Number.parseInt(req.body.tipoUsuario),
+            //     siglasUser: req.body.siglasUsuario,
+            // })
+            // .where("ID = :userId", {userId: req.body.userId})
+            // .execute();
+
+            // if(user.affected === 1){
+            //     console.log(`Parametros del usuario cambiados exitosamente`);
+            //     new Resolver().success(res, 'User parameters correctly changed');
+            // }
         }
         catch(ex){
             new Resolver().exception(res,'Unexpected error.', ex);
+            console.log("error", ex);
         }
     }
 
     public async DeleteUser(req: Request, res:Response): Promise <void>{
         try{
-            console.log(`borrando registro del usuario con el id:${req.body.userId}`);
+            console.log(`borrando registro lógico del usuario con el id:${req.body.userId}`);
             const user = await getRepository(CatUsers)
             .createQueryBuilder()
-            .delete()
-            .from(CatUsers)
+            .update(CatUsers)
+            .set({
+                activeChats: 0,
+                statusID: 8,
+                maxActiveChats: 5,
+                activeIp: null,
+                activo: 1,
+                credentials: null,
+                existe: 0
+            })
             .where("ID = :userId", {userId: req.body.userId})
             .execute()
 

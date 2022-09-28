@@ -3,7 +3,7 @@ import { CatAuxiliarStatuses } from "./auxiliarStatus";
 import { CatSoftphoneParameters } from './softphoneParameters';
 import { OpeChats } from './chat';
 import { OpeCalls } from './call';
-import{CatRols} from './rol'; 
+import {CatRols} from './rol'; 
 import { OpeStatusTime } from "./statusTime";
 
 @Entity()
@@ -80,23 +80,6 @@ export class CatUsers {
     @Column({ default: 2 })
     maxActiveChats:number;
 
-        /*
-        @Column({ nullable: true })
-        rolID:number;
-
-        @ManyToOne(() => CatRols, rol => rol.user)
-        @JoinColumn({name: 'rolID'})
-        rol: CatRols;
-
-        @OneToMany(() => CatUsers, user => user.rol)
-        user: CatUsers[];
-    */
-
-
-    /*
-        @OneToMany(() => CatUsers, user => user.rol)
-        user: CatUsers[]; 
-    */
-
-
+    @Column({type: 'int', default: 1})
+    existe:Number;
 }

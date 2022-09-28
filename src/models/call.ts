@@ -54,7 +54,12 @@ export class OpeCalls{
     @Column({type: 'varchar', nullable:true})
     startingDate:string
 
-    
+    @Column({type: 'int', nullable:true})
+    colgo:Number;
+
+    @Column({type: 'varchar', nullable:true})
+    agentExtension:String;
+
     @ManyToOne(() => CatUsers, user => user.call)
     @JoinColumn({name: 'userId'})
     user: CatUsers; 

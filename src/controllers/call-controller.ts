@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { getRepository } from "typeorm";
 import { Resolver } from "../services/resolver";
-import { OpeCalls } from "../models/call";
+import { OpeCalls } from '../models/call';
 import { CatUsers } from '../models/user';
 import { Logger } from "../services/logger";
 
@@ -21,7 +21,9 @@ export class CallController {
                 statusId: 2,
                 tipoLlamada: req.body.tipoLlamada,
                 llamadaTransferida: req.body.llamadaTransferida,
-                startingDate: req.body.startingDate
+                startingDate: req.body.startingDate,
+                clientPhoneNumber: req.body.clientPhoneNumber,
+                agentExtension: req.body.agentPhoneNumber
             })      
             .execute();
             let idLlamada = incomingCall.identifiers[0].id;
@@ -145,6 +147,50 @@ export class CallController {
             new Resolver().exception(res, "Unexpected error", ex);
         }
     }
+    
+    public async UserHangUp(req:Request, res:Response):Promise<void>{
+        try{
+            let idLlamada = req.body.IdLlamada;
+            console.log(`UserHangUp Id Llamada: ${idLlamada}`);
+            const user = await getRepository(OpeCalls)
+            .createQueryBuilder()
+            .update(OpeCalls)
+            .set({colgo: 0})
+            .where("id = :id", {id:idLlamada})
+            .execute();
+
+            if(user.affected === 1){
+                new Resolver().success(res, "User HangUp");
+            }
+            
+
+        }
+        catch(ex){
+            new Resolver().exception(res, "Unexpected error", ex);
+        }
+    }
+
+    public async VendorHangUp(req:Request, res:Response):Promise<void>{
+        try{
+            let idLlamada = req.body.IdLlamada;
+            console.log(`VendorHangUp Id Llamada: ${idLlamada}`);
+            let colgo = req.body.colgo
+            const vendor = await getRepository(OpeCalls)
+            .createQueryBuilder()
+            .update(OpeCalls)
+            .set({colgo: 1})
+            .where("id = :id", {id:idLlamada})
+            .execute();
+
+            if(colgo.affected === 1){
+                new Resolver().success(res, "Vendor HangUp");
+            }
+
+        }
+        catch(ex){
+            new Resolver().exception(res, "Unexpected error", ex);
+        }
+    }
 
     public async getIdCall(req: Request, res: Response): Promise<void> {
         try {
@@ -204,6 +250,75 @@ export class CallController {
 
         } catch (error) {
             console.log("Error[getTotalCalls]:" +error);
+        }
+    }
+    
+    public async GetCalls(req:Request, res:Response):Promise<void>{
+        try{
+            let userId = req.body.userId;
+            let fechaInicial = req.body.fechaInicial;   
+            let fechaFinal = req.body.fechaFinal;
+
+            // console.log(`date: ${date}`);
+            console.log(`userId: ${userId}`);
+            console.log(`fechaInicial: ${fechaInicial}`);
+            console.log(`fechaFinal: ${fechaFinal}`);
+            
+            if(userId === ""){
+                console.log('Se va a consultar las llamadas en general');
+                const calls = await getRepository(CatUsers)
+                .createQueryBuilder("user")
+                .innerJoinAndSelect("user.call", "call")
+                .select(["user.name", "user.paternalSurname", "user.maternalSurname", "call.date", "call.startTime", "call.endingTime", "call.folioLlamada", "call.comments", "call.colgo", "call.clientPhoneNumber", "call.agentExtension", "call.tipoLlamada"])
+                .where(`call.date BETWEEN '${fechaInicial}' AND '${fechaFinal}'`)
+                .getMany()
+
+                let object = {
+                    users:calls
+                }
+
+                console.log("Llamadas por agente", object);
+                new Resolver().success(res, "Data", object);
+            }
+            else{
+                if(userId !== "" && fechaInicial !== ""  && fechaFinal === ""){
+                    console.log(`Consultado todas las llamdas del agente:${userId} en el día:${fechaInicial}`)
+                    const calls = await getRepository(CatUsers)
+                    .createQueryBuilder("user")
+                    .innerJoinAndSelect("user.call", "call")
+                    .select(["user.name", "user.paternalSurname", "user.maternalSurname", "call.date", "call.startTime", "call.endingTime", "call.folioLlamada", "call.comments", "call.colgo", "call.clientPhoneNumber", "call.agentExtension", "call.tipoLlamada"])
+                    .where("call.date = :date", {date: fechaInicial})
+                    .andWhere("call.userId = :userId", {userId: userId})
+                    .getMany()
+
+                    let object = {
+                        users:calls
+                    }
+
+                    console.log("Llamadas por agente", object);
+                    new Resolver().success(res, "Data", object);
+                }
+                else {
+                    console.log(`Consultado todas las llamdas del usuario: ${userId} entre:${fechaInicial} y ${fechaFinal}`);
+                    const calls = await getRepository(CatUsers)
+                    .createQueryBuilder("user")
+                    .innerJoinAndSelect("user.call", "call")
+                    .select(["user.name", "user.paternalSurname", "user.maternalSurname", "call.date", "call.startTime", "call.endingTime", "call.folioLlamada", "call.comments", "call.colgo", "call.clientPhoneNumber", "call.agentExtension", "call.tipoLlamada"])
+                    .where(`call.date BETWEEN '${fechaInicial}' AND '${fechaFinal}'`)
+                    .getMany()
+
+                    let object = {
+                        users:calls
+                    }
+
+                    console.log("Llamadas por agente", object);
+                    new Resolver().success(res, "Data", object);
+                }
+            }
+        }
+        catch(ex){
+            new Resolver().error(res, "Error", ex);
+            console.log("Error[GetCalls]", ex);
         }
     }
 }
